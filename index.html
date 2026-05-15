@@ -97,7 +97,7 @@
                 <div class="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1.5 bg-white rounded-b-full md:hidden nav-indicator transition-opacity duration-300 opacity-0"></div>
                 <div class="absolute left-0 w-1.5 h-8 bg-white rounded-r-full hidden md:block nav-indicator transition-opacity duration-300 opacity-0"></div>
                 <i class="ph ph-user-plus text-2xl md:text-2xl nav-icon group-hover:scale-110 transition-transform"></i>
-                <span class="text-[10px] md:hidden mt-1 font-bold">ฟอร์มข้อมูล</span>
+                <span class="text-[10px] md:hidden mt-1 font-bold">เพิ่มพนักงาน</span>
             </a>
         </nav>
         
@@ -123,7 +123,6 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <!-- ปุ่มรีเฟรช (สำหรับมือถือ) -->
                 <button onclick="fetchData()" class="md:hidden flex items-center justify-center text-brand-purple bg-white p-2 rounded-full shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors">
                     <i class="ph-bold ph-arrows-clockwise text-lg"></i>
                 </button>
@@ -241,11 +240,10 @@
                                 <i class="ph ph-caret-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                             </div>
                             
-                            <!-- เพิ่มตัวกรองชุดผู้รับเหมา -->
+                            <!-- ตัวกรองชุดผู้รับเหมา -->
                             <div class="relative w-full md:w-44 bg-gray-50 rounded-full border border-gray-200 focus-within:border-brand-purple transition-all shrink-0">
                                 <select id="filterContractor" onchange="filterTable()" class="w-full bg-transparent border-none outline-none text-sm text-gray-700 px-4 py-2.5 appearance-none cursor-pointer font-sans">
                                     <option value="all">ทุกชุดผู้รับเหมา</option>
-                                    <!-- ตัวเลือกจะถูกสร้างอัตโนมัติจากข้อมูล -->
                                 </select>
                                 <i class="ph ph-caret-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                             </div>
@@ -312,7 +310,7 @@
                         <i class="ph-fill ph-user-plus text-xl md:text-2xl"></i>
                     </div>
                     <div>
-                        <h2 id="formTitle" class="text-xl md:text-2xl font-extrabold text-gray-800 font-heading leading-tight">เพิ่มข้อมูลพนักงาน</h2>
+                        <h2 class="text-xl md:text-2xl font-extrabold text-gray-800 font-heading leading-tight">เพิ่มข้อมูลพนักงาน</h2>
                         <p class="text-xs md:text-sm text-brand-textMuted mt-0.5">บันทึกข้อมูลเข้าสู่ระบบทะเบียน</p>
                     </div>
                 </div>
@@ -325,7 +323,6 @@
                             <i class="ph-fill ph-identification-card text-brand-purple"></i> ข้อมูลบุคคล
                         </h3>
                         <div>
-                            <!-- ปุ่มสแกนบัตร -->
                             <input type="file" id="idCardImage" accept="image/*" capture="environment" class="hidden" onchange="processIdCard(this)">
                             <button type="button" onclick="document.getElementById('idCardImage').click()" class="flex items-center gap-2 bg-indigo-50 text-brand-purple px-4 py-2 rounded-full text-xs md:text-sm font-bold hover:bg-indigo-100 transition-colors border border-indigo-100 w-full sm:w-auto justify-center shadow-sm">
                                 <i class="ph-bold ph-scan text-base md:text-lg"></i> สแกนดึงข้อมูลอัตโนมัติ
@@ -352,7 +349,7 @@
                         </div>
                     </div>
 
-                    <!-- 2. ข้อมูลตำแหน่งและสังกัด (เปลี่ยนเป็น Dropdown ที่ดึงจาก Config) -->
+                    <!-- 2. ข้อมูลตำแหน่งและสังกัด -->
                     <h3 class="text-base md:text-lg font-bold text-gray-700 mb-4 flex items-center gap-2 border-t border-gray-100 pt-6 md:pt-8">
                         <i class="ph-fill ph-briefcase text-brand-orange"></i> ข้อมูลตำแหน่งและสังกัด
                     </h3>
@@ -427,7 +424,7 @@
                                 <i class="ph ph-caret-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                             </div>
                         </div>
-                        <div>
+                        <div class="sm:col-span-2">
                             <label class="block text-xs md:text-sm font-bold text-gray-700 mb-1.5 md:mb-2">สถานะรับบัตร <span class="text-red-500">*</span></label>
                             <div class="relative">
                                 <select id="inpCardReceive" required class="w-full px-3 py-2.5 md:px-4 md:py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-bold text-gray-700 appearance-none cursor-pointer">
@@ -453,26 +450,112 @@
 
     </main>
 
-    <!-- ป๊อปอัปแสดงรายละเอียดพนักงาน (Modal) -->
+    <!-- ป๊อปอัป (Modal) ที่รองรับทั้งการ ดูรายละเอียด และ แก้ไขข้อมูล -->
     <div id="detailsModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity duration-300 opacity-0 p-4">
         <div id="detailsModalContent" class="bg-white rounded-[1.5rem] shadow-2xl w-full max-w-2xl transform scale-95 transition-all duration-300 overflow-hidden flex flex-col max-h-[85vh] md:max-h-[90vh]">
+            
             <!-- Header -->
             <div class="bg-gradient-to-r from-brand-sidebar to-brand-purple p-4 md:p-6 text-white flex justify-between items-center shrink-0">
-                <h3 class="text-lg md:text-xl font-bold font-heading flex items-center gap-2">
+                <h3 id="detailsModalTitle" class="text-lg md:text-xl font-bold font-heading flex items-center gap-2">
                     <i class="ph-fill ph-user-circle text-xl md:text-2xl"></i> รายละเอียดพนักงาน
                 </h3>
                 <button onclick="closeDetailsModal()" class="text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-2 rounded-full flex items-center justify-center">
                     <i class="ph-bold ph-x text-base md:text-lg"></i>
                 </button>
             </div>
-            <!-- Body -->
-            <div class="p-5 md:p-8 overflow-y-auto no-scrollbar" id="detailsModalBody">
-                <!-- ข้อมูลจะถูกแทรกผ่าน JS -->
+
+            <!-- VIEW MODE (โหมดดูรายละเอียด) -->
+            <div id="detailsViewMode" class="flex flex-col overflow-hidden">
+                <div class="p-5 md:p-8 overflow-y-auto no-scrollbar" id="detailsModalBody">
+                    <!-- ข้อมูลรายละเอียดจะถูกแทรกผ่าน JS -->
+                </div>
+                <div class="bg-gray-50 p-3 md:p-4 border-t border-gray-100 flex flex-wrap md:flex-nowrap justify-end shrink-0 gap-2" id="detailsModalFooter">
+                    <!-- ปุ่ม แก้ไข และ ลบ จะถูกแทรกผ่าน JS -->
+                </div>
             </div>
-            <!-- Footer ที่เพิ่มปุ่ม แก้ไข และ ลบ -->
-            <div class="bg-gray-50 p-3 md:p-4 border-t border-gray-100 flex flex-wrap md:flex-nowrap justify-end shrink-0 gap-2" id="detailsModalFooter">
-                <!-- ปุ่มจะถูกแทรกจาก JS -->
-            </div>
+
+            <!-- EDIT MODE (โหมดแก้ไขข้อมูล) -->
+            <form id="editViewMode" class="hidden flex flex-col overflow-hidden h-full" onsubmit="submitModalEdit(event)">
+                <div class="p-4 md:p-6 overflow-y-auto no-scrollbar space-y-4 md:space-y-6">
+                    <!-- 1. ข้อมูลบุคคล -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                        <div>
+                            <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">ชื่อ-นามสกุล <span class="text-red-500">*</span></label>
+                            <input type="text" id="editInpName" required class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-purple/20 outline-none text-sm text-gray-800 font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">เลขบัตรประชาชน <span class="text-red-500">*</span></label>
+                            <input type="text" id="editInpId" required class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-purple/20 outline-none text-sm font-mono text-gray-800">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">วันเกิด <span class="text-red-500">*</span></label>
+                            <input type="date" id="editInpDob" required onchange="autoCalcAgeEdit()" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-purple/20 outline-none text-sm text-gray-800">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">อายุ</label>
+                            <input type="text" id="editInpAge" readonly class="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-lg text-sm text-gray-500 cursor-not-allowed font-bold">
+                        </div>
+                    </div>
+                    
+                    <!-- 2. ตำแหน่ง/สังกัด -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+                        <div>
+                            <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">ตำแหน่ง <span class="text-red-500">*</span></label>
+                            <select id="editInpPos" required class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-medium"></select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">สังกัดชุด <span class="text-red-500">*</span></label>
+                            <select id="editInpGroup" required class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-medium"></select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">ชุดผู้รับเหมา <span class="text-red-500">*</span></label>
+                            <select id="editInpContractor" required class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-medium"></select>
+                        </div>
+                    </div>
+
+                    <!-- 3. สถานะต่างๆ -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 bg-brand-bg p-3 md:p-4 rounded-xl border border-gray-100">
+                        <div>
+                            <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">สถานะเอกสาร <span class="text-red-500">*</span></label>
+                            <select id="editInpDocStatus" required class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold">
+                                <option value="ครบ">ครบ</option><option value="ไม่ครบ">ไม่ครบ</option><option value="ขาดประกัน">ขาดประกัน</option><option value="ขาดบัตร">ขาดบัตร</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">สถานะการอบรม <span class="text-red-500">*</span></label>
+                            <select id="editInpTrain" required class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold">
+                                <option value="อบรมแล้ว">อบรมแล้ว</option><option value="รออบรมรอบถัดไป">รออบรมรอบถัดไป</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">วันที่อบรม <span class="text-[10px] text-gray-400 font-normal">(ถ้ามี)</span></label>
+                            <input type="text" id="editInpTrainDate" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">สถานะการทำบัตร <span class="text-red-500">*</span></label>
+                            <select id="editInpCard" required class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold">
+                                <option value="ทำบัตรแล้ว">ทำบัตรแล้ว</option><option value="รออบรม">รออบรม (ยังไม่ได้บัตร)</option>
+                            </select>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">สถานะรับบัตร <span class="text-red-500">*</span></label>
+                            <select id="editInpCardReceive" required class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold">
+                                <option value="ยังไม่รับ">ยังไม่รับ / รอรับบัตร</option><option value="รับแล้ว">รับแล้ว</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer โหมดแก้ไข -->
+                <div class="bg-gray-50 p-3 md:p-4 border-t border-gray-100 flex justify-end gap-2 shrink-0">
+                    <button type="button" onclick="cancelEditMode()" class="w-full md:w-auto px-5 py-2 bg-white border border-gray-200 text-gray-700 rounded-full text-xs md:text-sm font-bold hover:bg-gray-50 transition-colors shadow-sm">
+                        ยกเลิก
+                    </button>
+                    <button id="btnModalSubmit" type="submit" class="w-full md:w-auto px-6 py-2 bg-brand-purple text-white rounded-full text-xs md:text-sm font-bold hover:bg-[#4C51B6] transition-colors shadow-sm flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-floppy-disk text-lg"></i> บันทึกการแก้ไข
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -662,30 +745,23 @@
         // 3. ฟังก์ชันประมวลผลข้อมูลลง UI
         // ==========================================
         function populateDropdownsFromConfig(config) {
-            const posSelect = document.getElementById('inpPos');
-            const groupSelect = document.getElementById('inpGroup');
-            const contractorSelect = document.getElementById('inpContractor');
+            const posHtml = config.positions && config.positions.length > 0 
+                ? '<option value="" disabled selected>เลือกตำแหน่ง...</option>' + config.positions.map(p => `<option value="${p}">${p}</option>`).join('') 
+                : '<option value="" disabled selected>ไม่มีข้อมูลตำแหน่งในระบบ</option>';
+            document.getElementById('inpPos').innerHTML = posHtml;
+            document.getElementById('editInpPos').innerHTML = posHtml;
 
-            if(config.positions && config.positions.length > 0) {
-                posSelect.innerHTML = '<option value="" disabled selected>เลือกตำแหน่ง...</option>' + 
-                                      config.positions.map(p => `<option value="${p}">${p}</option>`).join('');
-            } else {
-                posSelect.innerHTML = '<option value="" disabled selected>ไม่มีข้อมูลตำแหน่งในระบบ</option>';
-            }
+            const groupHtml = config.groups && config.groups.length > 0 
+                ? '<option value="" disabled selected>เลือกสังกัดชุด...</option>' + config.groups.map(g => `<option value="${g}">${g}</option>`).join('') 
+                : '<option value="" disabled selected>ไม่มีข้อมูลสังกัดชุดในระบบ</option>';
+            document.getElementById('inpGroup').innerHTML = groupHtml;
+            document.getElementById('editInpGroup').innerHTML = groupHtml;
 
-            if(config.groups && config.groups.length > 0) {
-                groupSelect.innerHTML = '<option value="" disabled selected>เลือกสังกัดชุด...</option>' + 
-                                        config.groups.map(g => `<option value="${g}">${g}</option>`).join('');
-            } else {
-                groupSelect.innerHTML = '<option value="" disabled selected>ไม่มีข้อมูลสังกัดชุดในระบบ</option>';
-            }
-
-            if(config.contractors && config.contractors.length > 0) {
-                contractorSelect.innerHTML = '<option value="" disabled selected>เลือกชุดผู้รับเหมา...</option>' + 
-                                             config.contractors.map(c => `<option value="${c}">${c}</option>`).join('');
-            } else {
-                contractorSelect.innerHTML = '<option value="" disabled selected>ไม่มีข้อมูลชุดผู้รับเหมาในระบบ</option>';
-            }
+            const contractorHtml = config.contractors && config.contractors.length > 0 
+                ? '<option value="" disabled selected>เลือกชุดผู้รับเหมา...</option>' + config.contractors.map(c => `<option value="${c}">${c}</option>`).join('') 
+                : '<option value="" disabled selected>ไม่มีข้อมูลชุดผู้รับเหมาในระบบ</option>';
+            document.getElementById('inpContractor').innerHTML = contractorHtml;
+            document.getElementById('editInpContractor').innerHTML = contractorHtml;
         }
 
         function updateContractorFilter(data) {
@@ -906,29 +982,52 @@
             }
         }
 
+        function autoCalcAgeEdit() {
+            const dobInput = document.getElementById('editInpDob').value;
+            if (dobInput) {
+                const birthDate = new Date(dobInput);
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const m = today.getMonth() - birthDate.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+                document.getElementById('editInpAge').value = age + " ปี";
+            } else {
+                document.getElementById('editInpAge').value = "";
+            }
+        }
+
         function formatDobForSheet(dateStr) {
             if(!dateStr) return "";
             const [y, m, d] = dateStr.split('-');
             return `${parseInt(d)}/${parseInt(m)}/${y}`; 
         }
 
+        function ensureOptionExists(selectId, value) {
+            if (!value) return;
+            const select = document.getElementById(selectId);
+            if (!Array.from(select.options).some(o => o.value === value)) {
+                select.innerHTML += `<option value="${value}">${value}</option>`;
+            }
+            select.value = value;
+        }
+
         function resetFormState() {
             document.getElementById('employeeDataForm').reset();
             document.getElementById('inpAge').value = "";
-            currentEditNo = null;
-            document.getElementById('formTitle').innerText = 'เพิ่มข้อมูลพนักงาน';
-            document.getElementById('btnSubmitText').innerText = 'บันทึกข้อมูลเข้าฐานระบบ';
         }
 
         // ==========================================
-        // 5. ฟังก์ชันบันทึกข้อมูล (POST: เพิ่ม และ แก้ไข)
+        // 5. ฟังก์ชันบันทึกข้อมูล (POST)
         // ==========================================
+        
+        // บันทึกเพิ่มข้อมูลใหม่ (จากแท็บฟอร์มหลัก)
         async function submitForm(e) {
             e.preventDefault();
             
             const btnSubmit = document.getElementById('btnSubmit');
             const originalHTML = btnSubmit.innerHTML;
-            
             btnSubmit.innerHTML = '<i class="ph ph-spinner animate-spin text-xl"></i> <span>กำลังบันทึก...</span>';
             btnSubmit.disabled = true;
             btnSubmit.classList.add('opacity-75', 'cursor-not-allowed');
@@ -936,8 +1035,8 @@
             const rawDob = document.getElementById('inpDob').value;
 
             const newData = {
-                action: currentEditNo ? 'edit' : 'add',
-                no: currentEditNo ? currentEditNo : (localData.length > 0 ? Math.max(...localData.map(d => d.no || 0)) + 1 : 1),
+                action: 'add',
+                no: localData.length > 0 ? Math.max(...localData.map(d => d.no || 0)) + 1 : 1,
                 name: document.getElementById('inpName').value,
                 idCard: document.getElementById('inpId').value,
                 position: document.getElementById('inpPos').value,
@@ -968,14 +1067,8 @@
                 });
                 
                 if(response.ok) {
-                    await fetchData(); // ฟังก์ชันนี้จะดึงข้อมูลใหม่ทันที
-                    
-                    if (currentEditNo) {
-                        showToast('อัปเดตสำเร็จ', 'แก้ไขข้อมูลเรียบร้อยแล้ว', 'success');
-                    } else {
-                        showToast('บันทึกข้อมูลสำเร็จ', 'ข้อมูลถูกเพิ่มเข้าสู่ระบบแล้ว', 'success');
-                    }
-                    
+                    await fetchData(); 
+                    showToast('บันทึกข้อมูลสำเร็จ', 'ข้อมูลถูกเพิ่มเข้าสู่ระบบแล้ว', 'success');
                     resetFormState(); 
                     resetBtn();
                     setTimeout(() => switchTab('employee-list'), 1000);
@@ -992,6 +1085,59 @@
                 btnSubmit.innerHTML = originalHTML;
                 btnSubmit.disabled = false;
                 btnSubmit.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+        }
+
+        // บันทึกแก้ไขข้อมูล (จากภายใน Modal)
+        async function submitModalEdit(e) {
+            e.preventDefault();
+            
+            const btnSubmit = document.getElementById('btnModalSubmit');
+            const originalHTML = btnSubmit.innerHTML;
+            btnSubmit.innerHTML = '<i class="ph ph-spinner animate-spin text-lg"></i> บันทึก...';
+            btnSubmit.disabled = true;
+
+            const rawDob = document.getElementById('editInpDob').value;
+
+            const newData = {
+                action: 'edit',
+                no: currentEditNo,
+                name: document.getElementById('editInpName').value,
+                idCard: document.getElementById('editInpId').value,
+                position: document.getElementById('editInpPos').value,
+                group: document.getElementById('editInpGroup').value,
+                documentStatus: document.getElementById('editInpDocStatus').value, 
+                trainStatus: document.getElementById('editInpTrain').value,        
+                trainDate: document.getElementById('editInpTrainDate').value,      
+                cardStatus: document.getElementById('editInpCard').value,          
+                birthDate: formatDobForSheet(rawDob),                          
+                age: document.getElementById('editInpAge').value,                  
+                cardReceiveStatus: document.getElementById('editInpCardReceive').value, 
+                contractorGroup: document.getElementById('editInpContractor').value     
+            };
+
+            try {
+                const formData = new URLSearchParams();
+                for (const key in newData) { formData.append(key, newData[key]); }
+
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if(response.ok) {
+                    await fetchData(); 
+                    showToast('อัปเดตสำเร็จ', 'แก้ไขข้อมูลเรียบร้อยแล้ว', 'success');
+                    closeDetailsModal();
+                } else {
+                    throw new Error("POST Error");
+                }
+            } catch (error) {
+                console.error('Submit Error:', error);
+                showToast('เกิดข้อผิดพลาด', 'ไม่สามารถแก้ไขข้อมูลได้', 'error');
+            } finally {
+                btnSubmit.innerHTML = originalHTML;
+                btnSubmit.disabled = false;
             }
         }
 
@@ -1167,6 +1313,12 @@
         function showEmployeeDetails(row, displayTrainDate, displayDob, trainBadge, cardBadge, receiveBadge, docBadge) {
             const modal = document.getElementById('detailsModal');
             const modalContent = document.getElementById('detailsModalContent');
+            
+            // ทำให้แน่ใจว่าแสดงโหมดรายละเอียด (ไม่ใช่โหมดแก้ไข)
+            document.getElementById('detailsViewMode').classList.remove('hidden');
+            document.getElementById('editViewMode').classList.add('hidden');
+            document.getElementById('detailsModalTitle').innerHTML = '<i class="ph-fill ph-user-circle text-xl md:text-2xl"></i> รายละเอียดพนักงาน';
+
             const body = document.getElementById('detailsModalBody');
             const footer = document.getElementById('detailsModalFooter');
 
@@ -1262,38 +1414,26 @@
             });
         }
 
+        // เมื่อกดแก้ไข จะเปลี่ยนหน้าตาภายในป๊อปอัปให้กลายเป็นฟอร์ม
         function editEmployee(no) {
             const row = localData.find(r => r.no === no);
             if (!row) return;
 
             currentEditNo = no;
 
-            document.getElementById('inpName').value = row.name;
-            document.getElementById('inpId').value = row.idCard;
+            // นำข้อมูลเดิมไปใส่ในช่องกรอกของโหมดแก้ไข
+            document.getElementById('editInpName').value = row.name;
+            document.getElementById('editInpId').value = row.idCard;
             
-            const posSelect = document.getElementById('inpPos');
-            if (row.position && !Array.from(posSelect.options).some(o => o.value === row.position)) {
-                posSelect.innerHTML += `<option value="${row.position}">${row.position}</option>`;
-            }
-            posSelect.value = row.position || '';
+            ensureOptionExists('editInpPos', row.position);
+            ensureOptionExists('editInpGroup', row.group);
+            ensureOptionExists('editInpContractor', row.contractorGroup);
 
-            const groupSelect = document.getElementById('inpGroup');
-            if (row.group && !Array.from(groupSelect.options).some(o => o.value === row.group)) {
-                groupSelect.innerHTML += `<option value="${row.group}">${row.group}</option>`;
-            }
-            groupSelect.value = row.group || '';
-
-            const contractorSelect = document.getElementById('inpContractor');
-            if (row.contractorGroup && !Array.from(contractorSelect.options).some(o => o.value === row.contractorGroup)) {
-                contractorSelect.innerHTML += `<option value="${row.contractorGroup}">${row.contractorGroup}</option>`;
-            }
-            contractorSelect.value = row.contractorGroup || '';
-
-            document.getElementById('inpDocStatus').value = row.documentStatus || 'ครบ';
-            document.getElementById('inpTrain').value = row.trainStatus;
-            document.getElementById('inpTrainDate').value = row.trainDate || '';
-            document.getElementById('inpCard').value = row.cardStatus;
-            document.getElementById('inpCardReceive').value = row.cardReceiveStatus || 'ยังไม่รับ';
+            document.getElementById('editInpDocStatus').value = row.documentStatus || 'ครบ';
+            document.getElementById('editInpTrain').value = row.trainStatus;
+            document.getElementById('editInpTrainDate').value = row.trainDate || '';
+            document.getElementById('editInpCard').value = row.cardStatus;
+            document.getElementById('editInpCardReceive').value = row.cardReceiveStatus || 'ยังไม่รับ';
 
             if (row.birthDate) {
                 const parts = String(row.birthDate).split('/');
@@ -1301,21 +1441,29 @@
                     const y = parts[2];
                     const m = parts[1].padStart(2, '0');
                     const d = parts[0].padStart(2, '0');
-                    document.getElementById('inpDob').value = `${y}-${m}-${d}`;
+                    document.getElementById('editInpDob').value = `${y}-${m}-${d}`;
                 }
+            } else {
+                document.getElementById('editInpDob').value = '';
             }
-            document.getElementById('inpAge').value = row.age || '';
+            document.getElementById('editInpAge').value = row.age || '';
 
-            document.getElementById('formTitle').innerText = 'แก้ไขข้อมูลพนักงาน';
-            document.getElementById('btnSubmitText').innerText = 'บันทึกการแก้ไข';
+            // สลับ View ภายใน Modal เป็นโหมดแก้ไข
+            document.getElementById('detailsViewMode').classList.add('hidden');
+            document.getElementById('editViewMode').classList.remove('hidden');
+            document.getElementById('detailsModalTitle').innerHTML = '<i class="ph-bold ph-pencil-simple text-xl md:text-2xl"></i> แก้ไขข้อมูลพนักงาน';
+        }
 
-            closeDetailsModal();
-            switchTab('form');
+        // ยกเลิกการแก้ไข สลับกลับมาดูรายละเอียดเหมือนเดิม
+        function cancelEditMode() {
+            document.getElementById('detailsViewMode').classList.remove('hidden');
+            document.getElementById('editViewMode').classList.add('hidden');
+            document.getElementById('detailsModalTitle').innerHTML = '<i class="ph-fill ph-user-circle text-xl md:text-2xl"></i> รายละเอียดพนักงาน';
         }
 
         function promptDeleteEmployee(no) {
             employeeToDeleteNo = no;
-            closeDetailsModal(); // ปิด Modal รายละเอียดก่อน
+            closeDetailsModal(); 
             
             const modal = document.getElementById('deleteConfirmModal');
             const content = document.getElementById('deleteConfirmContent');
@@ -1361,7 +1509,7 @@
 
                 if (response.ok) {
                     showToast('ลบสำเร็จ', 'ข้อมูลถูกลบออกจากระบบแล้ว', 'success');
-                    await fetchData(); // โหลดข้อมูลใหม่
+                    await fetchData(); 
                 } else {
                     throw new Error("Delete failed");
                 }
@@ -1383,6 +1531,9 @@
 
             setTimeout(() => {
                 modal.classList.add('hidden');
+                // รีเซ็ตโหมดทุกครั้งที่ปิด
+                document.getElementById('detailsViewMode').classList.remove('hidden');
+                document.getElementById('editViewMode').classList.add('hidden');
             }, 300);
         }
 
@@ -1392,7 +1543,6 @@
             }
         });
 
-        // ปิดป๊อปอัปยืนยันการลบ เมื่อคลิกที่พื้นหลัง
         document.getElementById('deleteConfirmModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeDeleteConfirmModal();
