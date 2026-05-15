@@ -685,6 +685,19 @@
         
         initPWA();
 
+        // ลงทะเบียน Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('Service Worker ลงทะเบียนสำเร็จ:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('การลงทะเบียน Service Worker ล้มเหลว:', error);
+                    });
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             Chart.defaults.font.family = "'Sarabun', sans-serif";
             fetchData();
