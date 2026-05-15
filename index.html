@@ -225,19 +225,30 @@
             <div class="bg-white rounded-[1.5rem] p-4 md:p-8 shadow-card flex flex-col gap-4">
                 
                 <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-2 w-full">
-                    <div class="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto flex-1">
+                    <div class="flex flex-col md:flex-row items-center gap-3 w-full xl:w-auto flex-1">
                         <div class="relative w-full bg-gray-50 rounded-full flex items-center px-4 py-2 border border-gray-200 focus-within:border-brand-purple focus-within:ring-2 focus-within:ring-brand-purple/20 transition-all">
                             <i class="ph ph-magnifying-glass text-gray-400 text-lg"></i>
                             <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="ค้นหาชื่อ, เลขบัตร..." class="bg-transparent border-none outline-none text-sm w-full ml-2 text-gray-700 placeholder-gray-400 font-sans">
                         </div>
                         
-                        <div class="relative w-full sm:w-48 bg-gray-50 rounded-full border border-gray-200 focus-within:border-brand-purple transition-all shrink-0">
-                            <select id="filterStatus" onchange="filterTable()" class="w-full bg-transparent border-none outline-none text-sm text-gray-700 px-4 py-2.5 appearance-none cursor-pointer font-sans">
-                                <option value="all">สถานะทั้งหมด</option>
-                                <option value="อบรมแล้ว">เฉพาะ อบรมแล้ว</option>
-                                <option value="รออบรม">เฉพาะ รออบรม</option>
-                            </select>
-                            <i class="ph ph-caret-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                        <div class="flex w-full md:w-auto gap-2">
+                            <div class="relative w-full md:w-40 bg-gray-50 rounded-full border border-gray-200 focus-within:border-brand-purple transition-all shrink-0">
+                                <select id="filterStatus" onchange="filterTable()" class="w-full bg-transparent border-none outline-none text-sm text-gray-700 px-4 py-2.5 appearance-none cursor-pointer font-sans">
+                                    <option value="all">สถานะทั้งหมด</option>
+                                    <option value="อบรมแล้ว">เฉพาะ อบรมแล้ว</option>
+                                    <option value="รออบรม">เฉพาะ รออบรม</option>
+                                </select>
+                                <i class="ph ph-caret-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
+                            
+                            <!-- เพิ่มตัวกรองชุดผู้รับเหมา -->
+                            <div class="relative w-full md:w-44 bg-gray-50 rounded-full border border-gray-200 focus-within:border-brand-purple transition-all shrink-0">
+                                <select id="filterContractor" onchange="filterTable()" class="w-full bg-transparent border-none outline-none text-sm text-gray-700 px-4 py-2.5 appearance-none cursor-pointer font-sans">
+                                    <option value="all">ทุกชุดผู้รับเหมา</option>
+                                    <!-- ตัวเลือกจะถูกสร้างอัตโนมัติจากข้อมูล -->
+                                </select>
+                                <i class="ph ph-caret-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
                         </div>
                     </div>
                     
@@ -257,7 +268,7 @@
                 </div>
 
                 <div class="overflow-auto max-h-[60vh] table-scrollbar border border-gray-100 rounded-xl relative w-full" id="tableContainer">
-                    <table class="w-full text-left border-collapse min-w-[1300px]">
+                    <table class="w-full text-left border-collapse min-w-[900px]">
                         <thead class="bg-gray-50 sticky top-0 z-20 shadow-sm outline outline-1 outline-gray-200">
                             <tr class="text-[11px] text-gray-500 uppercase tracking-wider border-b border-gray-200 font-bold">
                                 <th class="py-3 px-4 text-center w-12 bg-gray-50">ลำดับ</th>
@@ -267,10 +278,7 @@
                                 <th class="py-3 px-4 bg-gray-50">สังกัดชุด</th>
                                 <th class="py-3 px-4 text-center bg-gray-50">เอกสาร</th>
                                 <th class="py-3 px-4 text-center bg-gray-50">สถานะอบรม</th>
-                                <th class="py-3 px-4 text-center bg-gray-50">วันที่อบรม</th>
                                 <th class="py-3 px-4 text-center bg-gray-50">สถานะทำบัตร</th>
-                                <th class="py-3 px-4 text-center bg-gray-50">วันเกิด</th>
-                                <th class="py-3 px-4 text-center bg-gray-50">อายุ</th>
                                 <th class="py-3 px-4 text-center bg-gray-50">สถานะรับบัตร</th>
                                 <th class="py-3 px-4 text-center bg-gray-50">ชุดผู้รับเหมา</th>
                             </tr>
@@ -593,10 +601,10 @@
                 hideLoading();
                 
                 if (error.message === "URL_EMPTY") {
-                    tbody.innerHTML = `<tr><td colspan="13" class="text-center py-10 text-brand-orange font-bold"><i class="ph-fill ph-warning-circle text-4xl mb-3"></i><br>กรุณาตั้งค่าตัวแปร WEB_APP_URL ในโค้ด<br><span class="text-xs font-normal text-gray-500">เพื่อเชื่อมต่อดึงข้อมูลจาก Google Sheets</span></td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="10" class="text-center py-10 text-brand-orange font-bold"><i class="ph-fill ph-warning-circle text-4xl mb-3"></i><br>กรุณาตั้งค่าตัวแปร WEB_APP_URL ในโค้ด<br><span class="text-xs font-normal text-gray-500">เพื่อเชื่อมต่อดึงข้อมูลจาก Google Sheets</span></td></tr>`;
                     updateDashboardCards([]);
                 } else {
-                    tbody.innerHTML = `<tr><td colspan="13" class="text-center py-10 text-red-500 font-bold"><i class="ph-fill ph-x-circle text-4xl mb-3"></i><br>ไม่สามารถเชื่อมต่อฐานข้อมูลได้<br><span class="text-xs font-normal text-gray-500">โปรดตรวจสอบ URL ของ Apps Script หรือสิทธิ์การเข้าถึงอินเทอร์เน็ต</span></td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="10" class="text-center py-10 text-red-500 font-bold"><i class="ph-fill ph-x-circle text-4xl mb-3"></i><br>ไม่สามารถเชื่อมต่อฐานข้อมูลได้<br><span class="text-xs font-normal text-gray-500">โปรดตรวจสอบ URL ของ Apps Script หรือสิทธิ์การเข้าถึงอินเทอร์เน็ต</span></td></tr>`;
                 }
             }
 
@@ -609,8 +617,28 @@
         // ==========================================
         // 3. ฟังก์ชันประมวลผลข้อมูลลง UI
         // ==========================================
+        function updateContractorFilter(data) {
+            const select = document.getElementById('filterContractor');
+            const currentValue = select.value;
+            
+            // ดึงชื่อชุดผู้รับเหมาแบบไม่ซ้ำ (Unique)
+            const contractors = [...new Set(data.map(item => String(item.contractorGroup || '').trim()).filter(c => c !== ''))].sort();
+            
+            let html = '<option value="all">ทุกชุดผู้รับเหมา</option>';
+            contractors.forEach(c => {
+                html += `<option value="${c}">${c}</option>`;
+            });
+            
+            select.innerHTML = html;
+            
+            if (contractors.includes(currentValue)) {
+                select.value = currentValue;
+            }
+        }
+
         function processData(data) {
             updateDashboardCards(data);
+            updateContractorFilter(data); // สร้างตัวเลือก Dropdown สำหรับผู้รับเหมา
             renderTable(data);
             initOrUpdateChart(data);
         }
@@ -651,7 +679,7 @@
 
             dataToRender.forEach((row, index) => {
                 
-                // Column F: เอกสาร (NEW)
+                // Column F: เอกสาร
                 let docBadge = '';
                 const docStatus = String(row.documentStatus || '').trim();
                 if (docStatus === 'ครบ') {
@@ -703,6 +731,7 @@
                     receiveBadge = `<span class="text-[10px] md:text-xs text-gray-400">${rStatus || '-'}</span>`;
                 }
 
+                // คำนวณเพื่อส่งไปให้ Modal (ถึงแม้จะไม่แสดงในตารางหลักแล้ว)
                 let displayTrainDate = row.trainDate || '-';
                 if (String(displayTrainDate).includes('T')) {
                     const d = new Date(displayTrainDate);
@@ -726,10 +755,7 @@
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-gray-600">${row.group}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${docBadge}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${trainBadge}</td>
-                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center text-gray-600">${displayTrainDate}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${cardBadge}</td>
-                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center text-gray-600">${displayDob}</td>
-                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center font-bold text-brand-purple">${row.age || '-'}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${receiveBadge}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center text-gray-600">${row.contractorGroup || '-'}</td>
                 `;
@@ -775,6 +801,7 @@
         function filterTable() {
             const searchText = document.getElementById('searchInput').value.toLowerCase();
             const statusFilter = document.getElementById('filterStatus').value;
+            const contractorFilter = document.getElementById('filterContractor').value;
             
             const filteredData = localData.filter(row => {
                 const name = String(row.name).toLowerCase();
@@ -787,7 +814,13 @@
                     if (statusFilter === 'อบรมแล้ว') matchStatus = tStatus.includes('อบรมแล้ว');
                     else if (statusFilter === 'รออบรม') matchStatus = tStatus.includes('รอ');
                 }
-                return matchText && matchStatus;
+
+                let matchContractor = true;
+                if (contractorFilter !== 'all') {
+                    matchContractor = String(row.contractorGroup).trim() === contractorFilter;
+                }
+                
+                return matchText && matchStatus && matchContractor;
             });
             renderTable(filteredData);
         }
