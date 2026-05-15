@@ -352,22 +352,37 @@
                         </div>
                     </div>
 
-                    <!-- 2. ข้อมูลตำแหน่งและสังกัด -->
+                    <!-- 2. ข้อมูลตำแหน่งและสังกัด (เปลี่ยนเป็น Dropdown ที่ดึงจาก Config) -->
                     <h3 class="text-base md:text-lg font-bold text-gray-700 mb-4 flex items-center gap-2 border-t border-gray-100 pt-6 md:pt-8">
                         <i class="ph-fill ph-briefcase text-brand-orange"></i> ข้อมูลตำแหน่งและสังกัด
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
                         <div>
                             <label class="block text-xs md:text-sm font-bold text-gray-600 mb-1.5 md:mb-2">ตำแหน่ง (Position) <span class="text-red-500">*</span></label>
-                            <input type="text" id="inpPos" required value="Site Engineer" class="w-full px-3 py-2.5 md:px-4 md:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-sans">
+                            <div class="relative">
+                                <select id="inpPos" required class="w-full px-3 py-2.5 md:px-4 md:py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-sans appearance-none cursor-pointer">
+                                    <option value="" disabled selected>กำลังโหลดข้อมูล...</option>
+                                </select>
+                                <i class="ph ph-caret-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-xs md:text-sm font-bold text-gray-600 mb-1.5 md:mb-2">สังกัดชุด (Group) <span class="text-red-500">*</span></label>
-                            <input type="text" id="inpGroup" required value="SUNWORK" class="w-full px-3 py-2.5 md:px-4 md:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-sans">
+                            <div class="relative">
+                                <select id="inpGroup" required class="w-full px-3 py-2.5 md:px-4 md:py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-sans appearance-none cursor-pointer">
+                                    <option value="" disabled selected>กำลังโหลดข้อมูล...</option>
+                                </select>
+                                <i class="ph ph-caret-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-xs md:text-sm font-bold text-gray-600 mb-1.5 md:mb-2">ชุดผู้รับเหมา <span class="text-red-500">*</span></label>
-                            <input type="text" id="inpContractor" required value="SUNWORK" class="w-full px-3 py-2.5 md:px-4 md:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-sans">
+                            <div class="relative">
+                                <select id="inpContractor" required class="w-full px-3 py-2.5 md:px-4 md:py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-sans appearance-none cursor-pointer">
+                                    <option value="" disabled selected>กำลังโหลดข้อมูล...</option>
+                                </select>
+                                <i class="ph ph-caret-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
                         </div>
                     </div>
 
@@ -461,6 +476,25 @@
         </div>
     </div>
 
+    <!-- ป๊อปอัปยืนยันการลบ (Delete Confirmation Modal) -->
+    <div id="deleteConfirmModal" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0 p-4">
+        <div id="deleteConfirmContent" class="bg-white p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] flex flex-col items-center shadow-2xl w-full max-w-sm transform scale-95 transition-all duration-300 text-center">
+            <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4 shadow-inner">
+                <i class="ph-fill ph-trash text-3xl"></i>
+            </div>
+            <h4 class="font-extrabold text-gray-800 text-lg md:text-xl">ยืนยันการลบข้อมูล</h4>
+            <p class="text-sm text-gray-500 mt-2">คุณต้องการลบข้อมูลพนักงานรายการนี้ใช่หรือไม่?<br><span class="text-red-500 font-medium">การลบข้อมูลไม่สามารถเรียกคืนได้</span></p>
+            <div class="flex gap-3 w-full mt-6">
+                <button onclick="closeDeleteConfirmModal()" class="flex-1 px-4 py-3 bg-white border border-gray-200 text-gray-700 rounded-full text-sm font-bold hover:bg-gray-50 transition-colors shadow-sm">
+                    ยกเลิก
+                </button>
+                <button onclick="executeDeleteEmployee()" class="flex-1 px-4 py-3 bg-red-500 text-white rounded-full text-sm font-bold hover:bg-red-600 transition-colors shadow-md shadow-red-500/30 flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-trash"></i> ยืนยันลบ
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ป๊อปอัปโหลดดิ้ง OCR และการลบ (Global Loading) -->
     <div id="globalLoading" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0 p-4">
         <div class="bg-white p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] flex flex-col items-center shadow-2xl w-full max-w-sm transform scale-95 transition-all duration-300" id="globalLoadingContent">
@@ -507,6 +541,7 @@
         let localData = [];
         let donutChartInstance = null;
         let currentEditNo = null; 
+        let employeeToDeleteNo = null;
 
         // ==========================================
         // ระบบ PWA
@@ -588,12 +623,21 @@
             try {
                 if(WEB_APP_URL === "") throw new Error("URL_EMPTY");
 
-                const response = await fetch(WEB_APP_URL);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const data = await response.json();
+                // ป้องกันปัญหา Browser Cache ด้วยการเพิ่ม timestamp (Cache-Busting)
+                const urlWithCacheBuster = WEB_APP_URL + (WEB_APP_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
                 
-                localData = data;
-                processData(data);
+                const response = await fetch(urlWithCacheBuster, { cache: "no-store" });
+                if (!response.ok) throw new Error('Network response was not ok');
+                const dataResponse = await response.json();
+                
+                if (dataResponse.employees && dataResponse.config) {
+                    localData = dataResponse.employees;
+                    populateDropdownsFromConfig(dataResponse.config);
+                } else {
+                    localData = Array.isArray(dataResponse) ? dataResponse : [];
+                }
+
+                processData(localData);
                 hideLoading();
 
             } catch (error) {
@@ -617,11 +661,37 @@
         // ==========================================
         // 3. ฟังก์ชันประมวลผลข้อมูลลง UI
         // ==========================================
+        function populateDropdownsFromConfig(config) {
+            const posSelect = document.getElementById('inpPos');
+            const groupSelect = document.getElementById('inpGroup');
+            const contractorSelect = document.getElementById('inpContractor');
+
+            if(config.positions && config.positions.length > 0) {
+                posSelect.innerHTML = '<option value="" disabled selected>เลือกตำแหน่ง...</option>' + 
+                                      config.positions.map(p => `<option value="${p}">${p}</option>`).join('');
+            } else {
+                posSelect.innerHTML = '<option value="" disabled selected>ไม่มีข้อมูลตำแหน่งในระบบ</option>';
+            }
+
+            if(config.groups && config.groups.length > 0) {
+                groupSelect.innerHTML = '<option value="" disabled selected>เลือกสังกัดชุด...</option>' + 
+                                        config.groups.map(g => `<option value="${g}">${g}</option>`).join('');
+            } else {
+                groupSelect.innerHTML = '<option value="" disabled selected>ไม่มีข้อมูลสังกัดชุดในระบบ</option>';
+            }
+
+            if(config.contractors && config.contractors.length > 0) {
+                contractorSelect.innerHTML = '<option value="" disabled selected>เลือกชุดผู้รับเหมา...</option>' + 
+                                             config.contractors.map(c => `<option value="${c}">${c}</option>`).join('');
+            } else {
+                contractorSelect.innerHTML = '<option value="" disabled selected>ไม่มีข้อมูลชุดผู้รับเหมาในระบบ</option>';
+            }
+        }
+
         function updateContractorFilter(data) {
             const select = document.getElementById('filterContractor');
             const currentValue = select.value;
             
-            // ดึงชื่อชุดผู้รับเหมาแบบไม่ซ้ำ (Unique)
             const contractors = [...new Set(data.map(item => String(item.contractorGroup || '').trim()).filter(c => c !== ''))].sort();
             
             let html = '<option value="all">ทุกชุดผู้รับเหมา</option>';
@@ -638,7 +708,7 @@
 
         function processData(data) {
             updateDashboardCards(data);
-            updateContractorFilter(data); // สร้างตัวเลือก Dropdown สำหรับผู้รับเหมา
+            updateContractorFilter(data);
             renderTable(data);
             initOrUpdateChart(data);
         }
@@ -679,7 +749,6 @@
 
             dataToRender.forEach((row, index) => {
                 
-                // Column F: เอกสาร
                 let docBadge = '';
                 const docStatus = String(row.documentStatus || '').trim();
                 if (docStatus === 'ครบ') {
@@ -690,7 +759,6 @@
                     docBadge = `<span class="text-[10px] md:text-xs text-gray-500">${docStatus || '-'}</span>`;
                 }
 
-                // Column G: สถานะการอบรม
                 let trainBadge = '';
                 const tStatus = String(row.trainStatus).trim();
                 if (tStatus.includes('อบรมแล้ว')) {
@@ -701,7 +769,6 @@
                     trainBadge = `<span class="text-[10px] md:text-xs text-gray-500">${tStatus || '-'}</span>`;
                 }
 
-                // Column I: สถานะทำบัตร
                 let cardBadge = '';
                 const cStatus = String(row.cardStatus).trim();
                 if (cStatus === 'ทำบัตรแล้ว') {
@@ -716,7 +783,6 @@
                     cardBadge = `<span class="text-[10px] md:text-xs text-gray-500">${cStatus || '-'}</span>`;
                 }
 
-                // Column L: สถานะรับบัตร
                 let receiveBadge = '';
                 const rStatus = String(row.cardReceiveStatus || '').trim();
                 if (rStatus === 'รับแล้ว') {
@@ -731,7 +797,6 @@
                     receiveBadge = `<span class="text-[10px] md:text-xs text-gray-400">${rStatus || '-'}</span>`;
                 }
 
-                // คำนวณเพื่อส่งไปให้ Modal (ถึงแม้จะไม่แสดงในตารางหลักแล้ว)
                 let displayTrainDate = row.trainDate || '-';
                 if (String(displayTrainDate).includes('T')) {
                     const d = new Date(displayTrainDate);
@@ -847,7 +912,6 @@
             return `${parseInt(d)}/${parseInt(m)}/${y}`; 
         }
 
-        // รีเซ็ตสถานะฟอร์ม
         function resetFormState() {
             document.getElementById('employeeDataForm').reset();
             document.getElementById('inpAge').value = "";
@@ -871,7 +935,6 @@
 
             const rawDob = document.getElementById('inpDob').value;
 
-            // จัดเรียง 13 คอลัมน์ส่งไป Apps Script
             const newData = {
                 action: currentEditNo ? 'edit' : 'add',
                 no: currentEditNo ? currentEditNo : (localData.length > 0 ? Math.max(...localData.map(d => d.no || 0)) + 1 : 1),
@@ -879,14 +942,14 @@
                 idCard: document.getElementById('inpId').value,
                 position: document.getElementById('inpPos').value,
                 group: document.getElementById('inpGroup').value,
-                documentStatus: document.getElementById('inpDocStatus').value, // Col F
-                trainStatus: document.getElementById('inpTrain').value,        // Col G
-                trainDate: document.getElementById('inpTrainDate').value,      // Col H
-                cardStatus: document.getElementById('inpCard').value,          // Col I
-                birthDate: formatDobForSheet(rawDob),                          // Col J
-                age: document.getElementById('inpAge').value,                  // Col K
-                cardReceiveStatus: document.getElementById('inpCardReceive').value, // Col L
-                contractorGroup: document.getElementById('inpContractor').value     // Col M
+                documentStatus: document.getElementById('inpDocStatus').value, 
+                trainStatus: document.getElementById('inpTrain').value,        
+                trainDate: document.getElementById('inpTrainDate').value,      
+                cardStatus: document.getElementById('inpCard').value,          
+                birthDate: formatDobForSheet(rawDob),                          
+                age: document.getElementById('inpAge').value,                  
+                cardReceiveStatus: document.getElementById('inpCardReceive').value, 
+                contractorGroup: document.getElementById('inpContractor').value     
             };
 
             try {
@@ -905,7 +968,7 @@
                 });
                 
                 if(response.ok) {
-                    await fetchData(); 
+                    await fetchData(); // ฟังก์ชันนี้จะดึงข้อมูลใหม่ทันที
                     
                     if (currentEditNo) {
                         showToast('อัปเดตสำเร็จ', 'แก้ไขข้อมูลเรียบร้อยแล้ว', 'success');
@@ -1179,7 +1242,7 @@
 
             footer.innerHTML = `
                 <div class="flex gap-2 w-full md:w-auto">
-                    <button onclick="deleteEmployee(${row.no})" class="flex-1 md:flex-none px-4 py-2.5 bg-white border border-red-200 text-red-600 rounded-full text-xs md:text-sm font-bold hover:bg-red-50 transition-colors shadow-sm flex items-center justify-center gap-1">
+                    <button onclick="promptDeleteEmployee(${row.no})" class="flex-1 md:flex-none px-4 py-2.5 bg-white border border-red-200 text-red-600 rounded-full text-xs md:text-sm font-bold hover:bg-red-50 transition-colors shadow-sm flex items-center justify-center gap-1">
                         <i class="ph-bold ph-trash"></i> ลบ
                     </button>
                     <button onclick="editEmployee(${row.no})" class="flex-1 md:flex-none px-4 py-2.5 bg-white border border-brand-purple text-brand-purple rounded-full text-xs md:text-sm font-bold hover:bg-brand-purple/10 transition-colors shadow-sm flex items-center justify-center gap-1">
@@ -1207,14 +1270,30 @@
 
             document.getElementById('inpName').value = row.name;
             document.getElementById('inpId').value = row.idCard;
-            document.getElementById('inpPos').value = row.position;
-            document.getElementById('inpGroup').value = row.group;
+            
+            const posSelect = document.getElementById('inpPos');
+            if (row.position && !Array.from(posSelect.options).some(o => o.value === row.position)) {
+                posSelect.innerHTML += `<option value="${row.position}">${row.position}</option>`;
+            }
+            posSelect.value = row.position || '';
+
+            const groupSelect = document.getElementById('inpGroup');
+            if (row.group && !Array.from(groupSelect.options).some(o => o.value === row.group)) {
+                groupSelect.innerHTML += `<option value="${row.group}">${row.group}</option>`;
+            }
+            groupSelect.value = row.group || '';
+
+            const contractorSelect = document.getElementById('inpContractor');
+            if (row.contractorGroup && !Array.from(contractorSelect.options).some(o => o.value === row.contractorGroup)) {
+                contractorSelect.innerHTML += `<option value="${row.contractorGroup}">${row.contractorGroup}</option>`;
+            }
+            contractorSelect.value = row.contractorGroup || '';
+
             document.getElementById('inpDocStatus').value = row.documentStatus || 'ครบ';
             document.getElementById('inpTrain').value = row.trainStatus;
             document.getElementById('inpTrainDate').value = row.trainDate || '';
             document.getElementById('inpCard').value = row.cardStatus;
             document.getElementById('inpCardReceive').value = row.cardReceiveStatus || 'ยังไม่รับ';
-            document.getElementById('inpContractor').value = row.contractorGroup || '';
 
             if (row.birthDate) {
                 const parts = String(row.birthDate).split('/');
@@ -1234,12 +1313,40 @@
             switchTab('form');
         }
 
-        async function deleteEmployee(no) {
-            if (!confirm('ยืนยัน! คุณต้องการลบข้อมูลพนักงานรายการนี้ใช่หรือไม่? \n(การลบข้อมูลไม่สามารถเรียกคืนได้)')) {
-                return;
-            }
+        function promptDeleteEmployee(no) {
+            employeeToDeleteNo = no;
+            closeDetailsModal(); // ปิด Modal รายละเอียดก่อน
+            
+            const modal = document.getElementById('deleteConfirmModal');
+            const content = document.getElementById('deleteConfirmContent');
+            
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            });
+        }
 
-            closeDetailsModal();
+        function closeDeleteConfirmModal() {
+            const modal = document.getElementById('deleteConfirmModal');
+            const content = document.getElementById('deleteConfirmContent');
+
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                employeeToDeleteNo = null;
+            }, 300);
+        }
+
+        async function executeDeleteEmployee() {
+            if (!employeeToDeleteNo) return;
+            const no = employeeToDeleteNo;
+
+            closeDeleteConfirmModal();
             showGlobalLoading(true, "กำลังลบข้อมูล", "กรุณารอสักครู่ ระบบกำลังลบข้อมูลจากฐานข้อมูล");
 
             try {
@@ -1254,7 +1361,7 @@
 
                 if (response.ok) {
                     showToast('ลบสำเร็จ', 'ข้อมูลถูกลบออกจากระบบแล้ว', 'success');
-                    fetchData(); 
+                    await fetchData(); // โหลดข้อมูลใหม่
                 } else {
                     throw new Error("Delete failed");
                 }
@@ -1282,6 +1389,13 @@
         document.getElementById('detailsModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeDetailsModal();
+            }
+        });
+
+        // ปิดป๊อปอัปยืนยันการลบ เมื่อคลิกที่พื้นหลัง
+        document.getElementById('deleteConfirmModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteConfirmModal();
             }
         });
     </script>
