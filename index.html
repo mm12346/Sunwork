@@ -113,25 +113,26 @@
     <!-- พื้นที่เนื้อหาหลัก -->
     <main class="flex-1 p-4 md:p-8 pb-24 md:pb-8 overflow-y-auto no-scrollbar relative w-full">
         
-        <!-- ส่วนหัว (Header) -->
-        <div class="flex flex-wrap justify-between items-center mb-6 gap-3 pt-2 md:pt-0">
-            <div class="flex items-center gap-3 w-full sm:w-auto">
+        <!-- ส่วนหัว (Header) แก้ไขโครงสร้างไม่ให้ตกบรรทัด -->
+        <div class="flex justify-between items-center mb-4 md:mb-6 gap-2 md:gap-4 pt-2 md:pt-0 w-full">
+            <div class="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
                 <div class="md:hidden w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md shrink-0 border-2 border-white overflow-hidden p-0.5">
                     <img src="https://raw.githubusercontent.com/mm12346/Sunwork/refs/heads/main/Sunwork.png" alt="SUNWORK Logo" class="w-full h-full object-contain rounded-full">
                 </div>
-                <div class="flex-1">
-                    <h1 class="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-800 font-heading tracking-tight truncate">ทะเบียนพนักงาน / จป.</h1>
-                    <p class="text-brand-textMuted text-xs sm:text-sm mt-0.5 truncate">SUNWORK COMPANY LIMITED</p>
+                <div class="flex-1 min-w-0">
+                    <h1 class="text-lg sm:text-2xl md:text-3xl font-extrabold text-gray-800 font-heading tracking-tight truncate">ทะเบียนพนักงาน / จป.</h1>
+                    <p class="text-brand-textMuted text-[10px] sm:text-sm mt-0.5 truncate">SUNWORK COMPANY LIMITED</p>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <!-- ปุ่มรีเฟรช (สำหรับมือถือ) -->
-                <button onclick="fetchData()" class="md:hidden flex items-center justify-center text-brand-purple bg-white p-2 rounded-full shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors shrink-0">
-                    <i class="ph-bold ph-arrows-clockwise text-lg"></i>
+            <div class="flex items-center gap-2 shrink-0">
+                <!-- ปุ่มรีเฟรช (แสดงทุกหน้าจอ รวม Desktop) -->
+                <button onclick="fetchData()" class="flex items-center justify-center gap-1.5 text-brand-purple bg-white p-2 md:px-4 md:py-2 rounded-full shadow-sm border border-gray-200 hover:bg-gray-50 transition-all shrink-0 group" title="รีเฟรชข้อมูล">
+                    <i class="ph-bold ph-arrows-clockwise text-lg md:text-base group-hover:rotate-180 transition-transform duration-500"></i>
+                    <span class="hidden md:inline text-xs font-bold">รีเฟรชข้อมูล</span>
                 </button>
                 <div class="hidden md:flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 shrink-0">
                     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V5.0</span>
+                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V5.1</span>
                 </div>
             </div>
         </div>
@@ -321,12 +322,13 @@
                         </div>
                     </div>
                     
-                    <div class="flex flex-col md:flex-row w-full xl:w-auto shrink-0 gap-2 mt-2 xl:mt-0">
-                        <button onclick="openExportModal()" class="w-full md:w-auto flex justify-center items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-full text-sm font-bold hover:bg-green-700 transition-colors shadow-md shadow-green-600/20">
-                            <i class="ph-bold ph-file-xls text-lg"></i> ส่งออก Excel
+                    <!-- ปรับแต่งปุ่มในหน้าจอเล็กให้เป็น Grid คู่ ไม่ล้นจอ -->
+                    <div class="grid grid-cols-2 md:flex md:flex-row w-full xl:w-auto shrink-0 gap-2 mt-2 xl:mt-0">
+                        <button onclick="openExportModal()" class="w-full md:w-auto flex justify-center items-center gap-1.5 md:gap-2 bg-green-600 text-white px-3 sm:px-5 py-2.5 rounded-full text-xs md:text-sm font-bold hover:bg-green-700 transition-colors shadow-md shadow-green-600/20 truncate">
+                            <i class="ph-bold ph-file-xls text-base md:text-lg"></i> <span class="truncate">ส่งออก Excel</span>
                         </button>
-                        <button onclick="resetFormState(); switchTab('form');" class="w-full md:w-auto flex justify-center items-center gap-2 bg-brand-purple text-white px-5 py-2.5 rounded-full text-sm font-bold hover:bg-[#4C51B6] transition-colors shadow-md shadow-brand-purple/20">
-                            <i class="ph-bold ph-plus text-lg"></i> เพิ่มข้อมูล
+                        <button onclick="resetFormState(); switchTab('form');" class="w-full md:w-auto flex justify-center items-center gap-1.5 md:gap-2 bg-brand-purple text-white px-3 sm:px-5 py-2.5 rounded-full text-xs md:text-sm font-bold hover:bg-[#4C51B6] transition-colors shadow-md shadow-brand-purple/20 truncate">
+                            <i class="ph-bold ph-plus text-base md:text-lg"></i> <span class="truncate">เพิ่มข้อมูล</span>
                         </button>
                     </div>
                 </div>
@@ -1105,31 +1107,34 @@
                     let initial = String(row.name).replace('นาย ', '').replace('นางสาว ', '').replace('นาง ', '').charAt(0) || 'U';
                     imageThumbnail = `<div class="w-8 h-8 rounded-full bg-brand-lightPurple/20 text-brand-purple flex items-center justify-center font-bold text-xs mx-auto">${initial}</div>`;
                 }
+                
+                const safeIdCard = row.idCard && row.idCard !== 'undefined' ? row.idCard : '-';
+                const safeContractor = row.contractorGroup && row.contractorGroup !== 'undefined' ? row.contractorGroup : '-';
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-brand-bg transition-colors duration-200 group cursor-pointer";
                 tr.onclick = () => showEmployeeDetails(row, displayTrainDate, displayDob, trainBadge, cardBadge, receiveBadge, docBadge);
                 tr.innerHTML = `
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${imageThumbnail}</td>
-                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap"><div class="font-bold text-gray-800 group-hover:text-brand-purple transition-colors truncate max-w-[120px] md:max-w-none break-words whitespace-normal leading-tight">${row.name}</div></td>
-                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-gray-600 font-mono tracking-wider">${row.idCard}</td>
-                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-gray-600 font-medium truncate max-w-[100px] md:max-w-none break-words whitespace-normal leading-tight">${row.position}</td>
-                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-gray-600 break-words whitespace-normal leading-tight">${row.group}</td>
+                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap"><div class="font-bold text-gray-800 group-hover:text-brand-purple transition-colors truncate max-w-[120px] md:max-w-none break-words whitespace-normal leading-tight">${row.name || '-'}</div></td>
+                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-gray-600 font-mono tracking-wider">${safeIdCard}</td>
+                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-gray-600 font-medium truncate max-w-[100px] md:max-w-none break-words whitespace-normal leading-tight">${row.position || '-'}</td>
+                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-gray-600 break-words whitespace-normal leading-tight">${row.group || '-'}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${docBadge}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${trainBadge}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${cardBadge}</td>
-                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center text-gray-600 break-words whitespace-normal leading-tight">${row.contractorGroup || '-'}</td>
+                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center text-gray-600 break-words whitespace-normal leading-tight">${safeContractor}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
         function initOrUpdateChart(data) {
-            // ... (โค้ดสร้าง Chart เหมือนเดิม) ...
             const total = data.length;
             const trainedCount = data.filter(d => String(d.trainStatus).includes('อบรมแล้ว')).length;
             const waitingCount = total - trainedCount;
             const ctx = document.getElementById('statusChart').getContext('2d');
+            
             if (donutChartInstance) {
                 donutChartInstance.data.datasets[0].data = [trainedCount, waitingCount];
                 donutChartInstance.update();
@@ -1157,8 +1162,8 @@
             
             const filteredData = localData.filter(row => {
                 // ข้อมูลจากฐานข้อมูลก็ทำการตัดช่องว่าง/ขีด ออกก่อนเปรียบเทียบเช่นกัน
-                const name = String(row.name).toLowerCase().replace(/\s+/g, '');
-                const id = String(row.idCard).toLowerCase().replace(/[\s\-]/g, '');
+                const name = String(row.name || '').toLowerCase().replace(/\s+/g, '');
+                const id = String(row.idCard || '').toLowerCase().replace(/[\s\-]/g, '');
                 
                 const matchText = name.includes(searchText) || id.includes(searchIdText);
                 
@@ -1344,7 +1349,7 @@
 
                         Object.keys(groupedData).sort().forEach(groupName => {
                             const wsGroup = createStyledWorksheet(groupedData[groupName]);
-                            let safeName = groupName.replace(/[\\/*?:\[\]]/g, '').trim();
+                            let safeName = groupName.replace(/[\/*?:\[\]]/g, '').trim();
                             if (!safeName) safeName = 'ไม่มีสังกัด';
                             safeName = safeName.substring(0, 28);
                             let finalName = safeName;
@@ -1420,7 +1425,7 @@
         }
 
         function ensureOptionExists(selectId, value) {
-            if (!value) return;
+            if (!value || value === 'undefined') return;
             const select = document.getElementById(selectId);
             if (!Array.from(select.options).some(o => o.value === value)) {
                 select.innerHTML += `<option value="${value}">${value}</option>`;
@@ -1471,9 +1476,16 @@
                 const rawDob = document.getElementById('inpDob').value;
                 const rawTrainDate = document.getElementById('inpTrainDate').value;
 
+                // แก้ไขปัญหา Number การรัน ID ให้ปลอดภัย
+                let newNo = 1;
+                if (localData && localData.length > 0) {
+                    const allIds = localData.map(d => parseInt(d.no) || 0);
+                    newNo = Math.max(...allIds) + 1;
+                }
+
                 const newData = {
                     action: 'add',
-                    no: localData.length > 0 ? Math.max(...localData.map(d => d.no || 0)) + 1 : 1,
+                    no: newNo,
                     name: document.getElementById('inpName').value,
                     idCard: document.getElementById('inpId').value,
                     position: document.getElementById('inpPos').value,
@@ -1842,21 +1854,23 @@
             if (row.imageUrl && row.imageUrl !== "" && row.imageUrl !== "-") {
                 profileAvatarHtml = `<img src="${row.imageUrl}" alt="profile" class="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover shadow-lg shadow-brand-purple/20 shrink-0 border-2 border-white">`;
             } else {
-                let initial = String(row.name).replace('นาย ', '').replace('นางสาว ', '').replace('นาง ', '').charAt(0) || 'U';
+                let initial = String(row.name || 'U').replace('นาย ', '').replace('นางสาว ', '').replace('นาง ', '').charAt(0) || 'U';
                 profileAvatarHtml = `
                     <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-tr from-brand-purple to-brand-lightPurple flex items-center justify-center text-white font-bold text-2xl md:text-3xl shadow-lg shadow-brand-purple/20 shrink-0 border-2 border-white">
                         ${initial}
                     </div>`;
             }
 
+            const safeIdCard = row.idCard && row.idCard !== 'undefined' ? row.idCard : '-';
+
             body.innerHTML = `
                 <div class="flex items-center gap-4 md:gap-5 mb-6 md:mb-8 pb-4 md:pb-6 border-b border-gray-100">
                     ${profileAvatarHtml}
                     <div class="flex-1 min-w-0">
-                        <h4 class="text-xl md:text-2xl font-extrabold text-gray-800 font-heading leading-tight truncate w-full break-words whitespace-normal">${row.name}</h4>
+                        <h4 class="text-xl md:text-2xl font-extrabold text-gray-800 font-heading leading-tight truncate w-full break-words whitespace-normal">${row.name || '-'}</h4>
                         <div class="flex items-center gap-1.5 md:gap-2 mt-1 md:mt-1.5">
                             <i class="ph-fill ph-identification-card text-brand-purple text-lg"></i>
-                            <span class="text-xs md:text-sm text-gray-600 font-mono tracking-wide">${row.idCard}</span>
+                            <span class="text-xs md:text-sm text-gray-600 font-mono tracking-wide">${safeIdCard}</span>
                         </div>
                     </div>
                 </div>
@@ -1958,8 +1972,9 @@
                 document.getElementById('editProfileImagePlaceholder').classList.remove('hidden');
             }
 
-            document.getElementById('editInpName').value = row.name;
-            document.getElementById('editInpId').value = row.idCard;
+            document.getElementById('editInpName').value = row.name || '';
+            const safeIdCard = row.idCard && row.idCard !== 'undefined' ? row.idCard : '';
+            document.getElementById('editInpId').value = safeIdCard;
             
             ensureOptionExists('editInpPos', row.position);
             ensureOptionExists('editInpGroup', row.group);
