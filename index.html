@@ -75,10 +75,8 @@
     <!-- แถบเมนู (Sidebar บน Desktop / Bottom Nav บน Mobile) -->
     <aside class="fixed md:relative bottom-0 w-full md:w-20 h-16 md:h-full bg-brand-sidebar flex flex-row md:flex-col items-center py-0 md:py-6 justify-around md:justify-between rounded-t-2xl md:rounded-none md:rounded-r-3xl z-50 shrink-0 shadow-[0_-5px_20px_rgba(0,0,0,0.15)] md:shadow-lg order-last md:order-first">
         <div class="hidden md:flex flex-col items-center gap-8">
-            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 shadow-md">
-                <div class="w-full h-full bg-yellow-400 rounded-full flex items-center justify-center text-brand-sidebar relative overflow-hidden">
-                    <i class="ph-fill ph-hard-hat text-2xl"></i>
-                </div>
+            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center p-0.5 shadow-md overflow-hidden">
+                <img src="https://raw.githubusercontent.com/mm12346/Sunwork/refs/heads/main/Sunwork.png" alt="SUNWORK Logo" class="w-full h-full object-contain rounded-full">
             </div>
         </div>
         
@@ -116,8 +114,8 @@
         <!-- ส่วนหัว (Header) -->
         <div class="flex flex-wrap justify-between items-center mb-6 gap-3 pt-2 md:pt-0">
             <div class="flex items-center gap-3 w-full sm:w-auto">
-                <div class="md:hidden w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-brand-sidebar shadow-md shrink-0 border-2 border-white">
-                    <i class="ph-fill ph-hard-hat text-xl"></i>
+                <div class="md:hidden w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md shrink-0 border-2 border-white overflow-hidden p-0.5">
+                    <img src="https://raw.githubusercontent.com/mm12346/Sunwork/refs/heads/main/Sunwork.png" alt="SUNWORK Logo" class="w-full h-full object-contain rounded-full">
                 </div>
                 <div class="flex-1">
                     <h1 class="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-800 font-heading tracking-tight truncate">ทะเบียนพนักงาน / จป.</h1>
@@ -131,7 +129,7 @@
                 </button>
                 <div class="hidden md:flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 shrink-0">
                     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V1.0</span>
+                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V2.0</span>
                 </div>
             </div>
         </div>
@@ -417,7 +415,7 @@
                         </div>
                         <div>
                             <label class="block text-xs md:text-sm font-bold text-gray-700 mb-1.5 md:mb-2">วันที่อบรม <span class="text-[10px] md:text-xs text-gray-400 font-normal">(ถ้ามี)</span></label>
-                            <input type="text" id="inpTrainDate" placeholder="เช่น 23/4/2569" class="w-full px-3 py-2.5 md:px-4 md:py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-sans">
+                            <input type="date" id="inpTrainDate" class="w-full px-3 py-2.5 md:px-4 md:py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-sans text-gray-600">
                         </div>
                         <div>
                             <label class="block text-xs md:text-sm font-bold text-gray-700 mb-1.5 md:mb-2">สถานะการทำบัตร <span class="text-red-500">*</span></label>
@@ -534,7 +532,7 @@
                         </div>
                         <div>
                             <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">วันที่อบรม <span class="text-[10px] text-gray-400 font-normal">(ถ้ามี)</span></label>
-                            <input type="text" id="editInpTrainDate" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-medium">
+                            <input type="date" id="editInpTrainDate" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-purple/20 outline-none text-sm text-gray-800">
                         </div>
                         <div>
                             <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">สถานะการทำบัตร <span class="text-red-500">*</span></label>
@@ -670,8 +668,7 @@
         let deferredPrompt;
         
         function initPWA() {
-            const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" fill="#5E64D1"/><path d="M128,32A96,96,0,0,0,32,128v40a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V128A96,96,0,0,0,128,32Z" fill="#FFF"/></svg>`;
-            const iconDataUrl = "data:image/svg+xml;base64," + btoa(svgIcon);
+            const logoUrl = "https://raw.githubusercontent.com/mm12346/Sunwork/refs/heads/main/Sunwork.png";
 
             const manifest = {
                 name: "ทะเบียน จป. SUNWORK",
@@ -682,9 +679,9 @@
                 background_color: "#F1F5FA",
                 theme_color: "#5E64D1",
                 icons: [{
-                    src: iconDataUrl,
+                    src: logoUrl,
                     sizes: "512x512",
-                    type: "image/svg+xml",
+                    type: "image/png",
                     purpose: "any maskable"
                 }]
             };
@@ -925,10 +922,14 @@
                     receiveBadge = `<span class="text-[10px] md:text-xs text-gray-400">${rStatus || '-'}</span>`;
                 }
 
-                let displayTrainDate = row.trainDate || '-';
-                if (String(displayTrainDate).includes('T')) {
-                    const d = new Date(displayTrainDate);
-                    displayTrainDate = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+                let displayTrainDate = row.trainDate || 'ไม่ระบุ';
+                if (displayTrainDate !== 'ไม่ระบุ' && displayTrainDate !== '-') {
+                    if (String(displayTrainDate).includes('T')) {
+                        const d = new Date(displayTrainDate);
+                        displayTrainDate = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+                    }
+                } else {
+                    displayTrainDate = '<span class="text-gray-400 font-normal">ไม่ระบุ</span>';
                 }
 
                 let displayDob = row.birthDate || '-';
@@ -1109,10 +1110,14 @@
                     // สร้างฟังก์ชันช่วย (Helper Function) สำหรับแปลงข้อมูลเป็น Worksheet และจัดสไตล์
                     const createStyledWorksheet = (dataArray) => {
                         const exportData = dataArray.map((row, index) => {
-                            let displayTrainDate = row.trainDate || '-';
-                            if (String(displayTrainDate).includes('T')) {
-                                const d = new Date(displayTrainDate);
-                                displayTrainDate = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+                            let displayTrainDate = row.trainDate || 'ไม่ระบุ';
+                            if (displayTrainDate !== 'ไม่ระบุ' && displayTrainDate !== '-') {
+                                if (String(displayTrainDate).includes('T')) {
+                                    const d = new Date(displayTrainDate);
+                                    displayTrainDate = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+                                }
+                            } else {
+                                displayTrainDate = 'ไม่ระบุ';
                             }
 
                             let displayDob = row.birthDate || '-';
@@ -1301,6 +1306,15 @@
             return `${parseInt(d)}/${parseInt(m)}/${y}`; 
         }
 
+        function formatTrainDateForSheet(dateStr) {
+            if(!dateStr) return "ไม่ระบุ";
+            if (dateStr.includes('-')) {
+                const [y, m, d] = dateStr.split('-');
+                return `${parseInt(d)}/${parseInt(m)}/${y}`; 
+            }
+            return dateStr;
+        }
+
         function ensureOptionExists(selectId, value) {
             if (!value) return;
             const select = document.getElementById(selectId);
@@ -1329,6 +1343,7 @@
             btnSubmit.classList.add('opacity-75', 'cursor-not-allowed');
 
             const rawDob = document.getElementById('inpDob').value;
+            const rawTrainDate = document.getElementById('inpTrainDate').value;
 
             const newData = {
                 action: 'add',
@@ -1339,7 +1354,7 @@
                 group: document.getElementById('inpGroup').value,
                 documentStatus: document.getElementById('inpDocStatus').value, 
                 trainStatus: document.getElementById('inpTrain').value,        
-                trainDate: document.getElementById('inpTrainDate').value,      
+                trainDate: formatTrainDateForSheet(rawTrainDate),      
                 cardStatus: document.getElementById('inpCard').value,          
                 birthDate: formatDobForSheet(rawDob),                          
                 age: document.getElementById('inpAge').value,                  
@@ -1393,6 +1408,7 @@
             btnSubmit.disabled = true;
 
             const rawDob = document.getElementById('editInpDob').value;
+            const rawEditTrainDate = document.getElementById('editInpTrainDate').value;
 
             const newData = {
                 action: 'edit',
@@ -1403,7 +1419,7 @@
                 group: document.getElementById('editInpGroup').value,
                 documentStatus: document.getElementById('editInpDocStatus').value, 
                 trainStatus: document.getElementById('editInpTrain').value,        
-                trainDate: document.getElementById('editInpTrainDate').value,      
+                trainDate: formatTrainDateForSheet(rawEditTrainDate),      
                 cardStatus: document.getElementById('editInpCard').value,          
                 birthDate: formatDobForSheet(rawDob),                          
                 age: document.getElementById('editInpAge').value,                  
@@ -1804,12 +1820,30 @@
             document.getElementById('editInpDocStatus').value = row.documentStatus || 'ครบ';
             document.getElementById('editInpTrain').value = row.trainStatus;
             
-            let tDateStr = row.trainDate || '';
-            if (String(tDateStr).includes('T')) {
-                const d = new Date(tDateStr);
-                tDateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+            let tDateStr = String(row.trainDate || '').trim();
+            if (tDateStr && tDateStr !== '-' && tDateStr !== 'ไม่ระบุ' && tDateStr !== 'undefined') {
+                if (tDateStr.includes('T')) {
+                    const d = new Date(tDateStr);
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    document.getElementById('editInpTrainDate').value = `${y}-${m}-${day}`;
+                } else if (tDateStr.includes('/')) {
+                    const parts = tDateStr.split('/');
+                    if (parts.length === 3) {
+                        const y = parts[2];
+                        const m = parts[1].padStart(2, '0');
+                        const d = parts[0].padStart(2, '0');
+                        document.getElementById('editInpTrainDate').value = `${y}-${m}-${d}`;
+                    }
+                } else if (tDateStr.includes('-')) {
+                    document.getElementById('editInpTrainDate').value = tDateStr.substring(0, 10);
+                } else {
+                    document.getElementById('editInpTrainDate').value = '';
+                }
+            } else {
+                document.getElementById('editInpTrainDate').value = '';
             }
-            document.getElementById('editInpTrainDate').value = tDateStr;
             
             document.getElementById('editInpCard').value = row.cardStatus;
             document.getElementById('editInpCardReceive').value = row.cardReceiveStatus || 'ยังไม่รับ';
