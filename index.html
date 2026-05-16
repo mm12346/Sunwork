@@ -131,7 +131,7 @@
                 </button>
                 <div class="hidden md:flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 shrink-0">
                     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V3.0</span>
+                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V4.0</span>
                 </div>
             </div>
         </div>
@@ -1031,14 +1031,21 @@
         // 4. ระบบกรอง (Filter) , คำนวณอายุ & ส่งออก Excel
         // ==========================================
         function filterTable() {
-            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            // ตัดช่องว่างออกทั้งหมดสำหรับการค้นหาชื่อ
+            const searchText = searchInput.replace(/\s+/g, '');
+            // ตัดช่องว่างและขีดออกทั้งหมดสำหรับการค้นหาด้วยเลขบัตร
+            const searchIdText = searchInput.replace(/[\s\-]/g, '');
+
             const statusFilter = document.getElementById('filterStatus').value;
             const contractorFilter = document.getElementById('filterContractor').value;
             
             const filteredData = localData.filter(row => {
-                const name = String(row.name).toLowerCase();
-                const id = String(row.idCard).toLowerCase();
-                const matchText = name.includes(searchText) || id.includes(searchText);
+                // ข้อมูลจากฐานข้อมูลก็ทำการตัดช่องว่าง/ขีด ออกก่อนเปรียบเทียบเช่นกัน
+                const name = String(row.name).toLowerCase().replace(/\s+/g, '');
+                const id = String(row.idCard).toLowerCase().replace(/[\s\-]/g, '');
+                
+                const matchText = name.includes(searchText) || id.includes(searchIdText);
                 
                 let matchStatus = true;
                 if (statusFilter !== 'all') {
