@@ -17,7 +17,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Tesseract.js สำหรับทำ OCR ดึงข้อมูลจากรูปภาพ -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <!-- SheetJS สำหรับ Export เป็น Excel (ใช้เวอร์ชัน xlsx-js-style เพื่อให้ตกแต่งตารางได้) -->
+    <!-- SheetJS สำหรับ Export เป็น Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <script>
         tailwind.config = {
@@ -131,7 +131,7 @@
                 </button>
                 <div class="hidden md:flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 shrink-0">
                     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V2.0</span>
+                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V3.0</span>
                 </div>
             </div>
         </div>
@@ -273,7 +273,7 @@
                     <table class="w-full text-left border-collapse min-w-[900px]">
                         <thead class="bg-gray-50 sticky top-0 z-20 shadow-sm outline outline-1 outline-gray-200">
                             <tr class="text-[11px] text-gray-500 uppercase tracking-wider border-b border-gray-200 font-bold">
-                                <th class="py-3 px-4 text-center w-12 bg-gray-50">ลำดับ</th>
+                                <th class="py-3 px-4 text-center w-12 bg-gray-50">รูป</th>
                                 <th class="py-3 px-4 bg-gray-50">ชื่อ-นามสกุล</th>
                                 <th class="py-3 px-4 bg-gray-50">เลขบัตรประชาชน</th>
                                 <th class="py-3 px-4 bg-gray-50">ตำแหน่ง</th>
@@ -281,7 +281,6 @@
                                 <th class="py-3 px-4 text-center bg-gray-50">เอกสาร</th>
                                 <th class="py-3 px-4 text-center bg-gray-50">สถานะอบรม</th>
                                 <th class="py-3 px-4 text-center bg-gray-50">สถานะทำบัตร</th>
-                                <th class="py-3 px-4 text-center bg-gray-50">สถานะรับบัตร</th>
                                 <th class="py-3 px-4 text-center bg-gray-50">ชุดผู้รับเหมา</th>
                             </tr>
                         </thead>
@@ -321,6 +320,25 @@
 
                 <form id="employeeDataForm" onsubmit="submitForm(event)">
                     
+                    <!-- ส่วนอัปโหลดรูปภาพโปรไฟล์ -->
+                    <div class="flex flex-col items-center justify-center mb-8">
+                        <div class="relative w-28 h-28 md:w-32 md:h-32 rounded-full bg-brand-bg border-2 border-dashed border-brand-lightPurple flex flex-col items-center justify-center overflow-hidden cursor-pointer hover:bg-indigo-50 transition-colors group shadow-sm" onclick="document.getElementById('inpProfileImage').click()">
+                            <!-- กรณีมีรูป -->
+                            <img id="profileImagePreview" class="w-full h-full object-cover hidden absolute inset-0 z-10" />
+                            <!-- กรณีไม่มีรูป -->
+                            <div class="z-0 flex flex-col items-center" id="profileImagePlaceholder">
+                                <i class="ph-fill ph-camera text-3xl text-brand-lightPurple group-hover:scale-110 transition-transform"></i>
+                                <span class="text-[10px] text-brand-purple font-bold mt-1">เพิ่มรูปถ่าย</span>
+                            </div>
+                            <!-- Overlay ตอนมีรูปแล้ว hover -->
+                            <div class="absolute inset-0 bg-black/40 z-20 hidden group-hover:flex items-center justify-center transition-opacity" id="profileImageOverlay">
+                                <i class="ph-fill ph-pencil-simple text-white text-xl"></i>
+                            </div>
+                        </div>
+                        <input type="file" id="inpProfileImage" accept="image/*" class="hidden" onchange="handleImagePreview(this, 'profileImagePreview', 'profileImagePlaceholder', 'profileImageOverlay')">
+                        <span class="text-[11px] text-gray-400 mt-3 font-medium">รองรับไฟล์ JPG, PNG ไม่เกิน 5MB</span>
+                    </div>
+
                     <!-- 1. ข้อมูลบุคคล -->
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                         <h3 class="text-base md:text-lg font-bold text-gray-700 flex items-center gap-2">
@@ -482,6 +500,22 @@
             <!-- EDIT MODE (โหมดแก้ไขข้อมูล) -->
             <form id="editViewMode" class="hidden flex flex-col overflow-hidden h-full" onsubmit="submitModalEdit(event)">
                 <div class="p-4 md:p-6 overflow-y-auto no-scrollbar space-y-4 md:space-y-6">
+                    
+                    <!-- ส่วนเปลี่ยนรูปโปรไฟล์ -->
+                    <div class="flex flex-col items-center justify-center mb-2">
+                        <div class="relative w-24 h-24 rounded-full bg-brand-bg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden cursor-pointer hover:bg-gray-50 transition-colors group" onclick="document.getElementById('editInpProfileImage').click()">
+                            <img id="editProfileImagePreview" class="w-full h-full object-cover hidden absolute inset-0 z-10" />
+                            <div class="z-0 flex flex-col items-center" id="editProfileImagePlaceholder">
+                                <i class="ph-fill ph-camera text-2xl text-gray-400"></i>
+                            </div>
+                            <div class="absolute inset-0 bg-black/40 z-20 hidden group-hover:flex items-center justify-center transition-opacity" id="editProfileImageOverlay">
+                                <i class="ph-fill ph-camera-plus text-white text-xl"></i>
+                            </div>
+                        </div>
+                        <input type="file" id="editInpProfileImage" accept="image/*" class="hidden" onchange="handleImagePreview(this, 'editProfileImagePreview', 'editProfileImagePlaceholder', 'editProfileImageOverlay')">
+                        <span class="text-[10px] text-gray-400 mt-2">แตะเพื่อเปลี่ยนรูป</span>
+                    </div>
+
                     <!-- 1. ข้อมูลบุคคล -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                         <div>
@@ -598,7 +632,7 @@
             <!-- Body -->
             <div class="p-4 md:p-6 overflow-y-auto no-scrollbar flex-1">
                 <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
-                    <span class="text-sm font-bold text-gray-700">เลือกคอลัมน์ที่ต้องการ <span class="text-[10px] text-gray-400 font-normal">(ค่าเริ่มต้นจะเลือกไว้ 13 คอลัมน์)</span></span>
+                    <span class="text-sm font-bold text-gray-700">เลือกคอลัมน์ที่ต้องการ</span>
                     <button type="button" onclick="toggleAllExportCols()" class="text-xs text-brand-purple hover:underline font-bold" id="btnToggleExportCols">ยกเลิกทั้งหมด</button>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="exportColsContainer">
@@ -639,7 +673,7 @@
         }
     </style>
 
-    <!-- ป๊อปอัปแจ้งเตือน (Toast Notification) แบบ Responsive -->
+    <!-- ป๊อปอัปแจ้งเตือน (Toast Notification) -->
     <div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 md:left-auto md:transform-none md:top-8 md:right-8 bg-white border-l-4 border-green-500 text-gray-800 px-4 md:px-6 py-3 md:py-4 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.15)] transition-all duration-500 z-[80] flex items-center gap-3 md:gap-4 w-[calc(100%-2rem)] max-w-sm md:max-w-md opacity-0 scale-90 pointer-events-none">
         <div id="toastIconBg" class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-green-100 flex items-center justify-center shrink-0">
             <i id="toastIcon" class="ph-fill ph-check-circle text-green-500 text-xl md:text-2xl"></i>
@@ -653,15 +687,21 @@
     <script>
         /**
          * ==========================================
-         * 1. ตั้งค่า URL ของ Google Apps Script
+         * 1. การตั้งค่าระบบ (Cloudinary และ Google Apps Script)
          * ==========================================
          */
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz5GmfMhcjNhj996u8QRQwPJzWGIdEFGxaUOuVnsPZeoGfqCgfwEpaTLE79oF8RDRf0/exec"; 
         
+        // --- การตั้งค่า Cloudinary ---
+        // เปลี่ยนค่าด้านล่างเป็นของคุณจาก Dashboard ใน Cloudinary
+        const CLOUDINARY_CLOUD_NAME = "dwfaxbxjn"; // <-- ใส่ Cloud Name
+        const CLOUDINARY_UPLOAD_PRESET = "Sunwork1"; // <-- ใส่ Upload Preset แบบ Unsigned
+        
         let localData = [];
-        let currentFilteredData = []; // ตัวแปรเก็บข้อมูลที่ผ่านการกรองแล้ว สำหรับใช้งานตอน Export
+        let currentFilteredData = []; 
         let donutChartInstance = null;
         let currentEditNo = null; 
+        let currentEditImageUrl = ""; // เก็บ URL รูปเดิมตอนกด Edit
         let employeeToDeleteNo = null;
 
         // ==========================================
@@ -722,23 +762,57 @@
         
         initPWA();
 
-        // ลงทะเบียน Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => {
-                        console.log('Service Worker ลงทะเบียนสำเร็จ:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.log('การลงทะเบียน Service Worker ล้มเหลว:', error);
-                    });
-            });
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
             Chart.defaults.font.family = "'Sarabun', sans-serif";
             fetchData();
         });
+
+        // ==========================================
+        // ฟังก์ชันอัปโหลดรูปภาพไปยัง Cloudinary (Upload Function)
+        // ==========================================
+        async function uploadImageToCloudinary(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+            
+            try {
+                const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.secure_url) {
+                    return data.secure_url;
+                } else {
+                    throw new Error("Failed to upload image");
+                }
+            } catch (error) {
+                console.error("Cloudinary Error: ", error);
+                throw error;
+            }
+        }
+
+        // ฟังก์ชัน Preview รูปภาพตอนผู้ใช้เลือกไฟล์
+        function handleImagePreview(input, previewId, placeholderId, overlayId = null) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgPreview = document.getElementById(previewId);
+                    const placeholder = document.getElementById(placeholderId);
+                    
+                    imgPreview.src = e.target.result;
+                    imgPreview.classList.remove('hidden');
+                    if(placeholder) placeholder.classList.add('hidden');
+                    
+                    if(overlayId) {
+                        const overlay = document.getElementById(overlayId);
+                        overlay.classList.add('group-hover:flex');
+                    }
+                }
+                reader.readAsDataURL(file);
+            }
+        }
 
         // ==========================================
         // 2. ฟังก์ชันดึงข้อมูล (GET)
@@ -756,7 +830,6 @@
             try {
                 if(WEB_APP_URL === "") throw new Error("URL_EMPTY");
 
-                // ป้องกันปัญหา Browser Cache
                 const urlWithCacheBuster = WEB_APP_URL + (WEB_APP_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
                 
                 const response = await fetch(urlWithCacheBuster, { cache: "no-store" });
@@ -817,25 +890,20 @@
         function updateContractorFilter(data) {
             const select = document.getElementById('filterContractor');
             const currentValue = select.value;
-            
             const contractors = [...new Set(data.map(item => String(item.contractorGroup || '').trim()).filter(c => c !== ''))].sort();
             
             let html = '<option value="all">ทุกชุดผู้รับเหมา</option>';
             contractors.forEach(c => {
                 html += `<option value="${c}">${c}</option>`;
             });
-            
             select.innerHTML = html;
-            
-            if (contractors.includes(currentValue)) {
-                select.value = currentValue;
-            }
+            if (contractors.includes(currentValue)) { select.value = currentValue; }
         }
 
         function processData(data) {
             updateDashboardCards(data);
             updateContractorFilter(data);
-            currentFilteredData = data; // อัปเดตข้อมูลที่จะ export ตอนเริ่มต้น
+            currentFilteredData = data; 
             renderTable(data);
             initOrUpdateChart(data);
         }
@@ -875,54 +943,30 @@
             }
 
             dataToRender.forEach((row, index) => {
-                
+                // ... (สถานะ badges เหมือนเดิม) ...
                 let docBadge = '';
                 const docStatus = String(row.documentStatus || '').trim();
-                if (docStatus === 'ครบ') {
-                    docBadge = `<span class="px-2 md:px-3 py-1 inline-flex text-[10px] md:text-[11px] font-bold rounded-full bg-green-50 text-green-600 border border-green-100">${docStatus}</span>`;
-                } else if (docStatus.includes('ขาด') || docStatus === 'ไม่ครบ') {
-                    docBadge = `<span class="px-2 md:px-3 py-1 inline-flex text-[10px] md:text-[11px] font-bold rounded-full bg-red-50 text-red-600 border border-red-100">${docStatus}</span>`;
-                } else {
-                    docBadge = `<span class="text-[10px] md:text-xs text-gray-500">${docStatus || '-'}</span>`;
-                }
+                if (docStatus === 'ครบ') docBadge = `<span class="px-2 md:px-3 py-1 inline-flex text-[10px] md:text-[11px] font-bold rounded-full bg-green-50 text-green-600 border border-green-100">${docStatus}</span>`;
+                else if (docStatus.includes('ขาด') || docStatus === 'ไม่ครบ') docBadge = `<span class="px-2 md:px-3 py-1 inline-flex text-[10px] md:text-[11px] font-bold rounded-full bg-red-50 text-red-600 border border-red-100">${docStatus}</span>`;
+                else docBadge = `<span class="text-[10px] md:text-xs text-gray-500">${docStatus || '-'}</span>`;
 
                 let trainBadge = '';
                 const tStatus = String(row.trainStatus).trim();
-                if (tStatus.includes('อบรมแล้ว')) {
-                    trainBadge = `<span class="px-2 md:px-3 py-1 inline-flex text-[10px] md:text-[11px] font-bold rounded-full bg-green-50 text-green-600 border border-green-100">${tStatus}</span>`;
-                } else if (tStatus.includes('รอ')) {
-                    trainBadge = `<span class="px-2 md:px-3 py-1 inline-flex text-[10px] md:text-[11px] font-bold rounded-full bg-orange-50 text-brand-orange border border-orange-100">${tStatus}</span>`;
-                } else {
-                    trainBadge = `<span class="text-[10px] md:text-xs text-gray-500">${tStatus || '-'}</span>`;
-                }
+                if (tStatus.includes('อบรมแล้ว')) trainBadge = `<span class="px-2 md:px-3 py-1 inline-flex text-[10px] md:text-[11px] font-bold rounded-full bg-green-50 text-green-600 border border-green-100">${tStatus}</span>`;
+                else if (tStatus.includes('รอ')) trainBadge = `<span class="px-2 md:px-3 py-1 inline-flex text-[10px] md:text-[11px] font-bold rounded-full bg-orange-50 text-brand-orange border border-orange-100">${tStatus}</span>`;
+                else trainBadge = `<span class="text-[10px] md:text-xs text-gray-500">${tStatus || '-'}</span>`;
 
                 let cardBadge = '';
                 const cStatus = String(row.cardStatus).trim();
-                if (cStatus === 'ทำบัตรแล้ว') {
-                    cardBadge = `<div class="bg-green-50 border border-green-200 text-green-700 px-2 py-1 rounded-md text-[10px] md:text-[11px] font-bold w-full max-w-[90px] md:max-w-[100px] mx-auto flex items-center justify-between shadow-sm">
-                        <span>${cStatus}</span> <i class="ph-fill ph-caret-down text-[9px] md:text-[10px]"></i>
-                    </div>`;
-                } else if (cStatus.includes('รอ') || cStatus === 'ยังไม่ทำ') {
-                    cardBadge = `<div class="bg-[#A01515] border border-red-800 text-white px-2 py-1 rounded-md text-[10px] md:text-[11px] font-bold w-full max-w-[90px] md:max-w-[100px] mx-auto flex items-center justify-between shadow-sm">
-                        <span>${cStatus}</span> <i class="ph-fill ph-caret-down text-[9px] md:text-[10px] text-red-200"></i>
-                    </div>`;
-                } else {
-                    cardBadge = `<span class="text-[10px] md:text-xs text-gray-500">${cStatus || '-'}</span>`;
-                }
+                if (cStatus === 'ทำบัตรแล้ว') cardBadge = `<div class="bg-green-50 border border-green-200 text-green-700 px-2 py-1 rounded-md text-[10px] md:text-[11px] font-bold w-full max-w-[90px] md:max-w-[100px] mx-auto flex items-center justify-between shadow-sm"><span>${cStatus}</span> <i class="ph-fill ph-caret-down text-[9px] md:text-[10px]"></i></div>`;
+                else if (cStatus.includes('รอ') || cStatus === 'ยังไม่ทำ') cardBadge = `<div class="bg-[#A01515] border border-red-800 text-white px-2 py-1 rounded-md text-[10px] md:text-[11px] font-bold w-full max-w-[90px] md:max-w-[100px] mx-auto flex items-center justify-between shadow-sm"><span>${cStatus}</span> <i class="ph-fill ph-caret-down text-[9px] md:text-[10px] text-red-200"></i></div>`;
+                else cardBadge = `<span class="text-[10px] md:text-xs text-gray-500">${cStatus || '-'}</span>`;
 
                 let receiveBadge = '';
                 const rStatus = String(row.cardReceiveStatus || '').trim();
-                if (rStatus === 'รับแล้ว') {
-                    receiveBadge = `<div class="bg-blue-50 border border-blue-200 text-blue-700 px-2 py-1 rounded-md text-[10px] md:text-[11px] font-bold w-full max-w-[80px] md:max-w-[90px] mx-auto flex items-center justify-center shadow-sm">
-                        <span>${rStatus}</span>
-                    </div>`;
-                } else if (rStatus.includes('ยังไม่รับ') || rStatus === 'รอรับบัตร') {
-                    receiveBadge = `<div class="bg-gray-100 border border-gray-300 text-gray-500 px-2 py-1 rounded-md text-[10px] md:text-[11px] font-bold w-full max-w-[80px] md:max-w-[90px] mx-auto flex items-center justify-center shadow-sm">
-                        <span>${rStatus}</span>
-                    </div>`;
-                } else {
-                    receiveBadge = `<span class="text-[10px] md:text-xs text-gray-400">${rStatus || '-'}</span>`;
-                }
+                if (rStatus === 'รับแล้ว') receiveBadge = `<div class="bg-blue-50 border border-blue-200 text-blue-700 px-2 py-1 rounded-md text-[10px] md:text-[11px] font-bold w-full max-w-[80px] md:max-w-[90px] mx-auto flex items-center justify-center shadow-sm"><span>${rStatus}</span></div>`;
+                else if (rStatus.includes('ยังไม่รับ') || rStatus === 'รอรับบัตร') receiveBadge = `<div class="bg-gray-100 border border-gray-300 text-gray-500 px-2 py-1 rounded-md text-[10px] md:text-[11px] font-bold w-full max-w-[80px] md:max-w-[90px] mx-auto flex items-center justify-center shadow-sm"><span>${rStatus}</span></div>`;
+                else receiveBadge = `<span class="text-[10px] md:text-xs text-gray-400">${rStatus || '-'}</span>`;
 
                 let displayTrainDate = row.trainDate || 'ไม่ระบุ';
                 if (displayTrainDate !== 'ไม่ระบุ' && displayTrainDate !== '-') {
@@ -930,9 +974,7 @@
                         const d = new Date(displayTrainDate);
                         displayTrainDate = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
                     }
-                } else {
-                    displayTrainDate = '<span class="text-gray-400 font-normal">ไม่ระบุ</span>';
-                }
+                } else displayTrainDate = '<span class="text-gray-400 font-normal">ไม่ระบุ</span>';
 
                 let displayDob = row.birthDate || '-';
                 if (String(displayDob).includes('T')) {
@@ -940,11 +982,20 @@
                     displayDob = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
                 }
 
+                // การแสดงรูปขนาดย่อในตาราง
+                let imageThumbnail = '';
+                if (row.imageUrl && row.imageUrl !== "" && row.imageUrl !== "-") {
+                    imageThumbnail = `<img src="${row.imageUrl}" class="w-8 h-8 rounded-full object-cover mx-auto shadow-sm" alt="profile">`;
+                } else {
+                    let initial = String(row.name).replace('นาย ', '').replace('นางสาว ', '').replace('นาง ', '').charAt(0) || 'U';
+                    imageThumbnail = `<div class="w-8 h-8 rounded-full bg-brand-lightPurple/20 text-brand-purple flex items-center justify-center font-bold text-xs mx-auto">${initial}</div>`;
+                }
+
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-brand-bg transition-colors duration-200 group cursor-pointer";
                 tr.onclick = () => showEmployeeDetails(row, displayTrainDate, displayDob, trainBadge, cardBadge, receiveBadge, docBadge);
                 tr.innerHTML = `
-                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center text-gray-400 font-bold">${row.no || index + 1}</td>
+                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${imageThumbnail}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap"><div class="font-bold text-gray-800 group-hover:text-brand-purple transition-colors truncate max-w-[120px] md:max-w-none break-words whitespace-normal leading-tight">${row.name}</div></td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-gray-600 font-mono tracking-wider">${row.idCard}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-gray-600 font-medium truncate max-w-[100px] md:max-w-none break-words whitespace-normal leading-tight">${row.position}</td>
@@ -952,7 +1003,6 @@
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${docBadge}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${trainBadge}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${cardBadge}</td>
-                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${receiveBadge}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center text-gray-600 break-words whitespace-normal leading-tight">${row.contractorGroup || '-'}</td>
                 `;
                 tbody.appendChild(tr);
@@ -960,33 +1010,19 @@
         }
 
         function initOrUpdateChart(data) {
+            // ... (โค้ดสร้าง Chart เหมือนเดิม) ...
             const total = data.length;
             const trainedCount = data.filter(d => String(d.trainStatus).includes('อบรมแล้ว')).length;
             const waitingCount = total - trainedCount;
-
             const ctx = document.getElementById('statusChart').getContext('2d');
-            
             if (donutChartInstance) {
                 donutChartInstance.data.datasets[0].data = [trainedCount, waitingCount];
                 donutChartInstance.update();
             } else {
                 donutChartInstance = new Chart(ctx, {
                     type: 'doughnut',
-                    data: {
-                        labels: ['อบรมแล้ว', 'รออบรม'],
-                        datasets: [{
-                            data: [trainedCount, waitingCount],
-                            backgroundColor: ['#5E64D1', '#F48962'],
-                            borderWidth: 3,
-                            borderColor: '#FFFFFF',
-                            hoverOffset: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false, cutout: '72%',
-                        plugins: { legend: { display: false } },
-                        animation: { animateScale: true, animateRotate: true }
-                    }
+                    data: { labels: ['อบรมแล้ว', 'รออบรม'], datasets: [{ data: [trainedCount, waitingCount], backgroundColor: ['#5E64D1', '#F48962'], borderWidth: 3, borderColor: '#FFFFFF', hoverOffset: 4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { display: false } }, animation: { animateScale: true, animateRotate: true } }
                 });
             }
         }
@@ -1012,23 +1048,18 @@
                 }
 
                 let matchContractor = true;
-                if (contractorFilter !== 'all') {
-                    matchContractor = String(row.contractorGroup).trim() === contractorFilter;
-                }
+                if (contractorFilter !== 'all') matchContractor = String(row.contractorGroup).trim() === contractorFilter;
                 
                 return matchText && matchStatus && matchContractor;
             });
             
-            currentFilteredData = filteredData; // อัปเดตข้อมูลล่าสุดให้ตรงกับการฟิลเตอร์
+            currentFilteredData = filteredData; 
             renderTable(filteredData);
         }
 
-        // ==========================================
-        // ตั้งค่าตัวเลือกคอลัมน์สำหรับการ Export Excel
-        // ==========================================
         const EXPORT_COL_OPTIONS = [
             { id: 'exp_no', label: 'ลำดับ', width: 8, checked: true },
-            { id: 'exp_sysno', label: 'รหัสในระบบ', width: 12, checked: false }, // ค่าเริ่มต้นปิดไว้ เผื่อไว้ดูรหัสอ้างอิงของ API
+            { id: 'exp_sysno', label: 'รหัสในระบบ', width: 12, checked: false }, 
             { id: 'exp_name', label: 'ชื่อ-นามสกุล', width: 30, checked: true },
             { id: 'exp_idcard', label: 'เลขบัตรประชาชน', width: 22, checked: true },
             { id: 'exp_position', label: 'ตำแหน่ง', width: 25, checked: true },
@@ -1048,10 +1079,8 @@
                 showToast('ไม่มีข้อมูล', 'ไม่พบข้อมูลที่ตรงกับเงื่อนไขสำหรับการส่งออก', 'error');
                 return;
             }
-
             const container = document.getElementById('exportColsContainer');
             container.innerHTML = '';
-            
             EXPORT_COL_OPTIONS.forEach(col => {
                 container.innerHTML += `
                     <label class="flex items-center gap-3 p-3 border border-gray-100 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors shadow-sm">
@@ -1060,7 +1089,6 @@
                     </label>
                 `;
             });
-
             const modal = document.getElementById('exportModal');
             const content = document.getElementById('exportModalContent');
             modal.classList.remove('hidden');
@@ -1084,7 +1112,6 @@
             const cbs = document.querySelectorAll('.export-col-cb');
             const btn = document.getElementById('btnToggleExportCols');
             const isSelectAll = btn.innerText === 'เลือกทั้งหมด';
-            
             cbs.forEach(cb => cb.checked = isSelectAll);
             btn.innerText = isSelectAll ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด';
         }
@@ -1096,11 +1123,7 @@
                 return;
             }
             const selectedIds = Array.from(cbs).map(cb => cb.value);
-            
-            // อัปเดตสถานะ checked ลงใน array หลัก (ให้จำค่าเดิมที่เลือกไว้ในครั้งถัดไป)
-            EXPORT_COL_OPTIONS.forEach(col => {
-                col.checked = selectedIds.includes(col.id);
-            });
+            EXPORT_COL_OPTIONS.forEach(col => { col.checked = selectedIds.includes(col.id); });
 
             closeExportModal();
             showGlobalLoading(true, "กำลังเตรียมไฟล์ Excel", "กรุณารอสักครู่ ระบบกำลังสร้างไฟล์ข้อมูล...");
@@ -1109,7 +1132,6 @@
                 try {
                     const workbook = XLSX.utils.book_new();
 
-                    // สร้างฟังก์ชันช่วย (Helper Function) สำหรับแปลงข้อมูลเป็น Worksheet และจัดสไตล์
                     const createStyledWorksheet = (dataArray) => {
                         const exportData = dataArray.map((row, index) => {
                             let displayTrainDate = row.trainDate || 'ไม่ระบุ';
@@ -1118,9 +1140,7 @@
                                     const d = new Date(displayTrainDate);
                                     displayTrainDate = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
                                 }
-                            } else {
-                                displayTrainDate = 'ไม่ระบุ';
-                            }
+                            } else displayTrainDate = 'ไม่ระบุ';
 
                             let displayDob = row.birthDate || '-';
                             if (String(displayDob).includes('T')) {
@@ -1131,14 +1151,10 @@
                             let idCardText = String(row.idCard || '-').trim();
                             if (idCardText !== '-' && idCardText !== 'undefined') {
                                 let digitsOnly = idCardText.replace(/\D/g, '');
-                                if (digitsOnly.length === 13) {
-                                    idCardText = `${digitsOnly[0]}-${digitsOnly.substring(1,5)}-${digitsOnly.substring(5,10)}-${digitsOnly.substring(10,12)}-${digitsOnly[12]}`;
-                                } else if (/^\d+$/.test(idCardText)) {
-                                    idCardText = '\u200B' + idCardText;
-                                }
+                                if (digitsOnly.length === 13) idCardText = `${digitsOnly[0]}-${digitsOnly.substring(1,5)}-${digitsOnly.substring(5,10)}-${digitsOnly.substring(10,12)}-${digitsOnly[12]}`;
+                                else if (/^\d+$/.test(idCardText)) idCardText = '\u200B' + idCardText;
                             }
 
-                            // สร้าง Object แบบไดนามิกตามคอลัมน์ที่เลือก
                             const rowData = {};
                             if (selectedIds.includes('exp_no')) rowData['ลำดับ'] = index + 1;
                             if (selectedIds.includes('exp_sysno')) rowData['รหัสในระบบ'] = row.no || '-';
@@ -1154,24 +1170,15 @@
                             if (selectedIds.includes('exp_traindate')) rowData['วันที่อบรม'] = displayTrainDate;
                             if (selectedIds.includes('exp_card')) rowData['สถานะการทำบัตร'] = row.cardStatus || '-';
                             if (selectedIds.includes('exp_receive')) rowData['สถานะการรับบัตร'] = row.cardReceiveStatus || '-';
-
                             return rowData;
                         });
 
                         const worksheet = XLSX.utils.json_to_sheet(exportData);
-                        
-                        // สร้างความกว้างของคอลัมน์ตามที่ถูกเลือก
                         const wscols = [];
-                        EXPORT_COL_OPTIONS.forEach(col => {
-                            if (selectedIds.includes(col.id)) {
-                                wscols.push({wch: col.width});
-                            }
-                        });
+                        EXPORT_COL_OPTIONS.forEach(col => { if (selectedIds.includes(col.id)) wscols.push({wch: col.width}); });
                         worksheet['!cols'] = wscols;
 
-                        // หา index ของคอลัมน์ 'ชื่อ-นามสกุล' (ถ้ามีการเลือก) เพื่อจัดให้ชิดซ้าย
                         const nameIndex = selectedIds.indexOf('exp_name');
-
                         const range = XLSX.utils.decode_range(worksheet['!ref']);
                         for (let R = range.s.r; R <= range.e.r; ++R) {
                             for (let C = range.s.c; C <= range.e.c; ++C) {
@@ -1180,12 +1187,7 @@
 
                                 let cellStyle = {
                                     alignment: { vertical: "center", horizontal: "center" },
-                                    border: {
-                                        top: { style: "thin", color: { rgb: "000000" } },
-                                        bottom: { style: "thin", color: { rgb: "000000" } },
-                                        left: { style: "thin", color: { rgb: "000000" } },
-                                        right: { style: "thin", color: { rgb: "000000" } }
-                                    },
+                                    border: { top: { style: "thin", color: { rgb: "000000" } }, bottom: { style: "thin", color: { rgb: "000000" } }, left: { style: "thin", color: { rgb: "000000" } }, right: { style: "thin", color: { rgb: "000000" } } },
                                     font: { name: "Arial", sz: 11 }
                                 };
 
@@ -1193,10 +1195,8 @@
                                     cellStyle.font.bold = true;
                                     cellStyle.fill = { fgColor: { rgb: "D9D9D9" } };
                                 } else {
-                                    // จัดชื่อชิดซ้าย (ถ้าเลือกให้โชว์คอลัมน์ชื่อ)
                                     if (C === nameIndex) cellStyle.alignment.horizontal = "left";
                                 }
-
                                 worksheet[cellRef].s = cellStyle;
                             }
                         }
@@ -1206,35 +1206,25 @@
                     const statusFilter = document.getElementById('filterStatus').value;
                     const contractorFilter = document.getElementById('filterContractor').value;
 
-                    // เช็คเงื่อนไข: ถ้าเลือกตัวกรองเป็น "สถานะทั้งหมด" และ "ทุกชุดผู้รับเหมา"
                     if (statusFilter === 'all' && contractorFilter === 'all') {
-                        
-                        // 1. สร้างชีตรวมข้อมูลทั้งหมด (ชีตแรก)
                         const wsAll = createStyledWorksheet(currentFilteredData);
                         XLSX.utils.book_append_sheet(workbook, wsAll, "รวมทั้งหมด");
 
-                        // 2. จัดกลุ่มข้อมูลตามชุดผู้รับเหมา
                         const groupedData = {};
                         currentFilteredData.forEach(row => {
                             const groupName = (row.contractorGroup && row.contractorGroup.trim() !== '') ? row.contractorGroup.trim() : 'ไม่มีสังกัด';
-                            if (!groupedData[groupName]) {
-                                groupedData[groupName] = [];
-                            }
+                            if (!groupedData[groupName]) groupedData[groupName] = [];
                             groupedData[groupName].push(row);
                         });
 
-                        // 3. สร้างชีตย่อยแยกตามแต่ละชุดผู้รับเหมา
                         const usedSheetNames = new Set();
                         usedSheetNames.add("รวมทั้งหมด"); 
 
                         Object.keys(groupedData).sort().forEach(groupName => {
                             const wsGroup = createStyledWorksheet(groupedData[groupName]);
-                            
                             let safeName = groupName.replace(/[\\/*?:\[\]]/g, '').trim();
                             if (!safeName) safeName = 'ไม่มีสังกัด';
-                            
                             safeName = safeName.substring(0, 28);
-                            
                             let finalName = safeName;
                             let counter = 1;
                             while (usedSheetNames.has(finalName.toLowerCase())) {
@@ -1242,22 +1232,16 @@
                                 counter++;
                             }
                             usedSheetNames.add(finalName.toLowerCase()); 
-                            
                             XLSX.utils.book_append_sheet(workbook, wsGroup, finalName);
                         });
-
                     } else {
-                        // ถ้ามีการกรองแบบเจาะจง ให้ Export เฉพาะข้อมูลที่แสดงอยู่ลงในชีตเดียว
                         const wsSingle = createStyledWorksheet(currentFilteredData);
                         XLSX.utils.book_append_sheet(workbook, wsSingle, "Employee Data");
                     }
 
-                    // สร้างชื่อไฟล์พร้อมวันที่ปัจจุบัน
                     const today = new Date();
                     const dateStr = `${today.getFullYear()}${(today.getMonth()+1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
                     const fileName = `SUNWORK_Employees_${dateStr}.xlsx`;
-
-                    // สั่งดาวน์โหลด
                     XLSX.writeFile(workbook, fileName);
 
                     showGlobalLoading(false);
@@ -1277,9 +1261,7 @@
                 const today = new Date();
                 let age = today.getFullYear() - birthDate.getFullYear();
                 const m = today.getMonth() - birthDate.getMonth();
-                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                    age--;
-                }
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
                 document.getElementById('inpAge').value = age + " ปี";
             } else {
                 document.getElementById('inpAge').value = "";
@@ -1293,9 +1275,7 @@
                 const today = new Date();
                 let age = today.getFullYear() - birthDate.getFullYear();
                 const m = today.getMonth() - birthDate.getMonth();
-                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                    age--;
-                }
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
                 document.getElementById('editInpAge').value = age + " ปี";
             } else {
                 document.getElementById('editInpAge').value = "";
@@ -1329,10 +1309,16 @@
         function resetFormState() {
             document.getElementById('employeeDataForm').reset();
             document.getElementById('inpAge').value = "";
+            
+            // รีเซ็ตรูปภาพ
+            document.getElementById('inpProfileImage').value = "";
+            document.getElementById('profileImagePreview').classList.add('hidden');
+            document.getElementById('profileImagePreview').src = "";
+            document.getElementById('profileImagePlaceholder').classList.remove('hidden');
         }
 
         // ==========================================
-        // 5. ฟังก์ชันบันทึกข้อมูล (POST)
+        // 5. ฟังก์ชันบันทึกข้อมูล (POST) พร้อมอัปโหลดรูป
         // ==========================================
         
         async function submitForm(e) {
@@ -1340,29 +1326,9 @@
             
             const btnSubmit = document.getElementById('btnSubmit');
             const originalHTML = btnSubmit.innerHTML;
-            btnSubmit.innerHTML = '<i class="ph ph-spinner animate-spin text-xl"></i> <span>กำลังบันทึก...</span>';
+            btnSubmit.innerHTML = '<i class="ph ph-spinner animate-spin text-xl"></i> <span>กำลังดำเนินการ...</span>';
             btnSubmit.disabled = true;
             btnSubmit.classList.add('opacity-75', 'cursor-not-allowed');
-
-            const rawDob = document.getElementById('inpDob').value;
-            const rawTrainDate = document.getElementById('inpTrainDate').value;
-
-            const newData = {
-                action: 'add',
-                no: localData.length > 0 ? Math.max(...localData.map(d => d.no || 0)) + 1 : 1,
-                name: document.getElementById('inpName').value,
-                idCard: document.getElementById('inpId').value,
-                position: document.getElementById('inpPos').value,
-                group: document.getElementById('inpGroup').value,
-                documentStatus: document.getElementById('inpDocStatus').value, 
-                trainStatus: document.getElementById('inpTrain').value,        
-                trainDate: formatTrainDateForSheet(rawTrainDate),      
-                cardStatus: document.getElementById('inpCard').value,          
-                birthDate: formatDobForSheet(rawDob),                          
-                age: document.getElementById('inpAge').value,                  
-                cardReceiveStatus: document.getElementById('inpCardReceive').value, 
-                contractorGroup: document.getElementById('inpContractor').value     
-            };
 
             try {
                 if (WEB_APP_URL === "") {
@@ -1370,6 +1336,36 @@
                     resetBtn();
                     return;
                 }
+
+                let finalImageUrl = "";
+                const imageFile = document.getElementById('inpProfileImage').files[0];
+                
+                if (imageFile) {
+                    showGlobalLoading(true, "กำลังอัปโหลดรูปภาพ", "กรุณารอสักครู่ ระบบกำลังนำส่งรูปภาพ...");
+                    finalImageUrl = await uploadImageToCloudinary(imageFile);
+                    showGlobalLoading(true, "กำลังบันทึกข้อมูล", "กำลังบันทึกข้อมูลพนักงานเข้าสู่ฐานระบบ");
+                }
+
+                const rawDob = document.getElementById('inpDob').value;
+                const rawTrainDate = document.getElementById('inpTrainDate').value;
+
+                const newData = {
+                    action: 'add',
+                    no: localData.length > 0 ? Math.max(...localData.map(d => d.no || 0)) + 1 : 1,
+                    name: document.getElementById('inpName').value,
+                    idCard: document.getElementById('inpId').value,
+                    position: document.getElementById('inpPos').value,
+                    group: document.getElementById('inpGroup').value,
+                    documentStatus: document.getElementById('inpDocStatus').value, 
+                    trainStatus: document.getElementById('inpTrain').value,        
+                    trainDate: formatTrainDateForSheet(rawTrainDate),      
+                    cardStatus: document.getElementById('inpCard').value,          
+                    birthDate: formatDobForSheet(rawDob),                          
+                    age: document.getElementById('inpAge').value,                  
+                    cardReceiveStatus: document.getElementById('inpCardReceive').value, 
+                    contractorGroup: document.getElementById('inpContractor').value,
+                    imageUrl: finalImageUrl // ส่ง URL รูปไปด้วย
+                };
 
                 const formData = new URLSearchParams();
                 for (const key in newData) { formData.append(key, newData[key]); }
@@ -1384,13 +1380,15 @@
                     showToast('บันทึกข้อมูลสำเร็จ', 'ข้อมูลถูกเพิ่มเข้าสู่ระบบแล้ว', 'success');
                     resetFormState(); 
                     resetBtn();
+                    showGlobalLoading(false);
                     setTimeout(() => switchTab('employee-list'), 1000);
                 } else {
                     throw new Error("POST Error");
                 }
             } catch (error) {
                 console.error('Submit Error:', error);
-                showToast('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้ โปรดตรวจสอบอินเทอร์เน็ต', 'error');
+                showGlobalLoading(false);
+                showToast('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้ โปรดตรวจสอบการตั้งค่า Cloudinary หรืออินเทอร์เน็ต', 'error');
                 resetBtn();
             }
 
@@ -1409,27 +1407,39 @@
             btnSubmit.innerHTML = '<i class="ph ph-spinner animate-spin text-lg"></i> บันทึก...';
             btnSubmit.disabled = true;
 
-            const rawDob = document.getElementById('editInpDob').value;
-            const rawEditTrainDate = document.getElementById('editInpTrainDate').value;
-
-            const newData = {
-                action: 'edit',
-                no: currentEditNo,
-                name: document.getElementById('editInpName').value,
-                idCard: document.getElementById('editInpId').value,
-                position: document.getElementById('editInpPos').value,
-                group: document.getElementById('editInpGroup').value,
-                documentStatus: document.getElementById('editInpDocStatus').value, 
-                trainStatus: document.getElementById('editInpTrain').value,        
-                trainDate: formatTrainDateForSheet(rawEditTrainDate),      
-                cardStatus: document.getElementById('editInpCard').value,          
-                birthDate: formatDobForSheet(rawDob),                          
-                age: document.getElementById('editInpAge').value,                  
-                cardReceiveStatus: document.getElementById('editInpCardReceive').value, 
-                contractorGroup: document.getElementById('editInpContractor').value     
-            };
-
             try {
+                let finalImageUrl = currentEditImageUrl; // ใช้รูปเดิมไว้ก่อน
+                const newImageFile = document.getElementById('editInpProfileImage').files[0];
+
+                if (newImageFile) {
+                    showGlobalLoading(true, "กำลังอัปโหลดรูปภาพใหม่", "กรุณารอสักครู่ ระบบกำลังนำส่งรูปภาพ...");
+                    finalImageUrl = await uploadImageToCloudinary(newImageFile);
+                    showGlobalLoading(true, "กำลังบันทึกการแก้ไข", "รอสักครู่...");
+                } else {
+                    showGlobalLoading(true, "กำลังบันทึกการแก้ไข", "รอสักครู่...");
+                }
+
+                const rawDob = document.getElementById('editInpDob').value;
+                const rawEditTrainDate = document.getElementById('editInpTrainDate').value;
+
+                const newData = {
+                    action: 'edit',
+                    no: currentEditNo,
+                    name: document.getElementById('editInpName').value,
+                    idCard: document.getElementById('editInpId').value,
+                    position: document.getElementById('editInpPos').value,
+                    group: document.getElementById('editInpGroup').value,
+                    documentStatus: document.getElementById('editInpDocStatus').value, 
+                    trainStatus: document.getElementById('editInpTrain').value,        
+                    trainDate: formatTrainDateForSheet(rawEditTrainDate),      
+                    cardStatus: document.getElementById('editInpCard').value,          
+                    birthDate: formatDobForSheet(rawDob),                          
+                    age: document.getElementById('editInpAge').value,                  
+                    cardReceiveStatus: document.getElementById('editInpCardReceive').value, 
+                    contractorGroup: document.getElementById('editInpContractor').value,
+                    imageUrl: finalImageUrl // อัปเดต URL รูป 
+                };
+
                 const formData = new URLSearchParams();
                 for (const key in newData) { formData.append(key, newData[key]); }
 
@@ -1449,6 +1459,7 @@
                 console.error('Submit Error:', error);
                 showToast('เกิดข้อผิดพลาด', 'ไม่สามารถแก้ไขข้อมูลได้', 'error');
             } finally {
+                showGlobalLoading(false);
                 btnSubmit.innerHTML = originalHTML;
                 btnSubmit.disabled = false;
             }
@@ -1575,15 +1586,10 @@
                     const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
                     
                     for (let i = 0; i < data.length; i += 4) {
-                        const r = data[i];
-                        const g = data[i + 1];
-                        const b = data[i + 2];
-                        
+                        const r = data[i]; const g = data[i + 1]; const b = data[i + 2];
                         const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-                        
                         let newColor = factor * (gray - 128) + 128;
                         newColor = Math.max(0, Math.min(255, newColor));
-                        
                         data[i] = data[i + 1] = data[i + 2] = newColor;
                     }
                     
@@ -1602,7 +1608,6 @@
 
             try {
                 const processedImageData = await preprocessImageForOCR(file);
-
                 const worker = await Tesseract.createWorker('tha+eng');
                 const ret = await worker.recognize(processedImageData);
                 const text = ret.data.text;
@@ -1621,7 +1626,6 @@
         function parseIdCardData(text) {
             let foundData = false;
 
-            const rawTextForId = text.replace(/[^0-9]/g, '');
             const idPattern = text.match(/([0-9]\s*){13}/);
             if (idPattern) {
                 let digits = idPattern[0].replace(/\s/g, '');
@@ -1712,13 +1716,20 @@
             const body = document.getElementById('detailsModalBody');
             const footer = document.getElementById('detailsModalFooter');
 
-            let initial = String(row.name).replace('นาย ', '').replace('นางสาว ', '').replace('นาง ', '').charAt(0) || 'U';
+            let profileAvatarHtml = '';
+            if (row.imageUrl && row.imageUrl !== "" && row.imageUrl !== "-") {
+                profileAvatarHtml = `<img src="${row.imageUrl}" alt="profile" class="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover shadow-lg shadow-brand-purple/20 shrink-0 border-2 border-white">`;
+            } else {
+                let initial = String(row.name).replace('นาย ', '').replace('นางสาว ', '').replace('นาง ', '').charAt(0) || 'U';
+                profileAvatarHtml = `
+                    <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-tr from-brand-purple to-brand-lightPurple flex items-center justify-center text-white font-bold text-2xl md:text-3xl shadow-lg shadow-brand-purple/20 shrink-0 border-2 border-white">
+                        ${initial}
+                    </div>`;
+            }
 
             body.innerHTML = `
                 <div class="flex items-center gap-4 md:gap-5 mb-6 md:mb-8 pb-4 md:pb-6 border-b border-gray-100">
-                    <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-tr from-brand-purple to-brand-lightPurple flex items-center justify-center text-white font-bold text-2xl md:text-3xl shadow-lg shadow-brand-purple/20 shrink-0">
-                        ${initial}
-                    </div>
+                    ${profileAvatarHtml}
                     <div class="flex-1 min-w-0">
                         <h4 class="text-xl md:text-2xl font-extrabold text-gray-800 font-heading leading-tight truncate w-full break-words whitespace-normal">${row.name}</h4>
                         <div class="flex items-center gap-1.5 md:gap-2 mt-1 md:mt-1.5">
@@ -1811,6 +1822,19 @@
             if (!row) return;
 
             currentEditNo = no;
+            currentEditImageUrl = row.imageUrl || ""; // จำค่า URL เก่าไว้
+            
+            // จัดการแสดงผลรูปในโหมด Edit
+            document.getElementById('editInpProfileImage').value = ""; // เคลียร์ไฟล์ใหม่ที่อาจค้างอยู่
+            if (currentEditImageUrl && currentEditImageUrl !== "-") {
+                document.getElementById('editProfileImagePreview').src = currentEditImageUrl;
+                document.getElementById('editProfileImagePreview').classList.remove('hidden');
+                document.getElementById('editProfileImagePlaceholder').classList.add('hidden');
+            } else {
+                document.getElementById('editProfileImagePreview').src = "";
+                document.getElementById('editProfileImagePreview').classList.add('hidden');
+                document.getElementById('editProfileImagePlaceholder').classList.remove('hidden');
+            }
 
             document.getElementById('editInpName').value = row.name;
             document.getElementById('editInpId').value = row.idCard;
@@ -1826,26 +1850,14 @@
             if (tDateStr && tDateStr !== '-' && tDateStr !== 'ไม่ระบุ' && tDateStr !== 'undefined') {
                 if (tDateStr.includes('T')) {
                     const d = new Date(tDateStr);
-                    const y = d.getFullYear();
-                    const m = String(d.getMonth() + 1).padStart(2, '0');
-                    const day = String(d.getDate()).padStart(2, '0');
-                    document.getElementById('editInpTrainDate').value = `${y}-${m}-${day}`;
+                    document.getElementById('editInpTrainDate').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                 } else if (tDateStr.includes('/')) {
                     const parts = tDateStr.split('/');
-                    if (parts.length === 3) {
-                        const y = parts[2];
-                        const m = parts[1].padStart(2, '0');
-                        const d = parts[0].padStart(2, '0');
-                        document.getElementById('editInpTrainDate').value = `${y}-${m}-${d}`;
-                    }
+                    if (parts.length === 3) document.getElementById('editInpTrainDate').value = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
                 } else if (tDateStr.includes('-')) {
                     document.getElementById('editInpTrainDate').value = tDateStr.substring(0, 10);
-                } else {
-                    document.getElementById('editInpTrainDate').value = '';
-                }
-            } else {
-                document.getElementById('editInpTrainDate').value = '';
-            }
+                } else document.getElementById('editInpTrainDate').value = '';
+            } else document.getElementById('editInpTrainDate').value = '';
             
             document.getElementById('editInpCard').value = row.cardStatus;
             document.getElementById('editInpCardReceive').value = row.cardReceiveStatus || 'ยังไม่รับ';
@@ -1854,26 +1866,14 @@
             if (dobStr && dobStr !== '-' && dobStr !== 'undefined') {
                 if (dobStr.includes('T')) {
                     const d = new Date(dobStr);
-                    const y = d.getFullYear();
-                    const m = String(d.getMonth() + 1).padStart(2, '0');
-                    const day = String(d.getDate()).padStart(2, '0');
-                    document.getElementById('editInpDob').value = `${y}-${m}-${day}`;
+                    document.getElementById('editInpDob').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                 } else if (dobStr.includes('/')) {
                     const parts = dobStr.split('/');
-                    if (parts.length === 3) {
-                        const y = parts[2];
-                        const m = parts[1].padStart(2, '0');
-                        const d = parts[0].padStart(2, '0');
-                        document.getElementById('editInpDob').value = `${y}-${m}-${d}`;
-                    }
+                    if (parts.length === 3) document.getElementById('editInpDob').value = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
                 } else if (dobStr.includes('-')) {
                     document.getElementById('editInpDob').value = dobStr.substring(0, 10);
-                } else {
-                    document.getElementById('editInpDob').value = '';
-                }
-            } else {
-                document.getElementById('editInpDob').value = '';
-            }
+                } else document.getElementById('editInpDob').value = '';
+            } else document.getElementById('editInpDob').value = '';
             
             document.getElementById('editInpAge').value = row.age || '';
 
@@ -1964,15 +1964,11 @@
         }
 
         document.getElementById('detailsModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeDetailsModal();
-            }
+            if (e.target === this) closeDetailsModal();
         });
 
         document.getElementById('deleteConfirmModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeDeleteConfirmModal();
-            }
+            if (e.target === this) closeDeleteConfirmModal();
         });
     </script>
 </body>
