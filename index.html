@@ -17,6 +17,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Tesseract.js สำหรับทำ OCR ดึงข้อมูลจากรูปภาพ -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- SheetJS สำหรับ Export เป็น Excel (ใช้เวอร์ชัน xlsx-js-style เพื่อให้ตกแต่งตารางได้) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -252,9 +254,12 @@
                         </div>
                     </div>
                     
-                    <div class="flex w-full xl:w-auto shrink-0">
-                        <button onclick="resetFormState(); switchTab('form');" class="w-full flex justify-center items-center gap-2 bg-brand-purple text-white px-5 py-2.5 rounded-full text-sm font-bold hover:bg-[#4C51B6] transition-colors shadow-md shadow-brand-purple/20">
-                            <i class="ph-bold ph-plus"></i> เพิ่มข้อมูล
+                    <div class="flex flex-col md:flex-row w-full xl:w-auto shrink-0 gap-2 mt-2 xl:mt-0">
+                        <button onclick="openExportModal()" class="w-full md:w-auto flex justify-center items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-full text-sm font-bold hover:bg-green-700 transition-colors shadow-md shadow-green-600/20">
+                            <i class="ph-bold ph-file-xls text-lg"></i> ส่งออก Excel
+                        </button>
+                        <button onclick="resetFormState(); switchTab('form');" class="w-full md:w-auto flex justify-center items-center gap-2 bg-brand-purple text-white px-5 py-2.5 rounded-full text-sm font-bold hover:bg-[#4C51B6] transition-colors shadow-md shadow-brand-purple/20">
+                            <i class="ph-bold ph-plus text-lg"></i> เพิ่มข้อมูล
                         </button>
                     </div>
                 </div>
@@ -578,6 +583,38 @@
         </div>
     </div>
 
+    <!-- ป๊อปอัปตั้งค่าการ Export Excel (Export Modal) -->
+    <div id="exportModal" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0 p-4">
+        <div id="exportModalContent" class="bg-white rounded-[1.5rem] shadow-2xl w-full max-w-lg transform scale-95 transition-all duration-300 overflow-hidden flex flex-col max-h-[85vh]">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-green-500 to-green-600 p-4 md:p-5 text-white flex justify-between items-center shrink-0">
+                <h3 class="text-lg md:text-xl font-bold font-heading flex items-center gap-2">
+                    <i class="ph-fill ph-file-xls text-xl"></i> เลือกข้อมูลที่ต้องการส่งออก
+                </h3>
+                <button onclick="closeExportModal()" class="text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-2 rounded-full flex items-center justify-center shrink-0">
+                    <i class="ph-bold ph-x text-base md:text-lg"></i>
+                </button>
+            </div>
+            <!-- Body -->
+            <div class="p-4 md:p-6 overflow-y-auto no-scrollbar flex-1">
+                <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+                    <span class="text-sm font-bold text-gray-700">เลือกคอลัมน์ที่ต้องการ <span class="text-[10px] text-gray-400 font-normal">(ค่าเริ่มต้นจะเลือกไว้ 13 คอลัมน์)</span></span>
+                    <button type="button" onclick="toggleAllExportCols()" class="text-xs text-brand-purple hover:underline font-bold" id="btnToggleExportCols">ยกเลิกทั้งหมด</button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="exportColsContainer">
+                    <!-- Checkboxes will be rendered here by JS -->
+                </div>
+            </div>
+            <!-- Footer -->
+            <div class="bg-gray-50 p-4 border-t border-gray-100 flex flex-col-reverse sm:flex-row justify-end gap-2 shrink-0">
+                <button onclick="closeExportModal()" class="w-full sm:w-auto px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-full text-sm font-bold hover:bg-gray-50 transition-colors shadow-sm">ยกเลิก</button>
+                <button onclick="exportToExcel()" class="w-full sm:w-auto px-6 py-2.5 bg-green-600 text-white rounded-full text-sm font-bold hover:bg-green-700 transition-colors shadow-md shadow-green-600/20 flex justify-center items-center gap-2">
+                    <i class="ph-bold ph-download-simple"></i> ยืนยันและส่งออก
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ป๊อปอัปโหลดดิ้ง OCR และการลบ (Global Loading) -->
     <div id="globalLoading" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0 p-4">
         <div class="bg-white p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] flex flex-col items-center shadow-2xl w-full max-w-sm transform scale-95 transition-all duration-300" id="globalLoadingContent">
@@ -622,6 +659,7 @@
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz5GmfMhcjNhj996u8QRQwPJzWGIdEFGxaUOuVnsPZeoGfqCgfwEpaTLE79oF8RDRf0/exec"; 
         
         let localData = [];
+        let currentFilteredData = []; // ตัวแปรเก็บข้อมูลที่ผ่านการกรองแล้ว สำหรับใช้งานตอน Export
         let donutChartInstance = null;
         let currentEditNo = null; 
         let employeeToDeleteNo = null;
@@ -798,6 +836,7 @@
         function processData(data) {
             updateDashboardCards(data);
             updateContractorFilter(data);
+            currentFilteredData = data; // อัปเดตข้อมูลที่จะ export ตอนเริ่มต้น
             renderTable(data);
             initOrUpdateChart(data);
         }
@@ -950,7 +989,7 @@
         }
 
         // ==========================================
-        // 4. ระบบกรอง (Filter) & คำนวณอายุ
+        // 4. ระบบกรอง (Filter) , คำนวณอายุ & ส่งออก Excel
         // ==========================================
         function filterTable() {
             const searchText = document.getElementById('searchInput').value.toLowerCase();
@@ -976,7 +1015,252 @@
                 
                 return matchText && matchStatus && matchContractor;
             });
+            
+            currentFilteredData = filteredData; // อัปเดตข้อมูลล่าสุดให้ตรงกับการฟิลเตอร์
             renderTable(filteredData);
+        }
+
+        // ==========================================
+        // ตั้งค่าตัวเลือกคอลัมน์สำหรับการ Export Excel
+        // ==========================================
+        const EXPORT_COL_OPTIONS = [
+            { id: 'exp_no', label: 'ลำดับ', width: 8, checked: true },
+            { id: 'exp_sysno', label: 'รหัสในระบบ', width: 12, checked: false }, // ค่าเริ่มต้นปิดไว้ เผื่อไว้ดูรหัสอ้างอิงของ API
+            { id: 'exp_name', label: 'ชื่อ-นามสกุล', width: 30, checked: true },
+            { id: 'exp_idcard', label: 'เลขบัตรประชาชน', width: 22, checked: true },
+            { id: 'exp_position', label: 'ตำแหน่ง', width: 25, checked: true },
+            { id: 'exp_group', label: 'สังกัดชุด', width: 25, checked: true },
+            { id: 'exp_contractor', label: 'ชุดผู้รับเหมา', width: 25, checked: true },
+            { id: 'exp_dob', label: 'วัน/เดือน/ปีเกิด', width: 15, checked: true },
+            { id: 'exp_age', label: 'อายุ', width: 8, checked: true },
+            { id: 'exp_doc', label: 'สถานะเอกสาร', width: 15, checked: true },
+            { id: 'exp_train', label: 'สถานะการอบรม', width: 18, checked: true },
+            { id: 'exp_traindate', label: 'วันที่อบรม', width: 15, checked: true },
+            { id: 'exp_card', label: 'สถานะการทำบัตร', width: 18, checked: true },
+            { id: 'exp_receive', label: 'สถานะการรับบัตร', width: 18, checked: true }
+        ];
+
+        function openExportModal() {
+            if (!currentFilteredData || currentFilteredData.length === 0) {
+                showToast('ไม่มีข้อมูล', 'ไม่พบข้อมูลที่ตรงกับเงื่อนไขสำหรับการส่งออก', 'error');
+                return;
+            }
+
+            const container = document.getElementById('exportColsContainer');
+            container.innerHTML = '';
+            
+            EXPORT_COL_OPTIONS.forEach(col => {
+                container.innerHTML += `
+                    <label class="flex items-center gap-3 p-3 border border-gray-100 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors shadow-sm">
+                        <input type="checkbox" value="${col.id}" ${col.checked ? 'checked' : ''} class="export-col-cb w-5 h-5 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500">
+                        <span class="text-sm text-gray-700 font-bold">${col.label}</span>
+                    </label>
+                `;
+            });
+
+            const modal = document.getElementById('exportModal');
+            const content = document.getElementById('exportModalContent');
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            });
+        }
+
+        function closeExportModal() {
+            const modal = document.getElementById('exportModal');
+            const content = document.getElementById('exportModalContent');
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function toggleAllExportCols() {
+            const cbs = document.querySelectorAll('.export-col-cb');
+            const btn = document.getElementById('btnToggleExportCols');
+            const isSelectAll = btn.innerText === 'เลือกทั้งหมด';
+            
+            cbs.forEach(cb => cb.checked = isSelectAll);
+            btn.innerText = isSelectAll ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด';
+        }
+
+        function exportToExcel() {
+            const cbs = document.querySelectorAll('.export-col-cb:checked');
+            if (cbs.length === 0) {
+                showToast('คำเตือน', 'กรุณาเลือกอย่างน้อย 1 คอลัมน์', 'error');
+                return;
+            }
+            const selectedIds = Array.from(cbs).map(cb => cb.value);
+            
+            // อัปเดตสถานะ checked ลงใน array หลัก (ให้จำค่าเดิมที่เลือกไว้ในครั้งถัดไป)
+            EXPORT_COL_OPTIONS.forEach(col => {
+                col.checked = selectedIds.includes(col.id);
+            });
+
+            closeExportModal();
+            showGlobalLoading(true, "กำลังเตรียมไฟล์ Excel", "กรุณารอสักครู่ ระบบกำลังสร้างไฟล์ข้อมูล...");
+
+            setTimeout(() => {
+                try {
+                    const workbook = XLSX.utils.book_new();
+
+                    // สร้างฟังก์ชันช่วย (Helper Function) สำหรับแปลงข้อมูลเป็น Worksheet และจัดสไตล์
+                    const createStyledWorksheet = (dataArray) => {
+                        const exportData = dataArray.map((row, index) => {
+                            let displayTrainDate = row.trainDate || '-';
+                            if (String(displayTrainDate).includes('T')) {
+                                const d = new Date(displayTrainDate);
+                                displayTrainDate = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+                            }
+
+                            let displayDob = row.birthDate || '-';
+                            if (String(displayDob).includes('T')) {
+                                const d = new Date(displayDob);
+                                displayDob = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+                            }
+
+                            let idCardText = String(row.idCard || '-').trim();
+                            if (idCardText !== '-' && idCardText !== 'undefined') {
+                                let digitsOnly = idCardText.replace(/\D/g, '');
+                                if (digitsOnly.length === 13) {
+                                    idCardText = `${digitsOnly[0]}-${digitsOnly.substring(1,5)}-${digitsOnly.substring(5,10)}-${digitsOnly.substring(10,12)}-${digitsOnly[12]}`;
+                                } else if (/^\d+$/.test(idCardText)) {
+                                    idCardText = '\u200B' + idCardText;
+                                }
+                            }
+
+                            // สร้าง Object แบบไดนามิกตามคอลัมน์ที่เลือก
+                            const rowData = {};
+                            if (selectedIds.includes('exp_no')) rowData['ลำดับ'] = index + 1;
+                            if (selectedIds.includes('exp_sysno')) rowData['รหัสในระบบ'] = row.no || '-';
+                            if (selectedIds.includes('exp_name')) rowData['ชื่อ-นามสกุล'] = row.name || '-';
+                            if (selectedIds.includes('exp_idcard')) rowData['เลขบัตรประชาชน'] = idCardText;
+                            if (selectedIds.includes('exp_position')) rowData['ตำแหน่ง'] = row.position || '-';
+                            if (selectedIds.includes('exp_group')) rowData['สังกัดชุด'] = row.group || '-';
+                            if (selectedIds.includes('exp_contractor')) rowData['ชุดผู้รับเหมา'] = row.contractorGroup || '-';
+                            if (selectedIds.includes('exp_dob')) rowData['วัน/เดือน/ปีเกิด'] = displayDob;
+                            if (selectedIds.includes('exp_age')) rowData['อายุ'] = row.age || '-';
+                            if (selectedIds.includes('exp_doc')) rowData['สถานะเอกสาร'] = row.documentStatus || '-';
+                            if (selectedIds.includes('exp_train')) rowData['สถานะการอบรม'] = row.trainStatus || '-';
+                            if (selectedIds.includes('exp_traindate')) rowData['วันที่อบรม'] = displayTrainDate;
+                            if (selectedIds.includes('exp_card')) rowData['สถานะการทำบัตร'] = row.cardStatus || '-';
+                            if (selectedIds.includes('exp_receive')) rowData['สถานะการรับบัตร'] = row.cardReceiveStatus || '-';
+
+                            return rowData;
+                        });
+
+                        const worksheet = XLSX.utils.json_to_sheet(exportData);
+                        
+                        // สร้างความกว้างของคอลัมน์ตามที่ถูกเลือก
+                        const wscols = [];
+                        EXPORT_COL_OPTIONS.forEach(col => {
+                            if (selectedIds.includes(col.id)) {
+                                wscols.push({wch: col.width});
+                            }
+                        });
+                        worksheet['!cols'] = wscols;
+
+                        // หา index ของคอลัมน์ 'ชื่อ-นามสกุล' (ถ้ามีการเลือก) เพื่อจัดให้ชิดซ้าย
+                        const nameIndex = selectedIds.indexOf('exp_name');
+
+                        const range = XLSX.utils.decode_range(worksheet['!ref']);
+                        for (let R = range.s.r; R <= range.e.r; ++R) {
+                            for (let C = range.s.c; C <= range.e.c; ++C) {
+                                const cellRef = XLSX.utils.encode_cell({c: C, r: R});
+                                if (!worksheet[cellRef]) continue;
+
+                                let cellStyle = {
+                                    alignment: { vertical: "center", horizontal: "center" },
+                                    border: {
+                                        top: { style: "thin", color: { rgb: "000000" } },
+                                        bottom: { style: "thin", color: { rgb: "000000" } },
+                                        left: { style: "thin", color: { rgb: "000000" } },
+                                        right: { style: "thin", color: { rgb: "000000" } }
+                                    },
+                                    font: { name: "Arial", sz: 11 }
+                                };
+
+                                if (R === 0) {
+                                    cellStyle.font.bold = true;
+                                    cellStyle.fill = { fgColor: { rgb: "D9D9D9" } };
+                                } else {
+                                    // จัดชื่อชิดซ้าย (ถ้าเลือกให้โชว์คอลัมน์ชื่อ)
+                                    if (C === nameIndex) cellStyle.alignment.horizontal = "left";
+                                }
+
+                                worksheet[cellRef].s = cellStyle;
+                            }
+                        }
+                        return worksheet;
+                    };
+
+                    const statusFilter = document.getElementById('filterStatus').value;
+                    const contractorFilter = document.getElementById('filterContractor').value;
+
+                    // เช็คเงื่อนไข: ถ้าเลือกตัวกรองเป็น "สถานะทั้งหมด" และ "ทุกชุดผู้รับเหมา"
+                    if (statusFilter === 'all' && contractorFilter === 'all') {
+                        
+                        // 1. สร้างชีตรวมข้อมูลทั้งหมด (ชีตแรก)
+                        const wsAll = createStyledWorksheet(currentFilteredData);
+                        XLSX.utils.book_append_sheet(workbook, wsAll, "รวมทั้งหมด");
+
+                        // 2. จัดกลุ่มข้อมูลตามชุดผู้รับเหมา
+                        const groupedData = {};
+                        currentFilteredData.forEach(row => {
+                            const groupName = (row.contractorGroup && row.contractorGroup.trim() !== '') ? row.contractorGroup.trim() : 'ไม่มีสังกัด';
+                            if (!groupedData[groupName]) {
+                                groupedData[groupName] = [];
+                            }
+                            groupedData[groupName].push(row);
+                        });
+
+                        // 3. สร้างชีตย่อยแยกตามแต่ละชุดผู้รับเหมา
+                        const usedSheetNames = new Set();
+                        usedSheetNames.add("รวมทั้งหมด"); 
+
+                        Object.keys(groupedData).sort().forEach(groupName => {
+                            const wsGroup = createStyledWorksheet(groupedData[groupName]);
+                            
+                            let safeName = groupName.replace(/[\\/*?:\[\]]/g, '').trim();
+                            if (!safeName) safeName = 'ไม่มีสังกัด';
+                            
+                            safeName = safeName.substring(0, 28);
+                            
+                            let finalName = safeName;
+                            let counter = 1;
+                            while (usedSheetNames.has(finalName.toLowerCase())) {
+                                finalName = `${safeName.substring(0, 25)}_${counter}`;
+                                counter++;
+                            }
+                            usedSheetNames.add(finalName.toLowerCase()); 
+                            
+                            XLSX.utils.book_append_sheet(workbook, wsGroup, finalName);
+                        });
+
+                    } else {
+                        // ถ้ามีการกรองแบบเจาะจง ให้ Export เฉพาะข้อมูลที่แสดงอยู่ลงในชีตเดียว
+                        const wsSingle = createStyledWorksheet(currentFilteredData);
+                        XLSX.utils.book_append_sheet(workbook, wsSingle, "Employee Data");
+                    }
+
+                    // สร้างชื่อไฟล์พร้อมวันที่ปัจจุบัน
+                    const today = new Date();
+                    const dateStr = `${today.getFullYear()}${(today.getMonth()+1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
+                    const fileName = `SUNWORK_Employees_${dateStr}.xlsx`;
+
+                    // สั่งดาวน์โหลด
+                    XLSX.writeFile(workbook, fileName);
+
+                    showGlobalLoading(false);
+                    showToast('ส่งออกสำเร็จ', 'ดาวน์โหลดไฟล์ Excel เรียบร้อยแล้ว', 'success');
+                } catch (error) {
+                    console.error("Export to Excel Error: ", error);
+                    showGlobalLoading(false);
+                    showToast('เกิดข้อผิดพลาด', 'ไม่สามารถส่งออกไฟล์ Excel ได้', 'error');
+                }
+            }, 600); 
         }
 
         function autoCalcAge() {
