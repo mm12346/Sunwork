@@ -132,7 +132,7 @@
                 </button>
                 <div class="hidden md:flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 shrink-0">
                     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V5.1</span>
+                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V6.0</span>
                 </div>
             </div>
         </div>
@@ -145,7 +145,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                     <div class="bg-white rounded-[1.5rem] p-5 md:p-6 shadow-card flex flex-col justify-between border-t-4 border-brand-purple transition-transform">
                         <div class="flex justify-between items-start mb-2">
-                            <h3 class="font-bold text-gray-600 text-sm">พนักงานทั้งหมด</h3>
+                            <h3 class="font-bold text-gray-600 text-sm">พนักงานทั้งหมด (ที่ทำงานอยู่)</h3>
                             <div class="p-2 bg-brand-bg rounded-lg text-brand-purple"><i class="ph-fill ph-users text-xl"></i></div>
                         </div>
                         <div class="flex items-end gap-2 mt-2">
@@ -188,7 +188,7 @@
                     <!-- สถานะทำบัตร -->
                     <div class="bg-white rounded-[1.5rem] p-5 shadow-card flex flex-col justify-center border border-gray-100">
                         <div class="flex justify-between items-center mb-3">
-                            <h3 class="font-bold text-gray-700 text-sm flex items-center gap-2"><i class="ph-fill ph-identification-badge text-brand-purple text-lg"></i> สถานะการทำบัตร</h3>
+                            <h3 class="font-bold text-gray-700 text-sm flex items-center gap-2"><i class="ph-fill ph-identification-badge text-brand-purple text-lg"></i> สถานะการทำบัตร (เฉพาะคนที่ทำงานอยู่)</h3>
                         </div>
                         <div class="flex justify-around items-center bg-gray-50 rounded-xl p-3">
                             <div class="text-center">
@@ -212,7 +212,7 @@
                     <!-- สถานะรับบัตร -->
                     <div class="bg-white rounded-[1.5rem] p-5 shadow-card flex flex-col justify-center border border-gray-100">
                         <div class="flex justify-between items-center mb-3">
-                            <h3 class="font-bold text-gray-700 text-sm flex items-center gap-2"><i class="ph-fill ph-hand-swipe-right text-blue-500 text-lg"></i> สถานะการรับบัตร</h3>
+                            <h3 class="font-bold text-gray-700 text-sm flex items-center gap-2"><i class="ph-fill ph-hand-swipe-right text-blue-500 text-lg"></i> สถานะการรับบัตร (เฉพาะคนที่ทำงานอยู่)</h3>
                         </div>
                         <div class="flex justify-around items-center bg-gray-50 rounded-xl p-3">
                             <div class="text-center">
@@ -238,7 +238,7 @@
                 <div class="bg-white rounded-[1.5rem] p-5 md:p-6 shadow-card border border-gray-100">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-gray-800 text-sm md:text-base flex items-center gap-2">
-                            <i class="ph-fill ph-buildings text-brand-orange text-xl"></i> จำนวนพนักงานแยกตามชุดผู้รับเหมา
+                            <i class="ph-fill ph-buildings text-brand-orange text-xl"></i> จำนวนพนักงานแยกตามชุดผู้รับเหมา <span class="text-xs text-gray-400 font-normal">(ไม่รวมลาออก)</span>
                         </h3>
                     </div>
                     <!-- รายชื่อผู้รับเหมาจะถูกแทรกที่นี่ผ่าน JS -->
@@ -263,7 +263,7 @@
             <div class="w-full xl:w-[320px] shrink-0 flex flex-col gap-6">
                 <div class="bg-white rounded-[1.5rem] p-5 md:p-6 shadow-card flex-1 flex flex-col min-h-[280px]">
                     <h3 class="font-bold text-gray-800 mb-1">สัดส่วนสถานะการอบรม</h3>
-                    <p class="text-xs text-brand-textMuted mb-4">ภาพรวมพนักงานทั้งหมดในระบบ</p>
+                    <p class="text-xs text-brand-textMuted mb-4">ภาพรวมเฉพาะพนักงานที่ทำงานอยู่</p>
                     
                     <div class="flex-1 relative flex items-center justify-center">
                         <div class="w-[180px] h-[180px] md:w-[200px] md:h-[200px] relative">
@@ -296,28 +296,39 @@
                 
                 <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-2 w-full">
                     <div class="flex flex-col md:flex-row items-center gap-3 w-full xl:w-auto flex-1">
-                        <div class="relative w-full bg-gray-50 rounded-full flex items-center px-4 py-2 border border-gray-200 focus-within:border-brand-purple focus-within:ring-2 focus-within:ring-brand-purple/20 transition-all">
+                        <div class="relative w-full md:w-auto bg-gray-50 rounded-full flex items-center px-4 py-2 border border-gray-200 focus-within:border-brand-purple focus-within:ring-2 focus-within:ring-brand-purple/20 transition-all flex-1">
                             <i class="ph ph-magnifying-glass text-gray-400 text-lg"></i>
                             <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="ค้นหาชื่อ, เลขบัตร..." class="bg-transparent border-none outline-none text-sm w-full ml-2 text-gray-700 placeholder-gray-400 font-sans">
                         </div>
                         
-                        <div class="flex flex-col sm:flex-row w-full md:w-auto gap-2">
-                            <div class="relative w-full sm:w-40 bg-gray-50 rounded-full border border-gray-200 focus-within:border-brand-purple transition-all shrink-0">
-                                <select id="filterStatus" onchange="filterTable()" class="w-full bg-transparent border-none outline-none text-sm text-gray-700 px-4 py-2.5 appearance-none cursor-pointer font-sans">
-                                    <option value="all">สถานะทั้งหมด</option>
-                                    <option value="อบรมแล้ว">เฉพาะ อบรมแล้ว</option>
-                                    <option value="รออบรม">เฉพาะ รออบรม</option>
+                        <div class="grid grid-cols-2 sm:flex sm:flex-row w-full md:w-auto gap-2">
+                            <!-- ตัวกรองสถานะการทำงาน -->
+                            <div class="relative w-full sm:w-32 bg-gray-50 rounded-full border border-gray-200 focus-within:border-brand-purple transition-all shrink-0">
+                                <select id="filterWorkStatus" onchange="filterTable()" class="w-full bg-transparent border-none outline-none text-sm text-gray-700 px-3 py-2.5 appearance-none cursor-pointer font-sans">
+                                    <option value="all">ทั้งหมด (รวมลาออก)</option>
+                                    <option value="ทำงาน" selected>เฉพาะ ทำงาน</option>
+                                    <option value="ลาออก">เฉพาะ ลาออก</option>
                                 </select>
-                                <i class="ph ph-caret-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
+
+                            <!-- ตัวกรองสถานะอบรม -->
+                            <div class="relative w-full sm:w-36 bg-gray-50 rounded-full border border-gray-200 focus-within:border-brand-purple transition-all shrink-0">
+                                <select id="filterStatus" onchange="filterTable()" class="w-full bg-transparent border-none outline-none text-sm text-gray-700 px-3 py-2.5 appearance-none cursor-pointer font-sans">
+                                    <option value="all">ทุกสถานะอบรม</option>
+                                    <option value="อบรมแล้ว">อบรมแล้ว</option>
+                                    <option value="รออบรม">รออบรม</option>
+                                </select>
+                                <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                             </div>
                             
                             <!-- ตัวกรองชุดผู้รับเหมา -->
-                            <div class="relative w-full sm:w-44 bg-gray-50 rounded-full border border-gray-200 focus-within:border-brand-purple transition-all shrink-0">
-                                <select id="filterContractor" onchange="filterTable()" class="w-full bg-transparent border-none outline-none text-sm text-gray-700 px-4 py-2.5 appearance-none cursor-pointer font-sans">
+                            <div class="relative w-full col-span-2 sm:col-span-1 sm:w-44 bg-gray-50 rounded-full border border-gray-200 focus-within:border-brand-purple transition-all shrink-0">
+                                <select id="filterContractor" onchange="filterTable()" class="w-full bg-transparent border-none outline-none text-sm text-gray-700 px-3 py-2.5 appearance-none cursor-pointer font-sans">
                                     <option value="all">ทุกชุดผู้รับเหมา</option>
                                     <!-- ตัวเลือกจะถูกสร้างอัตโนมัติจากข้อมูล -->
                                 </select>
-                                <i class="ph ph-caret-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                             </div>
                         </div>
                     </div>
@@ -339,7 +350,7 @@
                 </div>
 
                 <div class="overflow-auto max-h-[60vh] table-scrollbar border border-gray-100 rounded-xl relative w-full" id="tableContainer">
-                    <table class="w-full text-left border-collapse min-w-[900px]">
+                    <table class="w-full text-left border-collapse min-w-[1000px]">
                         <thead class="bg-gray-50 sticky top-0 z-20 shadow-sm outline outline-1 outline-gray-200">
                             <tr class="text-[11px] text-gray-500 uppercase tracking-wider border-b border-gray-200 font-bold">
                                 <th class="py-3 px-4 text-center w-12 bg-gray-50">รูป</th>
@@ -347,6 +358,7 @@
                                 <th class="py-3 px-4 bg-gray-50">เลขบัตรประชาชน</th>
                                 <th class="py-3 px-4 bg-gray-50">ตำแหน่ง</th>
                                 <th class="py-3 px-4 bg-gray-50">สังกัดชุด</th>
+                                <th class="py-3 px-4 text-center bg-gray-50">สถานะงาน</th>
                                 <th class="py-3 px-4 text-center bg-gray-50">เอกสาร</th>
                                 <th class="py-3 px-4 text-center bg-gray-50">สถานะอบรม</th>
                                 <th class="py-3 px-4 text-center bg-gray-50">สถานะทำบัตร</th>
@@ -477,9 +489,19 @@
 
                     <!-- 3. สถานะต่างๆ -->
                     <h3 class="text-base md:text-lg font-bold text-gray-700 mb-4 flex items-center gap-2 border-t border-gray-100 pt-6 md:pt-8">
-                        <i class="ph-fill ph-shield-check text-green-500"></i> สถานะการอบรมและการทำเอกสาร
+                        <i class="ph-fill ph-shield-check text-green-500"></i> สถานะการทำงานและการทำเอกสาร
                     </h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-8 md:mb-10 bg-brand-bg p-4 md:p-6 rounded-2xl border border-gray-100">
+                        <div>
+                            <label class="block text-xs md:text-sm font-bold text-gray-700 mb-1.5 md:mb-2">สถานะการทำงาน <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <select id="inpWorkStatus" required class="w-full px-3 py-2.5 md:px-4 md:py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-bold text-gray-700 appearance-none cursor-pointer">
+                                    <option value="ทำงาน" class="text-blue-600">ทำงาน</option>
+                                    <option value="ลาออก" class="text-red-600">ลาออก</option>
+                                </select>
+                                <i class="ph ph-caret-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
+                        </div>
                         <div>
                             <label class="block text-xs md:text-sm font-bold text-gray-700 mb-1.5 md:mb-2">สถานะเอกสาร <span class="text-red-500">*</span></label>
                             <div class="relative">
@@ -516,7 +538,7 @@
                                 <i class="ph ph-caret-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                             </div>
                         </div>
-                        <div class="sm:col-span-2">
+                        <div>
                             <label class="block text-xs md:text-sm font-bold text-gray-700 mb-1.5 md:mb-2">สถานะรับบัตร <span class="text-red-500">*</span></label>
                             <div class="relative">
                                 <select id="inpCardReceive" required class="w-full px-3 py-2.5 md:px-4 md:py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-bold text-gray-700 appearance-none cursor-pointer">
@@ -624,6 +646,12 @@
                     <!-- 3. สถานะต่างๆ -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 bg-brand-bg p-3 md:p-4 rounded-xl border border-gray-100">
                         <div>
+                            <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">สถานะการทำงาน <span class="text-red-500">*</span></label>
+                            <select id="editInpWorkStatus" required class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold">
+                                <option value="ทำงาน">ทำงาน</option><option value="ลาออก">ลาออก</option>
+                            </select>
+                        </div>
+                        <div>
                             <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">สถานะเอกสาร <span class="text-red-500">*</span></label>
                             <select id="editInpDocStatus" required class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold">
                                 <option value="ครบ">ครบ</option><option value="ไม่ครบ">ไม่ครบ</option><option value="ขาดประกัน">ขาดประกัน</option><option value="ขาดบัตร">ขาดบัตร</option>
@@ -645,7 +673,7 @@
                                 <option value="ทำบัตรแล้ว">ทำบัตรแล้ว</option><option value="รออบรม">รออบรม (ยังไม่ได้บัตร)</option>
                             </select>
                         </div>
-                        <div class="sm:col-span-2">
+                        <div>
                             <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">สถานะรับบัตร <span class="text-red-500">*</span></label>
                             <select id="editInpCardReceive" required class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold">
                                 <option value="ยังไม่รับ">ยังไม่รับ / รอรับบัตร</option><option value="รับแล้ว">รับแล้ว</option>
@@ -762,7 +790,6 @@
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz5GmfMhcjNhj996u8QRQwPJzWGIdEFGxaUOuVnsPZeoGfqCgfwEpaTLE79oF8RDRf0/exec"; 
         
         // --- การตั้งค่า Cloudinary ---
-        // เปลี่ยนค่าด้านล่างเป็นของคุณจาก Dashboard ใน Cloudinary
         const CLOUDINARY_CLOUD_NAME = "dwfaxbxjn"; // <-- ใส่ Cloud Name
         const CLOUDINARY_UPLOAD_PRESET = "Sunwork1"; // <-- ใส่ Upload Preset แบบ Unsigned
         
@@ -770,7 +797,7 @@
         let currentFilteredData = []; 
         let donutChartInstance = null;
         let currentEditNo = null; 
-        let currentEditImageUrl = ""; // เก็บ URL รูปเดิมตอนกด Edit
+        let currentEditImageUrl = ""; 
         let employeeToDeleteNo = null;
 
         // ==========================================
@@ -861,7 +888,6 @@
             }
         }
 
-        // ฟังก์ชัน Preview รูปภาพตอนผู้ใช้เลือกไฟล์
         function handleImagePreview(input, previewId, placeholderId, overlayId = null) {
             const file = input.files[0];
             if (file) {
@@ -970,11 +996,13 @@
         }
 
         function processData(data) {
-            updateDashboardCards(data);
+            // Dashboard แสดงเฉพาะคนที่ "ทำงาน" ยกเว้นตั้งใจดูทั้งหมด (ในที่นี้ Dashboard จะกรองเฉพาะคนทำงานเสมอเพื่อความแม่นยำของสถิติ)
+            const activeData = data.filter(d => String(d.workStatus || 'ทำงาน').trim() === 'ทำงาน');
+            updateDashboardCards(activeData);
             updateContractorFilter(data);
             currentFilteredData = data; 
             renderTable(data);
-            initOrUpdateChart(data);
+            initOrUpdateChart(activeData);
         }
 
         function updateDashboardCards(data) {
@@ -986,19 +1014,16 @@
             animateValue("dashTrained", trainedCount);
             animateValue("dashWaiting", waitingCount);
 
-            // คำนวณสถานะทำบัตร
             const cardDoneCount = data.filter(d => String(d.cardStatus).includes('ทำบัตรแล้ว')).length;
             const cardWaitCount = total - cardDoneCount;
             animateValue("dashCardDone", cardDoneCount);
             animateValue("dashCardWait", cardWaitCount);
 
-            // คำนวณสถานะรับบัตร
             const receiveDoneCount = data.filter(d => String(d.cardReceiveStatus).includes('รับแล้ว')).length;
             const receiveWaitCount = total - receiveDoneCount;
             animateValue("dashReceiveDone", receiveDoneCount);
             animateValue("dashReceiveWait", receiveWaitCount);
 
-            // สรุปข้อมูลพนักงานแยกตามชุดผู้รับเหมา
             const contractorCounts = {};
             data.forEach(d => {
                 const group = String(d.contractorGroup || '').trim();
@@ -1060,7 +1085,13 @@
             }
 
             dataToRender.forEach((row, index) => {
-                // ... (สถานะ badges เหมือนเดิม) ...
+                
+                let workBadge = '';
+                const wStatus = String(row.workStatus || 'ทำงาน').trim();
+                if (wStatus === 'ทำงาน') workBadge = `<span class="px-2 py-1 inline-flex text-[10px] md:text-[11px] font-bold rounded-full bg-blue-50 text-blue-600 border border-blue-100 shadow-sm"><div class="w-1.5 h-1.5 bg-blue-500 rounded-full mr-1.5 my-auto mt-[3px]"></div> ทำงาน</span>`;
+                else if (wStatus === 'ลาออก') workBadge = `<span class="px-2 py-1 inline-flex text-[10px] md:text-[11px] font-bold rounded-full bg-gray-100 text-gray-500 border border-gray-200 shadow-sm"><div class="w-1.5 h-1.5 bg-gray-400 rounded-full mr-1.5 my-auto mt-[3px]"></div> ลาออก</span>`;
+                else workBadge = `<span class="text-[10px] md:text-[11px] text-gray-500">${wStatus}</span>`;
+
                 let docBadge = '';
                 const docStatus = String(row.documentStatus || '').trim();
                 if (docStatus === 'ครบ') docBadge = `<span class="px-2 md:px-3 py-1 inline-flex text-[10px] md:text-[11px] font-bold rounded-full bg-green-50 text-green-600 border border-green-100">${docStatus}</span>`;
@@ -1099,12 +1130,11 @@
                     displayDob = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
                 }
 
-                // การแสดงรูปขนาดย่อในตาราง
                 let imageThumbnail = '';
                 if (row.imageUrl && row.imageUrl !== "" && row.imageUrl !== "-") {
                     imageThumbnail = `<img src="${row.imageUrl}" class="w-8 h-8 rounded-full object-cover mx-auto shadow-sm" alt="profile">`;
                 } else {
-                    let initial = String(row.name).replace('นาย ', '').replace('นางสาว ', '').replace('นาง ', '').charAt(0) || 'U';
+                    let initial = String(row.name || 'U').replace('นาย ', '').replace('นางสาว ', '').replace('นาง ', '').charAt(0) || 'U';
                     imageThumbnail = `<div class="w-8 h-8 rounded-full bg-brand-lightPurple/20 text-brand-purple flex items-center justify-center font-bold text-xs mx-auto">${initial}</div>`;
                 }
                 
@@ -1112,14 +1142,15 @@
                 const safeContractor = row.contractorGroup && row.contractorGroup !== 'undefined' ? row.contractorGroup : '-';
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-brand-bg transition-colors duration-200 group cursor-pointer";
-                tr.onclick = () => showEmployeeDetails(row, displayTrainDate, displayDob, trainBadge, cardBadge, receiveBadge, docBadge);
+                tr.className = `hover:bg-brand-bg transition-colors duration-200 group cursor-pointer ${wStatus === 'ลาออก' ? 'opacity-60 bg-gray-50/50' : ''}`;
+                tr.onclick = () => showEmployeeDetails(row, displayTrainDate, displayDob, trainBadge, cardBadge, receiveBadge, docBadge, workBadge);
                 tr.innerHTML = `
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${imageThumbnail}</td>
-                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap"><div class="font-bold text-gray-800 group-hover:text-brand-purple transition-colors truncate max-w-[120px] md:max-w-none break-words whitespace-normal leading-tight">${row.name || '-'}</div></td>
+                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap"><div class="font-bold ${wStatus === 'ลาออก' ? 'text-gray-500 line-through' : 'text-gray-800'} group-hover:text-brand-purple transition-colors truncate max-w-[120px] md:max-w-none break-words whitespace-normal leading-tight">${row.name || '-'}</div></td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-gray-600 font-mono tracking-wider">${safeIdCard}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-gray-600 font-medium truncate max-w-[100px] md:max-w-none break-words whitespace-normal leading-tight">${row.position || '-'}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-gray-600 break-words whitespace-normal leading-tight">${row.group || '-'}</td>
+                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${workBadge}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${docBadge}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${trainBadge}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${cardBadge}</td>
@@ -1152,16 +1183,14 @@
         // ==========================================
         function filterTable() {
             const searchInput = document.getElementById('searchInput').value.toLowerCase();
-            // ตัดช่องว่างออกทั้งหมดสำหรับการค้นหาชื่อ
             const searchText = searchInput.replace(/\s+/g, '');
-            // ตัดช่องว่างและขีดออกทั้งหมดสำหรับการค้นหาด้วยเลขบัตร
             const searchIdText = searchInput.replace(/[\s\-]/g, '');
 
             const statusFilter = document.getElementById('filterStatus').value;
             const contractorFilter = document.getElementById('filterContractor').value;
+            const workStatusFilter = document.getElementById('filterWorkStatus').value;
             
             const filteredData = localData.filter(row => {
-                // ข้อมูลจากฐานข้อมูลก็ทำการตัดช่องว่าง/ขีด ออกก่อนเปรียบเทียบเช่นกัน
                 const name = String(row.name || '').toLowerCase().replace(/\s+/g, '');
                 const id = String(row.idCard || '').toLowerCase().replace(/[\s\-]/g, '');
                 
@@ -1177,7 +1206,13 @@
                 let matchContractor = true;
                 if (contractorFilter !== 'all') matchContractor = String(row.contractorGroup).trim() === contractorFilter;
                 
-                return matchText && matchStatus && matchContractor;
+                let matchWorkStatus = true;
+                if (workStatusFilter !== 'all') {
+                    const wStatus = String(row.workStatus || 'ทำงาน').trim();
+                    matchWorkStatus = (wStatus === workStatusFilter);
+                }
+
+                return matchText && matchStatus && matchContractor && matchWorkStatus;
             });
             
             currentFilteredData = filteredData; 
@@ -1189,6 +1224,7 @@
             { id: 'exp_sysno', label: 'รหัสในระบบ', width: 12, checked: false }, 
             { id: 'exp_name', label: 'ชื่อ-นามสกุล', width: 30, checked: true },
             { id: 'exp_idcard', label: 'เลขบัตรประชาชน', width: 22, checked: true },
+            { id: 'exp_workstatus', label: 'สถานะงาน', width: 15, checked: true },
             { id: 'exp_position', label: 'ตำแหน่ง', width: 25, checked: true },
             { id: 'exp_group', label: 'สังกัดชุด', width: 25, checked: true },
             { id: 'exp_contractor', label: 'ชุดผู้รับเหมา', width: 25, checked: true },
@@ -1287,6 +1323,7 @@
                             if (selectedIds.includes('exp_sysno')) rowData['รหัสในระบบ'] = row.no || '-';
                             if (selectedIds.includes('exp_name')) rowData['ชื่อ-นามสกุล'] = row.name || '-';
                             if (selectedIds.includes('exp_idcard')) rowData['เลขบัตรประชาชน'] = idCardText;
+                            if (selectedIds.includes('exp_workstatus')) rowData['สถานะงาน'] = row.workStatus || 'ทำงาน';
                             if (selectedIds.includes('exp_position')) rowData['ตำแหน่ง'] = row.position || '-';
                             if (selectedIds.includes('exp_group')) rowData['สังกัดชุด'] = row.group || '-';
                             if (selectedIds.includes('exp_contractor')) rowData['ชุดผู้รับเหมา'] = row.contractorGroup || '-';
@@ -1332,8 +1369,9 @@
 
                     const statusFilter = document.getElementById('filterStatus').value;
                     const contractorFilter = document.getElementById('filterContractor').value;
+                    const workStatusFilter = document.getElementById('filterWorkStatus').value;
 
-                    if (statusFilter === 'all' && contractorFilter === 'all') {
+                    if (statusFilter === 'all' && contractorFilter === 'all' && workStatusFilter === 'all') {
                         const wsAll = createStyledWorksheet(currentFilteredData);
                         XLSX.utils.book_append_sheet(workbook, wsAll, "รวมทั้งหมด");
 
@@ -1425,19 +1463,31 @@
         }
 
         function ensureOptionExists(selectId, value) {
-            if (!value || value === 'undefined') return;
+            if (!value || value === 'undefined' || value === '-') return;
             const select = document.getElementById(selectId);
-            if (!Array.from(select.options).some(o => o.value === value)) {
-                select.innerHTML += `<option value="${value}">${value}</option>`;
+            if (!select) return;
+            
+            const valStr = String(value).trim();
+            if (valStr === '') return;
+
+            let exists = false;
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value === valStr) {
+                    exists = true;
+                    break;
+                }
             }
-            select.value = value;
+            
+            if (!exists) {
+                select.innerHTML += `<option value="${valStr}">${valStr}</option>`;
+            }
+            select.value = valStr;
         }
 
         function resetFormState() {
             document.getElementById('employeeDataForm').reset();
             document.getElementById('inpAge').value = "";
             
-            // รีเซ็ตรูปภาพ
             document.getElementById('inpProfileImage').value = "";
             document.getElementById('profileImagePreview').classList.add('hidden');
             document.getElementById('profileImagePreview').src = "";
@@ -1476,7 +1526,6 @@
                 const rawDob = document.getElementById('inpDob').value;
                 const rawTrainDate = document.getElementById('inpTrainDate').value;
 
-                // แก้ไขปัญหา Number การรัน ID ให้ปลอดภัย
                 let newNo = 1;
                 if (localData && localData.length > 0) {
                     const allIds = localData.map(d => parseInt(d.no) || 0);
@@ -1498,7 +1547,8 @@
                     age: document.getElementById('inpAge').value,                  
                     cardReceiveStatus: document.getElementById('inpCardReceive').value, 
                     contractorGroup: document.getElementById('inpContractor').value,
-                    imageUrl: finalImageUrl // ส่ง URL รูปไปด้วย
+                    imageUrl: finalImageUrl,
+                    workStatus: document.getElementById('inpWorkStatus').value // เพิ่มสถานะการทำงาน
                 };
 
                 const formData = new URLSearchParams();
@@ -1542,7 +1592,7 @@
             btnSubmit.disabled = true;
 
             try {
-                let finalImageUrl = currentEditImageUrl; // ใช้รูปเดิมไว้ก่อน
+                let finalImageUrl = currentEditImageUrl; 
                 const newImageFile = document.getElementById('editInpProfileImage').files[0];
 
                 if (newImageFile) {
@@ -1571,7 +1621,8 @@
                     age: document.getElementById('editInpAge').value,                  
                     cardReceiveStatus: document.getElementById('editInpCardReceive').value, 
                     contractorGroup: document.getElementById('editInpContractor').value,
-                    imageUrl: finalImageUrl // อัปเดต URL รูป 
+                    imageUrl: finalImageUrl,
+                    workStatus: document.getElementById('editInpWorkStatus').value // เพิ่มสถานะการทำงานตอนแก้ไข
                 };
 
                 const formData = new URLSearchParams();
@@ -1839,7 +1890,7 @@
         // ==========================================
         // 8. ฟังก์ชันสำหรับ Modal (แสดง/แก้ไข/ลบ ข้อมูล)
         // ==========================================
-        function showEmployeeDetails(row, displayTrainDate, displayDob, trainBadge, cardBadge, receiveBadge, docBadge) {
+        function showEmployeeDetails(row, displayTrainDate, displayDob, trainBadge, cardBadge, receiveBadge, docBadge, workBadge) {
             const modal = document.getElementById('detailsModal');
             const modalContent = document.getElementById('detailsModalContent');
             
@@ -1862,15 +1913,17 @@
             }
 
             const safeIdCard = row.idCard && row.idCard !== 'undefined' ? row.idCard : '-';
+            const wStatus = String(row.workStatus || 'ทำงาน').trim();
 
             body.innerHTML = `
                 <div class="flex items-center gap-4 md:gap-5 mb-6 md:mb-8 pb-4 md:pb-6 border-b border-gray-100">
                     ${profileAvatarHtml}
                     <div class="flex-1 min-w-0">
-                        <h4 class="text-xl md:text-2xl font-extrabold text-gray-800 font-heading leading-tight truncate w-full break-words whitespace-normal">${row.name || '-'}</h4>
+                        <h4 class="text-xl md:text-2xl font-extrabold ${wStatus === 'ลาออก' ? 'text-gray-500 line-through' : 'text-gray-800'} font-heading leading-tight truncate w-full break-words whitespace-normal">${row.name || '-'}</h4>
                         <div class="flex items-center gap-1.5 md:gap-2 mt-1 md:mt-1.5">
                             <i class="ph-fill ph-identification-card text-brand-purple text-lg"></i>
                             <span class="text-xs md:text-sm text-gray-600 font-mono tracking-wide">${safeIdCard}</span>
+                            <span class="ml-2">${workBadge}</span>
                         </div>
                     </div>
                 </div>
@@ -1958,10 +2011,9 @@
             if (!row) return;
 
             currentEditNo = no;
-            currentEditImageUrl = row.imageUrl || ""; // จำค่า URL เก่าไว้
+            currentEditImageUrl = row.imageUrl || ""; 
             
-            // จัดการแสดงผลรูปในโหมด Edit
-            document.getElementById('editInpProfileImage').value = ""; // เคลียร์ไฟล์ใหม่ที่อาจค้างอยู่
+            document.getElementById('editInpProfileImage').value = ""; 
             if (currentEditImageUrl && currentEditImageUrl !== "-") {
                 document.getElementById('editProfileImagePreview').src = currentEditImageUrl;
                 document.getElementById('editProfileImagePreview').classList.remove('hidden');
@@ -1980,14 +2032,20 @@
             ensureOptionExists('editInpGroup', row.group);
             ensureOptionExists('editInpContractor', row.contractorGroup);
 
-            document.getElementById('editInpDocStatus').value = row.documentStatus || 'ครบ';
-            document.getElementById('editInpTrain').value = row.trainStatus;
+            // ใช้ ensureOptionExists เพื่อให้แน่ใจว่าแสดงค่าได้แม้ข้อมูลในชีตไม่ตรงกับ option เป๊ะๆ
+            ensureOptionExists('editInpWorkStatus', row.workStatus || 'ทำงาน');
+            ensureOptionExists('editInpDocStatus', row.documentStatus || 'ครบ');
+            ensureOptionExists('editInpTrain', row.trainStatus);
+            ensureOptionExists('editInpCard', row.cardStatus);
+            ensureOptionExists('editInpCardReceive', row.cardReceiveStatus || 'ยังไม่รับ');
             
             let tDateStr = String(row.trainDate || '').trim();
             if (tDateStr && tDateStr !== '-' && tDateStr !== 'ไม่ระบุ' && tDateStr !== 'undefined') {
                 if (tDateStr.includes('T')) {
                     const d = new Date(tDateStr);
-                    document.getElementById('editInpTrainDate').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    if (!isNaN(d.getTime())) {
+                        document.getElementById('editInpTrainDate').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    } else document.getElementById('editInpTrainDate').value = '';
                 } else if (tDateStr.includes('/')) {
                     const parts = tDateStr.split('/');
                     if (parts.length === 3) document.getElementById('editInpTrainDate').value = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
@@ -1996,14 +2054,13 @@
                 } else document.getElementById('editInpTrainDate').value = '';
             } else document.getElementById('editInpTrainDate').value = '';
             
-            document.getElementById('editInpCard').value = row.cardStatus;
-            document.getElementById('editInpCardReceive').value = row.cardReceiveStatus || 'ยังไม่รับ';
-
             let dobStr = String(row.birthDate || '').trim();
             if (dobStr && dobStr !== '-' && dobStr !== 'undefined') {
                 if (dobStr.includes('T')) {
                     const d = new Date(dobStr);
-                    document.getElementById('editInpDob').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    if (!isNaN(d.getTime())) {
+                        document.getElementById('editInpDob').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    } else document.getElementById('editInpDob').value = '';
                 } else if (dobStr.includes('/')) {
                     const parts = dobStr.split('/');
                     if (parts.length === 3) document.getElementById('editInpDob').value = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
@@ -2013,6 +2070,9 @@
             } else document.getElementById('editInpDob').value = '';
             
             document.getElementById('editInpAge').value = row.age || '';
+            if (document.getElementById('editInpDob').value && !document.getElementById('editInpAge').value) {
+                autoCalcAgeEdit();
+            }
 
             document.getElementById('detailsViewMode').classList.add('hidden');
             document.getElementById('editViewMode').classList.remove('hidden');
