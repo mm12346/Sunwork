@@ -1643,25 +1643,80 @@
 
             try {
                 const response = await fetch(WEB_APP_URL, { method: 'POST', body: formData });
-                if(response.ok) { await fetchData(); showToast('สำเร็จ', 'บันทึกข้อมูลเครื่องจักรเรียบร้อยแล้ว', 'success'); closeMachineModal(); }
-                else throw new Error("POST Error");
-            } catch (error) { showToast('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลเครื่องจักรได้', 'error'); } 
-            finally { showGlobalLoading(false); btnSubmit.innerHTML = originalHTML; btnSubmit.disabled = false; }
+                const result = await response.json();
+                
+                if(response.ok && result.status === 'success') { 
+                    await fetchData(); 
+                    showToast('สำเร็จ', 'บันทึกข้อมูลเครื่องจักรเรียบร้อยแล้ว', 'success'); 
+                    closeMachineModal(); 
+                }
+                else throw new Error(result.message || "POST Error");
+            } catch (error) { 
+                showToast('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลเครื่องจักรได้: ' + error.message, 'error'); 
+            } 
+            finally { 
+                showGlobalLoading(false); 
+                btnSubmit.innerHTML = originalHTML; 
+                btnSubmit.disabled = false; 
+            }
         }
         
         async function executeDeleteMachine() {
             const confirmDelete = confirm("คุณต้องการลบข้อมูลเครื่องจักรนี้ใช่หรือไม่?\n\nคำเตือน: การลบไม่สามารถเรียกคืนได้");
             if (!confirmDelete) return;
             const machineNumber = document.getElementById('oldMachineNumber').value;
-            closeMachineModal(); showGlobalLoading(true, "กำลังลบข้อมูล", "กรุณารอสักครู่ ระบบกำลังลบข้อมูลจากฐานข้อมูล");
+            closeMachineModal(); 
+            showGlobalLoading(true, "กำลังลบข้อมูล", "กรุณารอสักครู่ ระบบกำลังลบข้อมูลจากฐานข้อมูล");
             
             try {
-                const formData = new URLSearchParams(); formData.append('action', 'delete_machine'); formData.append('machineNumber', machineNumber);
+                const formData = new URLSearchParams(); 
+                formData.append('action', 'delete_machine'); 
+                formData.append('machineNumber', machineNumber);
+                
                 const response = await fetch(WEB_APP_URL, { method: 'POST', body: formData });
-                if (response.ok) { showToast('ลบสำเร็จ', 'ข้อมูลถูกลบออกจากระบบแล้ว', 'success'); await fetchData(); }
-                else throw new Error("Delete failed");
-            } catch (error) { showToast('เกิดข้อผิดพลาด', 'ไม่สามารถลบข้อมูลได้ โปรดตรวจสอบการเชื่อมต่อ', 'error'); } 
-            finally { showGlobalLoading(false); }
+                const result = await response.json();
+                
+                if (response.ok && result.status === 'success') { 
+                    showToast('ลบสำเร็จ', 'ข้อมูลถูกลบออกจากระบบแล้ว', 'success'); 
+                    await fetchData(); 
+                } else {
+                    throw new Error(result.message || "Delete failed");
+                }
+            } catch (error) { 
+                showToast('เกิดข้อผิดพลาด', 'ไม่สามารถลบข้อมูลได้: ' + error.message, 'error'); 
+            } finally { 
+                showGlobalLoading(false); 
+            }
+        }
+
+        // ==========================================
+        // ฟังก์ชันลบข้อมูลพนักงานที่เคยขาดหายไป (แก้ไขบั๊ก)
+        // ==========================================
+        async function executeDeleteEmployee() {
+            if (!employeeToDeleteNo) return;
+            closeDeleteConfirmModal();
+            showGlobalLoading(true, "กำลังลบข้อมูล", "กรุณารอสักครู่ ระบบกำลังลบข้อมูลจากฐานข้อมูล");
+            
+            try {
+                const formData = new URLSearchParams();
+                formData.append('action', 'delete');
+                formData.append('no', employeeToDeleteNo);
+                
+                const response = await fetch(WEB_APP_URL, { method: 'POST', body: formData });
+                const result = await response.json();
+                
+                if (response.ok && result.status === 'success') {
+                    showToast('ลบสำเร็จ', 'ข้อมูลถูกลบออกจากระบบแล้ว', 'success');
+                    await fetchData();
+                } else {
+                    throw new Error(result.message || "Delete failed");
+                }
+            } catch (error) {
+                showToast('เกิดข้อผิดพลาด', 'ไม่สามารถลบข้อมูลได้: ' + error.message, 'error');
+            } finally {
+                showGlobalLoading(false);
+                employeeToDeleteNo = null;
+            }
         }
 
         function initOrUpdateChart(data) {
@@ -1749,7 +1804,11 @@
                 };
 
                 const formData = new URLSearchParams(); for (const key in newData) { formData.append(key, newData[key]); }
-                try { const response = await fetch(WEB_APP_URL, { method: 'POST', body: formData }); if(response.ok) successCount++; } 
+                try { 
+                    const response = await fetch(WEB_APP_URL, { method: 'POST', body: formData }); 
+                    const resJson = await response.json();
+                    if(response.ok && resJson.status === 'success') successCount++; 
+                } 
                 catch (err) { console.error('Bulk Edit Error on ID:', no, err); }
             }
 
@@ -1956,10 +2015,19 @@
 
                 const formData = new URLSearchParams(); for (const key in newData) { formData.append(key, newData[key]); }
                 const response = await fetch(WEB_APP_URL, { method: 'POST', body: formData });
+                const result = await response.json();
                 
-                if(response.ok) { await fetchData(); showToast('บันทึกข้อมูลสำเร็จ', 'ข้อมูลถูกเพิ่มเข้าสู่ระบบแล้ว', 'success'); resetFormState(); resetBtn(); showGlobalLoading(false); setTimeout(() => switchTab('employee-list'), 1000); } 
-                else throw new Error("POST Error");
-            } catch (error) { showGlobalLoading(false); showToast('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้ โปรดตรวจสอบการเชื่อมต่อ', 'error'); resetBtn(); }
+                if(response.ok && result.status === 'success') { 
+                    await fetchData(); showToast('บันทึกข้อมูลสำเร็จ', 'ข้อมูลถูกเพิ่มเข้าสู่ระบบแล้ว', 'success'); 
+                    resetFormState(); resetBtn(); showGlobalLoading(false); 
+                    setTimeout(() => switchTab('employee-list'), 1000); 
+                } 
+                else throw new Error(result.message || "POST Error");
+            } catch (error) { 
+                showGlobalLoading(false); 
+                showToast('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้: ' + error.message, 'error'); 
+                resetBtn(); 
+            }
             function resetBtn() { btnSubmit.innerHTML = originalHTML; btnSubmit.disabled = false; btnSubmit.classList.remove('opacity-75', 'cursor-not-allowed'); }
         }
 
@@ -1986,10 +2054,18 @@
 
                 const formData = new URLSearchParams(); for (const key in newData) { formData.append(key, newData[key]); }
                 const response = await fetch(WEB_APP_URL, { method: 'POST', body: formData });
-                if(response.ok) { await fetchData(); showToast('อัปเดตสำเร็จ', 'แก้ไขข้อมูลเรียบร้อยแล้ว', 'success'); closeDetailsModal(); } 
-                else throw new Error("POST Error");
-            } catch (error) { showToast('เกิดข้อผิดพลาด', 'ไม่สามารถแก้ไขข้อมูลได้', 'error'); } 
-            finally { showGlobalLoading(false); btnSubmit.innerHTML = originalHTML; btnSubmit.disabled = false; }
+                const result = await response.json();
+                
+                if(response.ok && result.status === 'success') { 
+                    await fetchData(); showToast('อัปเดตสำเร็จ', 'แก้ไขข้อมูลเรียบร้อยแล้ว', 'success'); closeDetailsModal(); 
+                } 
+                else throw new Error(result.message || "POST Error");
+            } catch (error) { 
+                showToast('เกิดข้อผิดพลาด', 'ไม่สามารถแก้ไขข้อมูลได้: ' + error.message, 'error'); 
+            } 
+            finally { 
+                showGlobalLoading(false); btnSubmit.innerHTML = originalHTML; btnSubmit.disabled = false; 
+            }
         }
 
         function switchTab(tab) {
@@ -2113,12 +2189,16 @@
                 formData.append('configData', JSON.stringify(appConfig));
 
                 const response = await fetch(WEB_APP_URL, { method: 'POST', body: formData });
-                if(response.ok) {
+                const result = await response.json();
+                
+                if(response.ok && result.status === 'success') {
                     showToast('บันทึกสำเร็จ', 'อัปเดตการตั้งค่าระบบเรียบร้อยแล้ว', 'success');
                     await fetchData(); // โหลดข้อมูลใหม่ทั้งหมดเพื่อความแน่ใจ
-                } else throw new Error("Save Config Error");
+                } else {
+                    throw new Error(result.message || "Save Config Error");
+                }
             } catch (error) {
-                showToast('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกการตั้งค่าได้', 'error');
+                showToast('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกการตั้งค่าได้: ' + error.message, 'error');
             } finally {
                 showGlobalLoading(false);
                 document.getElementById('btnSaveConfigText').innerText = originalText;
