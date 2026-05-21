@@ -147,7 +147,7 @@
                 </button>
                 <div class="hidden md:flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 shrink-0">
                     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V7.0</span>
+                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V7.1</span>
                 </div>
             </div>
         </div>
@@ -999,6 +999,22 @@
                 </button>
             </div>
             <div class="p-4 md:p-6 overflow-y-auto no-scrollbar flex-1">
+                
+                <!-- ส่วนเงื่อนไขพิเศษ (เพิ่มใหม่) -->
+                <div class="bg-indigo-50 border border-indigo-100 p-3 md:p-4 rounded-xl mb-4">
+                    <span class="text-sm font-bold text-indigo-800 mb-3 flex items-center gap-2"><i class="ph-fill ph-funnel"></i> เงื่อนไขพิเศษ (ไม่บังคับ)</span>
+                    <label class="flex items-start gap-2 mb-3 cursor-pointer">
+                        <input type="checkbox" id="expConditionCard" class="w-4 h-4 text-brand-purple rounded border-gray-300 mt-0.5 shadow-sm">
+                        <span class="text-xs md:text-sm text-gray-700 font-bold leading-tight">ส่งออกเฉพาะคนที่ <span class="text-green-600">"ทำบัตรแล้ว"</span> แต่ <span class="text-red-500">"ยังไม่ได้รับบัตร"</span></span>
+                    </label>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 pt-2 border-t border-indigo-100/50">
+                        <span class="text-xs md:text-sm text-gray-700 font-bold shrink-0">กรองตามวันที่อบรม:</span>
+                        <input type="date" id="expConditionTrainDate" class="w-full sm:w-auto px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all font-sans">
+                    </div>
+                    <p class="text-[10px] text-gray-500 mt-2">* หากตั้งค่าเงื่อนไขพิเศษ ระบบจะอ้างอิงจากฐานข้อมูลทั้งหมด โดยไม่สนว่ากำลังค้นหาอะไรอยู่ในตาราง</p>
+                </div>
+                <!-- จบส่วนเงื่อนไขพิเศษ -->
+
                 <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
                     <span class="text-sm font-bold text-gray-700">เลือกคอลัมน์ที่ต้องการ</span>
                     <button type="button" onclick="toggleAllExportCols()" class="text-xs text-brand-purple hover:underline font-bold" id="btnToggleExportCols">ยกเลิกทั้งหมด</button>
@@ -1831,6 +1847,12 @@
         ];
 
         function openExportModal() {
+            // รีเซ็ตเงื่อนไขพิเศษ
+            const chkCard = document.getElementById('expConditionCard');
+            const inpDate = document.getElementById('expConditionTrainDate');
+            if(chkCard) chkCard.checked = false;
+            if(inpDate) inpDate.value = '';
+
             if (!currentFilteredData || currentFilteredData.length === 0) { showToast('ไม่มีข้อมูล', 'ไม่พบข้อมูลที่ตรงกับเงื่อนไขสำหรับการส่งออก', 'error'); return; }
             const container = document.getElementById('exportColsContainer'); container.innerHTML = '';
             EXPORT_COL_OPTIONS.forEach(col => {
@@ -1860,6 +1882,55 @@
             const cbs = document.querySelectorAll('.export-col-cb:checked');
             if (cbs.length === 0) { showToast('คำเตือน', 'กรุณาเลือกอย่างน้อย 1 คอลัมน์', 'error'); return; }
             const selectedIds = Array.from(cbs).map(cb => cb.value); EXPORT_COL_OPTIONS.forEach(col => { col.checked = selectedIds.includes(col.id); });
+            
+            // กรองข้อมูลตามเงื่อนไขพิเศษ
+            let dataToExport = currentFilteredData;
+            const useCardCondition = document.getElementById('expConditionCard').checked;
+            const selectedTrainDate = document.getElementById('expConditionTrainDate').value;
+            const isSpecialConditionActive = useCardCondition || selectedTrainDate; // เช็คว่ามีการใช้เงื่อนไขพิเศษหรือไม่
+
+            if (isSpecialConditionActive) {
+                dataToExport = localData.filter(row => {
+                    let isMatch = true;
+                    
+                    if (useCardCondition) {
+                        const cardStatus = String(row.cardStatus || '').trim();
+                        const receiveStatus = String(row.cardReceiveStatus || '').trim();
+                        // เงื่อนไข: ทำบัตรแล้ว และ ยังไม่ได้รับบัตร (หรือไม่ใช่คำว่า รับแล้ว)
+                        const isCardDone = cardStatus.includes('ทำบัตรแล้ว');
+                        const isNotReceived = receiveStatus.includes('ยังไม่') || (!receiveStatus.includes('รับแล้ว'));
+                        
+                        if (!(isCardDone && isNotReceived)) isMatch = false;
+                    }
+                    
+                    if (selectedTrainDate && isMatch) {
+                        let tDateStr = String(row.trainDate || '').trim();
+                        let rowDateFormatted = '';
+                        
+                        if (tDateStr && tDateStr !== '-' && tDateStr !== 'ไม่ระบุ' && tDateStr !== 'undefined') {
+                            if (tDateStr.includes('T')) {
+                                const d = new Date(tDateStr);
+                                if (!isNaN(d.getTime())) rowDateFormatted = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                            } else if (tDateStr.includes('/')) {
+                                const parts = tDateStr.split('/');
+                                if (parts.length === 3) rowDateFormatted = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                            } else if (tDateStr.includes('-')) {
+                                rowDateFormatted = tDateStr.substring(0, 10);
+                            }
+                        }
+                        
+                        if (rowDateFormatted !== selectedTrainDate) isMatch = false;
+                    }
+                    
+                    return isMatch;
+                });
+                
+                if (dataToExport.length === 0) {
+                    showToast('ไม่พบข้อมูล', 'ไม่พบข้อมูลที่ตรงกับเงื่อนไขพิเศษที่ตั้งไว้', 'error');
+                    return;
+                }
+            }
+
             closeExportModal(); showGlobalLoading(true, "กำลังเตรียมไฟล์ Excel", "กรุณารอสักครู่ ระบบกำลังสร้างไฟล์ข้อมูล...");
 
             setTimeout(() => {
@@ -1897,11 +1968,25 @@
                             if (selectedIds.includes('exp_traindate')) rowData['วันที่อบรม'] = displayTrainDate;
                             if (selectedIds.includes('exp_card')) rowData['สถานะการทำบัตร'] = row.cardStatus || '-';
                             if (selectedIds.includes('exp_receive')) rowData['สถานะการรับบัตร'] = row.cardReceiveStatus || '-';
+                            
+                            // เพิ่มคอลัมน์ช่องเซ็นชื่อเปล่า ๆ ในกรณีที่ใช้เงื่อนไขพิเศษ
+                            if (isSpecialConditionActive) {
+                                rowData['ลายมือชื่อ (ผู้รับบัตร)'] = '';
+                            }
+
                             return rowData;
                         });
 
-                        const worksheet = XLSX.utils.json_to_sheet(exportData); const wscols = [];
-                        EXPORT_COL_OPTIONS.forEach(col => { if (selectedIds.includes(col.id)) wscols.push({wch: col.width}); }); worksheet['!cols'] = wscols;
+                        const worksheet = XLSX.utils.json_to_sheet(exportData); 
+                        const wscols = [];
+                        EXPORT_COL_OPTIONS.forEach(col => { if (selectedIds.includes(col.id)) wscols.push({wch: col.width}); }); 
+                        
+                        // กำหนดความกว้างให้คอลัมน์เซ็นชื่อ
+                        if (isSpecialConditionActive) {
+                            wscols.push({wch: 25});
+                        }
+                        
+                        worksheet['!cols'] = wscols;
 
                         const nameIndex = selectedIds.indexOf('exp_name'); const range = XLSX.utils.decode_range(worksheet['!ref']);
                         for (let R = range.s.r; R <= range.e.r; ++R) {
@@ -1916,11 +2001,11 @@
                         return worksheet;
                     };
 
-                    const wsAll = createStyledWorksheet(currentFilteredData); 
+                    const wsAll = createStyledWorksheet(dataToExport); 
                     XLSX.utils.book_append_sheet(workbook, wsAll, "รวมทั้งหมด");
                     
                     const groupedData = {}; 
-                    currentFilteredData.forEach(row => { 
+                    dataToExport.forEach(row => { 
                         const groupName = (row.contractorGroup && row.contractorGroup.trim() !== '') ? row.contractorGroup.trim() : 'ไม่มีสังกัด'; 
                         if (!groupedData[groupName]) groupedData[groupName] = []; 
                         groupedData[groupName].push(row); 
