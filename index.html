@@ -352,6 +352,7 @@
                     </div>
                     <div class="flex gap-2 w-full sm:w-auto">
                         <button onclick="clearBulkSelection()" class="flex-1 sm:flex-none px-4 py-2 bg-white text-gray-600 rounded-xl text-xs md:text-sm font-bold border border-gray-200 hover:bg-gray-50 transition-colors">ยกเลิก</button>
+                        <button onclick="openExportModal()" class="flex-1 sm:flex-none px-4 py-2 bg-green-600 text-white rounded-xl text-xs md:text-sm font-bold shadow-md hover:bg-green-700 transition-colors flex items-center justify-center gap-2"><i class="ph-bold ph-file-xls"></i> ส่งออก</button>
                         <button onclick="openBulkEditModal()" class="flex-1 sm:flex-none px-4 py-2 bg-brand-purple text-white rounded-xl text-xs md:text-sm font-bold shadow-md hover:bg-[#4C51B6] transition-colors flex items-center justify-center gap-2"><i class="ph-bold ph-pencil-simple"></i> แก้ไขสถานะ</button>
                     </div>
                 </div>
@@ -1003,6 +1004,12 @@
                 <!-- ส่วนเงื่อนไขพิเศษ (เพิ่มใหม่) -->
                 <div class="bg-indigo-50 border border-indigo-100 p-3 md:p-4 rounded-xl mb-4">
                     <span class="text-sm font-bold text-indigo-800 mb-3 flex items-center gap-2"><i class="ph-fill ph-funnel"></i> เงื่อนไขพิเศษ (ไม่บังคับ)</span>
+                    
+                    <label class="flex items-start gap-2 mb-3 cursor-pointer">
+                        <input type="checkbox" id="expConditionSelectedOnly" class="w-4 h-4 text-brand-purple rounded border-gray-300 mt-0.5 shadow-sm">
+                        <span class="text-xs md:text-sm text-gray-700 font-bold leading-tight">ส่งออกเฉพาะ <span class="text-brand-purple">"รายการที่เลือกจากตาราง"</span> (<span id="expSelectedCount">0</span> รายการ)</span>
+                    </label>
+
                     <label class="flex items-start gap-2 mb-3 cursor-pointer">
                         <input type="checkbox" id="expConditionCard" class="w-4 h-4 text-brand-purple rounded border-gray-300 mt-0.5 shadow-sm">
                         <span class="text-xs md:text-sm text-gray-700 font-bold leading-tight">ส่งออกเฉพาะคนที่ <span class="text-green-600">"ทำบัตรแล้ว"</span> แต่ <span class="text-red-500">"ยังไม่ได้รับบัตร"</span></span>
@@ -1011,7 +1018,7 @@
                         <span class="text-xs md:text-sm text-gray-700 font-bold shrink-0">กรองตามวันที่อบรม:</span>
                         <input type="date" id="expConditionTrainDate" class="w-full sm:w-auto px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all font-sans">
                     </div>
-                    <p class="text-[10px] text-gray-500 mt-2">* หากตั้งค่าเงื่อนไขพิเศษ ระบบจะอ้างอิงจากฐานข้อมูลทั้งหมด โดยไม่สนว่ากำลังค้นหาอะไรอยู่ในตาราง</p>
+                    <p class="text-[10px] text-gray-500 mt-2">* หากตั้งค่าเงื่อนไขพิเศษ ระบบจะอ้างอิงจากฐานข้อมูลทั้งหมด (หรือจากที่เลือกไว้) โดยไม่สนใจการค้นหาปัจจุบัน</p>
                 </div>
                 <!-- จบส่วนเงื่อนไขพิเศษ -->
 
@@ -1850,8 +1857,19 @@
             // รีเซ็ตเงื่อนไขพิเศษ
             const chkCard = document.getElementById('expConditionCard');
             const inpDate = document.getElementById('expConditionTrainDate');
+            const chkSelected = document.getElementById('expConditionSelectedOnly');
+            const selectedCountSpan = document.getElementById('expSelectedCount');
+
             if(chkCard) chkCard.checked = false;
             if(inpDate) inpDate.value = '';
+            
+            // ติ๊กเงื่อนไข "ส่งออกเฉพาะที่เลือก" อัตโนมัติถ้ามีการเลือกไว้
+            if(chkSelected) {
+                chkSelected.checked = selectedEmployees.size > 0;
+            }
+            if(selectedCountSpan) {
+                selectedCountSpan.innerText = selectedEmployees.size;
+            }
 
             if (!currentFilteredData || currentFilteredData.length === 0) { showToast('ไม่มีข้อมูล', 'ไม่พบข้อมูลที่ตรงกับเงื่อนไขสำหรับการส่งออก', 'error'); return; }
             const container = document.getElementById('exportColsContainer'); container.innerHTML = '';
@@ -1887,13 +1905,20 @@
             let dataToExport = currentFilteredData;
             const useCardCondition = document.getElementById('expConditionCard').checked;
             const selectedTrainDate = document.getElementById('expConditionTrainDate').value;
-            const isSpecialConditionActive = useCardCondition || selectedTrainDate; // เช็คว่ามีการใช้เงื่อนไขพิเศษหรือไม่
+            const useSelectedOnly = document.getElementById('expConditionSelectedOnly').checked;
+            
+            const isSpecialConditionActive = useCardCondition || selectedTrainDate || useSelectedOnly; 
+            const addSignatureColumn = useCardCondition || selectedTrainDate; // เพิ่มช่องเซ็นชื่อเฉพาะกรณีส่งออกบัตรหรือวันอบรม
 
             if (isSpecialConditionActive) {
                 dataToExport = localData.filter(row => {
                     let isMatch = true;
                     
-                    if (useCardCondition) {
+                    if (useSelectedOnly) {
+                        if (!selectedEmployees.has(parseInt(row.no))) isMatch = false;
+                    }
+                    
+                    if (useCardCondition && isMatch) {
                         const cardStatus = String(row.cardStatus || '').trim();
                         const receiveStatus = String(row.cardReceiveStatus || '').trim();
                         // เงื่อนไข: ทำบัตรแล้ว และ ยังไม่ได้รับบัตร (หรือไม่ใช่คำว่า รับแล้ว)
@@ -1970,7 +1995,7 @@
                             if (selectedIds.includes('exp_receive')) rowData['สถานะการรับบัตร'] = row.cardReceiveStatus || '-';
                             
                             // เพิ่มคอลัมน์ช่องเซ็นชื่อเปล่า ๆ ในกรณีที่ใช้เงื่อนไขพิเศษ
-                            if (isSpecialConditionActive) {
+                            if (addSignatureColumn) {
                                 rowData['ลายมือชื่อ (ผู้รับบัตร)'] = '';
                             }
 
@@ -1982,7 +2007,7 @@
                         EXPORT_COL_OPTIONS.forEach(col => { if (selectedIds.includes(col.id)) wscols.push({wch: col.width}); }); 
                         
                         // กำหนดความกว้างให้คอลัมน์เซ็นชื่อ
-                        if (isSpecialConditionActive) {
+                        if (addSignatureColumn) {
                             wscols.push({wch: 25});
                         }
                         
