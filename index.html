@@ -154,7 +154,7 @@
                 </button>
                 <div class="hidden md:flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 shrink-0">
                     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V8.1</span>
+                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V8.2</span>
                 </div>
             </div>
         </div>
@@ -1331,15 +1331,17 @@
             document.getElementById('filterMachineStatus').innerHTML = buildFilterOpts(config.machineStatus, 'สถานะเครื่องจักรทั้งหมด');
         }
 
-        function processData(data) {
+         function processData(data) {
             const activeData = data.filter(d => String(d.workStatus).includes('ทำงาน'));
             updateDashboardCards(activeData);
             currentFilteredData = data; 
             const selectAllCb = document.getElementById('selectAllCheckbox');
             if(selectAllCb) selectAllCb.checked = false;
             
-            renderTable(data);
-            renderMachineTable(localMachineData); 
+            // กรองข้อมูลตาม Dropdown ปัจจุบัน แทนที่จะแสดงข้อมูลทั้งหมดเสมอ
+            filterTable();
+            filterMachineTable(); 
+            
             updateMachineDashboardCards(localMachineData); 
             initOrUpdateChart(activeData);
             checkSelectAllState();
@@ -1896,7 +1898,8 @@
             { id: 'exp_receive', label: 'สถานะการรับบัตร', width: 18, checked: true }
         ];
 
-        function openExportModal() {
+
+       function openExportModal() {
             // รีเซ็ตเงื่อนไขพิเศษ
             const chkCard = document.getElementById('expConditionCard');
             const inpDate = document.getElementById('expConditionTrainDate');
@@ -1908,13 +1911,14 @@
             
             // ตั้งค่าวันที่และเวลาปัจจุบันลงในฟอร์มตั้งค่าการพิมพ์อัตโนมัติ
             const today = new Date();
+            today.setDate(today.getDate() + 1); // บวกล่วงหน้า 1 วัน
             const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+            
+            document.getElementById('expPrintName').value = "นาย ณัฐวุฒิ บัวผา";
             document.getElementById('expPrintDay').value = today.getDate();
             document.getElementById('expPrintMonth').value = thaiMonths[today.getMonth()];
             document.getElementById('expPrintYear').value = today.getFullYear() + 543;
-            const hh = String(today.getHours()).padStart(2, '0');
-            const mm = String(today.getMinutes()).padStart(2, '0');
-            document.getElementById('expPrintTime').value = `${hh}:${mm}`;
+            document.getElementById('expPrintTime').value = "08:00"; // ระบุเป็น 08:00 เสมอ
 
             // ติ๊กเงื่อนไข "ส่งออกเฉพาะที่เลือก" อัตโนมัติถ้ามีการเลือกไว้
             if(chkSelected) {
@@ -2076,6 +2080,7 @@
             fetch(WEB_APP_URL, { method: 'POST', body: formData })
             .then(res => res.json())
             .then(result => {
+
                 showGlobalLoading(false);
                 if(result.status === 'success') {
                     showToast('ส่งออกสำเร็จ', 'ข้อมูลถูกบันทึกลง Google Sheet ปลายทางแล้ว', 'success');
@@ -2314,7 +2319,7 @@
             }
         }
 
-        function switchTab(tab) {
+         function switchTab(tab) {
             const views = ['dashboard', 'employee-list', 'machine-list', 'form', 'settings']; 
             views.forEach(v => {
                 document.getElementById(`${v}-view`).classList.add('hidden');
@@ -2327,6 +2332,21 @@
 
             const activeNav = document.getElementById(`nav-${tab}`);
             if(activeNav) { activeNav.classList.remove('text-brand-lightPurple'); activeNav.classList.add('text-white'); activeNav.querySelectorAll('.nav-indicator').forEach(el => el.classList.replace('opacity-0', 'opacity-100')); const activeIcon = activeNav.querySelector('.nav-icon'); activeIcon.classList.remove('ph'); activeIcon.classList.add('ph-fill'); }
+            
+            // เมื่อเปิดเมนูทะเบียนพนักงาน ให้ตั้งค่าค้นหาเป็น "ทำงาน" อัตโนมัติ
+            if (tab === 'employee-list') {
+                const workStatusFilter = document.getElementById('filterWorkStatus');
+                if (workStatusFilter) {
+                    const hasWorking = Array.from(workStatusFilter.options).some(opt => opt.value === 'ทำงาน');
+                    if (hasWorking) {
+                        workStatusFilter.value = 'ทำงาน';
+                    }
+                }
+                // สั่งกรองข้อมูลทุกครั้งที่เปิดหน้านี้
+                if (localData.length > 0) {
+                    filterTable();
+                }
+            }
         }
 
         // ==========================================
