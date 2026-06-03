@@ -147,7 +147,7 @@
                 </button>
                 <div class="hidden md:flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 shrink-0">
                     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V7.1</span>
+                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V8</span>
                 </div>
             </div>
         </div>
@@ -352,7 +352,7 @@
                     </div>
                     <div class="flex gap-2 w-full sm:w-auto">
                         <button onclick="clearBulkSelection()" class="flex-1 sm:flex-none px-4 py-2 bg-white text-gray-600 rounded-xl text-xs md:text-sm font-bold border border-gray-200 hover:bg-gray-50 transition-colors">ยกเลิก</button>
-                        <button onclick="openExportModal()" class="flex-1 sm:flex-none px-4 py-2 bg-green-600 text-white rounded-xl text-xs md:text-sm font-bold shadow-md hover:bg-green-700 transition-colors flex items-center justify-center gap-2"><i class="ph-bold ph-file-xls"></i> ส่งออก</button>
+                        <button onclick="openExportModal()" class="flex-1 sm:flex-none px-4 py-2 bg-green-600 text-white rounded-xl text-xs md:text-sm font-bold shadow-md hover:bg-green-700 transition-colors flex items-center justify-center gap-2"><i class="ph-bold ph-export"></i> ส่งออกข้อมูล</button>
                         <button onclick="openBulkEditModal()" class="flex-1 sm:flex-none px-4 py-2 bg-brand-purple text-white rounded-xl text-xs md:text-sm font-bold shadow-md hover:bg-[#4C51B6] transition-colors flex items-center justify-center gap-2"><i class="ph-bold ph-pencil-simple"></i> แก้ไขสถานะ</button>
                     </div>
                 </div>
@@ -392,7 +392,7 @@
                     
                     <div class="grid grid-cols-2 md:flex md:flex-row w-full xl:w-auto shrink-0 gap-2 mt-2 xl:mt-0">
                         <button onclick="openExportModal()" class="w-full md:w-auto flex justify-center items-center gap-1.5 md:gap-2 bg-green-600 text-white px-3 sm:px-5 py-2.5 rounded-full text-xs md:text-sm font-bold hover:bg-green-700 transition-colors shadow-md shadow-green-600/20 truncate">
-                            <i class="ph-bold ph-file-xls text-base md:text-lg"></i> <span class="truncate">ส่งออก Excel</span>
+                            <i class="ph-bold ph-export text-base md:text-lg"></i> <span class="truncate">ส่งออกข้อมูล</span>
                         </button>
                         <button onclick="resetFormState(); switchTab('form');" class="w-full md:w-auto flex justify-center items-center gap-1.5 md:gap-2 bg-brand-purple text-white px-3 sm:px-5 py-2.5 rounded-full text-xs md:text-sm font-bold hover:bg-[#4C51B6] transition-colors shadow-md shadow-brand-purple/20 truncate">
                             <i class="ph-bold ph-plus text-base md:text-lg"></i> <span class="truncate">เพิ่มข้อมูล</span>
@@ -990,10 +990,10 @@
     </div>
 
     <div id="exportModal" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0 p-4">
-        <div id="exportModalContent" class="bg-white rounded-[1.5rem] shadow-2xl w-full max-w-lg transform scale-95 transition-all duration-300 overflow-hidden flex flex-col max-h-[85vh]">
+        <div id="exportModalContent" class="bg-white rounded-[1.5rem] shadow-2xl w-full max-w-xl transform scale-95 transition-all duration-300 overflow-hidden flex flex-col max-h-[85vh]">
             <div class="bg-gradient-to-r from-green-500 to-green-600 p-4 md:p-5 text-white flex justify-between items-center shrink-0">
                 <h3 class="text-lg md:text-xl font-bold font-heading flex items-center gap-2">
-                    <i class="ph-fill ph-file-xls text-xl"></i> เลือกข้อมูลที่ต้องการส่งออก
+                    <i class="ph-fill ph-export text-xl"></i> เลือกข้อมูลที่ต้องการส่งออก
                 </h3>
                 <button onclick="closeExportModal()" class="text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-2 rounded-full flex items-center justify-center shrink-0">
                     <i class="ph-bold ph-x text-base md:text-lg"></i>
@@ -1001,7 +1001,7 @@
             </div>
             <div class="p-4 md:p-6 overflow-y-auto no-scrollbar flex-1">
                 
-                <!-- ส่วนเงื่อนไขพิเศษ (เพิ่มใหม่) -->
+                <!-- ส่วนเงื่อนไขพิเศษ -->
                 <div class="bg-indigo-50 border border-indigo-100 p-3 md:p-4 rounded-xl mb-4">
                     <span class="text-sm font-bold text-indigo-800 mb-3 flex items-center gap-2"><i class="ph-fill ph-funnel"></i> เงื่อนไขพิเศษ (ไม่บังคับ)</span>
                     
@@ -1018,7 +1018,7 @@
                         <span class="text-xs md:text-sm text-gray-700 font-bold shrink-0">กรองตามวันที่อบรม:</span>
                         <input type="date" id="expConditionTrainDate" class="w-full sm:w-auto px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all font-sans">
                     </div>
-                    <p class="text-[10px] text-gray-500 mt-2">* หากตั้งค่าเงื่อนไขพิเศษ ระบบจะอ้างอิงจากฐานข้อมูลทั้งหมด (หรือจากที่เลือกไว้) โดยไม่สนใจการค้นหาปัจจุบัน</p>
+                    <p class="text-[10px] text-gray-500 mt-2">* หากตั้งค่าเงื่อนไขพิเศษ ระบบจะอ้างอิงจากฐานข้อมูลที่แสดงอยู่ (หรือจากที่เลือกไว้) โดยอัตโนมัติ</p>
                 </div>
                 <!-- จบส่วนเงื่อนไขพิเศษ -->
 
@@ -1028,10 +1028,14 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="exportColsContainer"></div>
             </div>
-            <div class="bg-gray-50 p-4 border-t border-gray-100 flex flex-col-reverse sm:flex-row justify-end gap-2 shrink-0">
-                <button onclick="closeExportModal()" class="w-full sm:w-auto px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-full text-sm font-bold hover:bg-gray-50 transition-colors shadow-sm">ยกเลิก</button>
-                <button onclick="exportToExcel()" class="w-full sm:w-auto px-6 py-2.5 bg-green-600 text-white rounded-full text-sm font-bold hover:bg-green-700 transition-colors shadow-md shadow-green-600/20 flex justify-center items-center gap-2">
-                    <i class="ph-bold ph-download-simple"></i> ยืนยันและส่งออก
+            
+            <div class="bg-gray-50 p-4 border-t border-gray-100 flex flex-col sm:flex-row justify-end gap-2 shrink-0">
+                <button onclick="closeExportModal()" class="w-full sm:w-auto px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-full text-xs md:text-sm font-bold hover:bg-gray-50 transition-colors shadow-sm order-3 sm:order-1">ยกเลิก</button>
+                <button onclick="exportToGoogleSheet()" class="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white rounded-full text-xs md:text-sm font-bold hover:bg-blue-700 transition-colors shadow-md shadow-blue-600/20 flex justify-center items-center gap-2 order-2 sm:order-2">
+                    <i class="ph-bold ph-google-logo"></i> ส่งออกไปยัง Sheet (ออนไลน์)
+                </button>
+                <button onclick="exportToExcel()" class="w-full sm:w-auto px-5 py-2.5 bg-green-600 text-white rounded-full text-xs md:text-sm font-bold hover:bg-green-700 transition-colors shadow-md shadow-green-600/20 flex justify-center items-center gap-2 order-1 sm:order-3">
+                    <i class="ph-bold ph-file-xls"></i> ดาวน์โหลด (Excel)
                 </button>
             </div>
         </div>
@@ -1712,9 +1716,6 @@
             }
         }
 
-        // ==========================================
-        // ฟังก์ชันลบข้อมูลพนักงานที่เคยขาดหายไป (แก้ไขบั๊ก)
-        // ==========================================
         async function executeDeleteEmployee() {
             if (!employeeToDeleteNo) return;
             closeDeleteConfirmModal();
@@ -1896,19 +1897,21 @@
             btn.innerText = isSelectAll ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด';
         }
 
-        function exportToExcel() {
+        // ฟังก์ชันช่วยสำหรับการเตรียมข้อมูลส่งออก (ใช้ร่วมกันทั้ง Excel และ Google Sheet)
+        function getFilteredDataForExport() {
             const cbs = document.querySelectorAll('.export-col-cb:checked');
-            if (cbs.length === 0) { showToast('คำเตือน', 'กรุณาเลือกอย่างน้อย 1 คอลัมน์', 'error'); return; }
-            const selectedIds = Array.from(cbs).map(cb => cb.value); EXPORT_COL_OPTIONS.forEach(col => { col.checked = selectedIds.includes(col.id); });
+            if (cbs.length === 0) { showToast('คำเตือน', 'กรุณาเลือกอย่างน้อย 1 คอลัมน์', 'error'); return null; }
             
-            // กรองข้อมูลตามเงื่อนไขพิเศษ
+            const selectedIds = Array.from(cbs).map(cb => cb.value); 
+            EXPORT_COL_OPTIONS.forEach(col => { col.checked = selectedIds.includes(col.id); });
+            
             let dataToExport = currentFilteredData;
             const useCardCondition = document.getElementById('expConditionCard').checked;
             const selectedTrainDate = document.getElementById('expConditionTrainDate').value;
             const useSelectedOnly = document.getElementById('expConditionSelectedOnly').checked;
             
             const isSpecialConditionActive = useCardCondition || selectedTrainDate || useSelectedOnly; 
-            const addSignatureColumn = useCardCondition || selectedTrainDate; // เพิ่มช่องเซ็นชื่อเฉพาะกรณีส่งออกบัตรหรือวันอบรม
+            const addSignatureColumn = useCardCondition || selectedTrainDate;
 
             if (isSpecialConditionActive) {
                 dataToExport = localData.filter(row => {
@@ -1921,7 +1924,6 @@
                     if (useCardCondition && isMatch) {
                         const cardStatus = String(row.cardStatus || '').trim();
                         const receiveStatus = String(row.cardReceiveStatus || '').trim();
-                        // เงื่อนไข: ทำบัตรแล้ว และ ยังไม่ได้รับบัตร (หรือไม่ใช่คำว่า รับแล้ว)
                         const isCardDone = cardStatus.includes('ทำบัตรแล้ว');
                         const isNotReceived = receiveStatus.includes('ยังไม่') || (!receiveStatus.includes('รับแล้ว'));
                         
@@ -1952,9 +1954,86 @@
                 
                 if (dataToExport.length === 0) {
                     showToast('ไม่พบข้อมูล', 'ไม่พบข้อมูลที่ตรงกับเงื่อนไขพิเศษที่ตั้งไว้', 'error');
-                    return;
+                    return null;
                 }
             }
+            
+            return { dataToExport, selectedIds, addSignatureColumn };
+        }
+
+        function exportToGoogleSheet() {
+            if (WEB_APP_URL === "") { showToast('ข้อผิดพลาด', 'ยังไม่ได้ตั้งค่า WEB_APP_URL ในระบบ', 'error'); return; }
+
+            const exportResult = getFilteredDataForExport();
+            if (!exportResult) return;
+            const { dataToExport, selectedIds, addSignatureColumn } = exportResult;
+
+            const exportDataArray = dataToExport.map((row, index) => {
+                let displayTrainDate = row.trainDate || 'ไม่ระบุ';
+                if (displayTrainDate !== 'ไม่ระบุ' && displayTrainDate !== '-') { if (String(displayTrainDate).includes('T')) { const d = new Date(displayTrainDate); displayTrainDate = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`; } } 
+                else displayTrainDate = 'ไม่ระบุ';
+
+                let displayDob = row.birthDate || '-';
+                if (String(displayDob).includes('T')) { const d = new Date(displayDob); displayDob = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`; }
+
+                let idCardText = String(row.idCard || '-').trim();
+                if (idCardText !== '-' && idCardText !== 'undefined') {
+                    let digitsOnly = idCardText.replace(/\D/g, '');
+                    if (digitsOnly.length === 13) idCardText = `${digitsOnly[0]}-${digitsOnly.substring(1,5)}-${digitsOnly.substring(5,10)}-${digitsOnly.substring(10,12)}-${digitsOnly[12]}`;
+                    idCardText = "'" + idCardText; // ใส่เครื่องหมาย ' นำหน้าเพื่อให้ Google Sheet มองเป็นข้อความ
+                }
+
+                const rowData = {};
+                if (selectedIds.includes('exp_no')) rowData['ลำดับ'] = index + 1;
+                if (selectedIds.includes('exp_sysno')) rowData['รหัสในระบบ'] = row.no || '-';
+                if (selectedIds.includes('exp_name')) rowData['ชื่อ-นามสกุล'] = row.name || '-';
+                if (selectedIds.includes('exp_idcard')) rowData['เลขบัตรประชาชน'] = idCardText;
+                if (selectedIds.includes('exp_workstatus')) rowData['สถานะงาน'] = row.workStatus || '-';
+                if (selectedIds.includes('exp_position')) rowData['ตำแหน่ง'] = row.position || '-';
+                if (selectedIds.includes('exp_group')) rowData['สังกัดชุด'] = row.group || '-';
+                if (selectedIds.includes('exp_contractor')) rowData['ชุดผู้รับเหมา'] = row.contractorGroup || '-';
+                if (selectedIds.includes('exp_dob')) rowData['วัน/เดือน/ปีเกิด'] = displayDob;
+                if (selectedIds.includes('exp_age')) rowData['อายุ'] = row.age || '-';
+                if (selectedIds.includes('exp_doc')) rowData['สถานะเอกสาร'] = row.documentStatus || '-';
+                if (selectedIds.includes('exp_train')) rowData['สถานะการอบรม'] = row.trainStatus || '-';
+                if (selectedIds.includes('exp_traindate')) rowData['วันที่อบรม'] = displayTrainDate;
+                if (selectedIds.includes('exp_card')) rowData['สถานะการทำบัตร'] = row.cardStatus || '-';
+                if (selectedIds.includes('exp_receive')) rowData['สถานะการรับบัตร'] = row.cardReceiveStatus || '-';
+                
+                if (addSignatureColumn) {
+                    rowData['ลายมือชื่อ (ผู้รับบัตร)'] = '';
+                }
+
+                return rowData;
+            });
+
+            closeExportModal(); 
+            showGlobalLoading(true, "กำลังส่งออกไปยัง Google Sheet", "ระบบกำลังนำข้อมูลไปบันทึกที่ชีตปลายทาง...");
+
+            const formData = new URLSearchParams();
+            formData.append('action', 'export_to_sheet');
+            formData.append('exportData', JSON.stringify(exportDataArray));
+
+            fetch(WEB_APP_URL, { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(result => {
+                showGlobalLoading(false);
+                if(result.status === 'success') {
+                    showToast('ส่งออกสำเร็จ', 'ข้อมูลถูกบันทึกลง Google Sheet ปลายทางแล้ว', 'success');
+                } else {
+                    showToast('เกิดข้อผิดพลาด', 'เซิร์ฟเวอร์แจ้งว่า: ' + (result.message || 'Unknown Error'), 'error');
+                }
+            })
+            .catch(err => {
+                showGlobalLoading(false);
+                showToast('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + err.message, 'error');
+            });
+        }
+
+        function exportToExcel() {
+            const exportResult = getFilteredDataForExport();
+            if (!exportResult) return;
+            const { dataToExport, selectedIds, addSignatureColumn } = exportResult;
 
             closeExportModal(); showGlobalLoading(true, "กำลังเตรียมไฟล์ Excel", "กรุณารอสักครู่ ระบบกำลังสร้างไฟล์ข้อมูล...");
 
@@ -1994,7 +2073,6 @@
                             if (selectedIds.includes('exp_card')) rowData['สถานะการทำบัตร'] = row.cardStatus || '-';
                             if (selectedIds.includes('exp_receive')) rowData['สถานะการรับบัตร'] = row.cardReceiveStatus || '-';
                             
-                            // เพิ่มคอลัมน์ช่องเซ็นชื่อเปล่า ๆ ในกรณีที่ใช้เงื่อนไขพิเศษ
                             if (addSignatureColumn) {
                                 rowData['ลายมือชื่อ (ผู้รับบัตร)'] = '';
                             }
@@ -2006,7 +2084,6 @@
                         const wscols = [];
                         EXPORT_COL_OPTIONS.forEach(col => { if (selectedIds.includes(col.id)) wscols.push({wch: col.width}); }); 
                         
-                        // กำหนดความกว้างให้คอลัมน์เซ็นชื่อ
                         if (addSignatureColumn) {
                             wscols.push({wch: 25});
                         }
