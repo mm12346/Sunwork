@@ -154,7 +154,7 @@
                 </button>
                 <div class="hidden md:flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 shrink-0">
                     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V 8.0</span>
+                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V8.1</span>
                 </div>
             </div>
         </div>
@@ -1025,9 +1025,44 @@
                         <span class="text-xs md:text-sm text-gray-700 font-bold shrink-0">กรองตามวันที่อบรม:</span>
                         <input type="date" id="expConditionTrainDate" class="w-full sm:w-auto px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all font-sans">
                     </div>
-                    <p class="text-[10px] text-gray-500 mt-2">* หากตั้งค่าเงื่อนไขพิเศษ ระบบจะอ้างอิงจากฐานข้อมูลที่แสดงอยู่ (หรือจากที่เลือกไว้) โดยอัตโนมัติ</p>
+                    <p class="text-[10px] text-gray-500 mt-2">* หากตั้งค่าเงื่อนไขพิเศษ ระบบจะอ้างอิงจากฐานข้อมูลทั้งหมด (หรือจากที่เลือกไว้) โดยไม่สนใจการค้นหาปัจจุบัน</p>
                 </div>
                 <!-- จบส่วนเงื่อนไขพิเศษ -->
+
+                <!-- ส่วนตั้งค่าหัวกระดาษ (สำหรับส่งออกออนไลน์) -->
+                <div class="bg-yellow-50 border border-yellow-200 p-3 md:p-4 rounded-xl mb-4">
+                    <span class="text-sm font-bold text-yellow-800 mb-3 flex items-center gap-2"><i class="ph-fill ph-printer"></i> ตั้งค่าข้อมูลแบบตรวจวัดแอลกอฮอล์ (เฉพาะส่งออก Sheet ออนไลน์)</span>
+                    <div class="grid grid-cols-2 lg:grid-cols-6 gap-2">
+                        <div class="col-span-2">
+                            <label class="block text-[10px] md:text-xs font-bold text-gray-700 mb-1">ชื่อ</label>
+                            <input type="text" id="expPrintName" placeholder="เช่น นาย ณัฐวุฒิ บัวผา" class="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 font-sans">
+                        </div>
+                        <div class="col-span-1">
+                            <label class="block text-[10px] md:text-xs font-bold text-gray-700 mb-1">วัน</label>
+                            <input type="number" id="expPrintDay" placeholder="เช่น 5" class="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 font-sans">
+                        </div>
+                        <div class="col-span-1">
+                            <label class="block text-[10px] md:text-xs font-bold text-gray-700 mb-1">เดือน</label>
+                            <select id="expPrintMonth" class="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 appearance-none cursor-pointer font-sans">
+                                <option value="มกราคม">มกราคม</option><option value="กุมภาพันธ์">กุมภาพันธ์</option>
+                                <option value="มีนาคม">มีนาคม</option><option value="เมษายน">เมษายน</option>
+                                <option value="พฤษภาคม">พฤษภาคม</option><option value="มิถุนายน">มิถุนายน</option>
+                                <option value="กรกฎาคม">กรกฎาคม</option><option value="สิงหาคม">สิงหาคม</option>
+                                <option value="กันยายน">กันยายน</option><option value="ตุลาคม">ตุลาคม</option>
+                                <option value="พฤศจิกายน">พฤศจิกายน</option><option value="ธันวาคม">ธันวาคม</option>
+                            </select>
+                        </div>
+                        <div class="col-span-1">
+                            <label class="block text-[10px] md:text-xs font-bold text-gray-700 mb-1">ปี (พ.ศ.)</label>
+                            <input type="number" id="expPrintYear" placeholder="เช่น 2569" class="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 font-sans">
+                        </div>
+                        <div class="col-span-1">
+                            <label class="block text-[10px] md:text-xs font-bold text-gray-700 mb-1">เวลา</label>
+                            <input type="time" id="expPrintTime" class="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 font-sans">
+                        </div>
+                    </div>
+                </div>
+                <!-- จบส่วนตั้งค่าหัวกระดาษ -->
 
                 <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
                     <span class="text-sm font-bold text-gray-700">เลือกคอลัมน์ที่ต้องการ</span>
@@ -1871,6 +1906,16 @@
             if(chkCard) chkCard.checked = false;
             if(inpDate) inpDate.value = '';
             
+            // ตั้งค่าวันที่และเวลาปัจจุบันลงในฟอร์มตั้งค่าการพิมพ์อัตโนมัติ
+            const today = new Date();
+            const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+            document.getElementById('expPrintDay').value = today.getDate();
+            document.getElementById('expPrintMonth').value = thaiMonths[today.getMonth()];
+            document.getElementById('expPrintYear').value = today.getFullYear() + 543;
+            const hh = String(today.getHours()).padStart(2, '0');
+            const mm = String(today.getMinutes()).padStart(2, '0');
+            document.getElementById('expPrintTime').value = `${hh}:${mm}`;
+
             // ติ๊กเงื่อนไข "ส่งออกเฉพาะที่เลือก" อัตโนมัติถ้ามีการเลือกไว้
             if(chkSelected) {
                 chkSelected.checked = selectedEmployees.size > 0;
@@ -2020,6 +2065,13 @@
             const formData = new URLSearchParams();
             formData.append('action', 'export_to_sheet');
             formData.append('exportData', JSON.stringify(exportDataArray));
+            
+            // เพิ่มข้อมูลตั้งค่าการพิมพ์ไปกับ Request
+            formData.append('printName', document.getElementById('expPrintName').value);
+            formData.append('printDay', document.getElementById('expPrintDay').value);
+            formData.append('printMonth', document.getElementById('expPrintMonth').value);
+            formData.append('printYear', document.getElementById('expPrintYear').value);
+            formData.append('printTime', document.getElementById('expPrintTime').value);
 
             fetch(WEB_APP_URL, { method: 'POST', body: formData })
             .then(res => res.json())
