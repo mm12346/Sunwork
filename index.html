@@ -154,7 +154,7 @@
                 </button>
                 <div class="hidden md:flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 shrink-0">
                     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V8.2</span>
+                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V8.3</span>
                 </div>
             </div>
         </div>
@@ -1117,7 +1117,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz5GmfMhcjNhj996u8QRQwPJzWGIdEFGxaUOuVnsPZeoGfqCgfwEpaTLE79oF8RDRf0/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyrAlbr2rtCteoo_tkViyRWQxiRHTvafXk7GXi3B6ttBY8lWYScWzm6yyaiXDq7SGY/exec"; 
         const CLOUDINARY_CLOUD_NAME = "dwfaxbxjn"; 
         const CLOUDINARY_UPLOAD_PRESET = "Sunwork1"; 
         
@@ -1221,6 +1221,85 @@
                 reader.readAsDataURL(file);
             }
         }
+        
+        // ฟังก์ชันใหม่สำหรับจัดการอัปโหลดเอกสารเข้า Google Drive ผ่าน Apps Script
+        async function handleUploadEmployeeDoc(input, no) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // ป้องกันไฟล์ใหญ่เกิน 5MB (ข้อจำกัด Apps Script Payload Base64)
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('ไฟล์ใหญ่เกินไป', 'กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB', 'error');
+                input.value = '';
+                return;
+            }
+
+            const row = localData.find(r => r.no === no);
+            if (!row) return;
+            const empName = row.name || 'Unknown';
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const base64Data = e.target.result.split(',')[1];
+                const mimeType = file.type;
+                const ext = file.name.split('.').pop();
+                
+                // เปลี่ยนชื่อไฟล์เป็นชื่อพนักงาน ตาม Requirement 
+                const fileName = `${empName}.${ext}`;
+
+                showGlobalLoading(true, "กำลังอัปโหลดเอกสารแนบ", "กำลังนำส่งไฟล์ไปยัง Google Drive\nกรุณารอสักครู่ (อาจใช้เวลา 10-30 วินาที)...");
+
+                try {
+                    const formData = new URLSearchParams();
+                    formData.append('action', 'upload_document');
+                    formData.append('employeeName', empName);
+                    formData.append('fileName', fileName);
+                    formData.append('mimeType', mimeType);
+                    formData.append('base64Data', base64Data);
+
+                    const uploadRes = await fetch(WEB_APP_URL, { method: 'POST', body: formData });
+                    const uploadResult = await uploadRes.json();
+
+                    if (uploadRes.ok && uploadResult.status === 'success') {
+                        const folderUrl = uploadResult.folderUrl;
+                        
+                        // อัปเดต docFolderUrl ใน Database ทันที
+                        const editData = {
+                            action: 'edit', no: row.no, name: row.name, idCard: row.idCard,
+                            position: row.position, group: row.group,
+                            documentStatus: row.documentStatus, trainStatus: row.trainStatus,        
+                            trainDate: row.trainDate, cardStatus: row.cardStatus,          
+                            birthDate: row.birthDate, age: row.age,                  
+                            cardReceiveStatus: row.cardReceiveStatus, contractorGroup: row.contractorGroup,
+                            imageUrl: row.imageUrl, workStatus: row.workStatus,
+                            docFolderUrl: folderUrl
+                        };
+
+                        const editFormData = new URLSearchParams(); 
+                        for (const key in editData) { editFormData.append(key, editData[key]); }
+                        
+                        const editRes = await fetch(WEB_APP_URL, { method: 'POST', body: editFormData });
+                        const editResult = await editRes.json();
+                        
+                        if(editRes.ok && editResult.status === 'success') {
+                            showToast('สำเร็จ', 'อัปโหลดเอกสารและบันทึกลงระบบเรียบร้อยแล้ว', 'success');
+                            await fetchData(); 
+                            closeDetailsModal();
+                        } else {
+                            throw new Error(editResult.message || "อัปเดตข้อมูลพนักงานไม่สำเร็จ");
+                        }
+                    } else {
+                        throw new Error(uploadResult.message || "อัปโหลดเอกสารไม่สำเร็จ");
+                    }
+                } catch (error) {
+                    showToast('เกิดข้อผิดพลาด', error.message, 'error');
+                } finally {
+                    showGlobalLoading(false);
+                    input.value = ''; 
+                }
+            };
+            reader.readAsDataURL(file);
+        }
 
         async function fetchData() {
             const loading = document.getElementById('loadingIndicator');
@@ -1235,7 +1314,8 @@
                 if(WEB_APP_URL === "") throw new Error("URL_EMPTY");
                 const urlWithCacheBuster = WEB_APP_URL + (WEB_APP_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
                 
-                const response = await fetch(urlWithCacheBuster, { cache: "no-store" });
+                // นำ { cache: "no-store" } ออกเพื่อป้องกันปัญหา CORS Preflight กับ Google Apps Script
+                const response = await fetch(urlWithCacheBuster);
                 if (!response.ok) throw new Error('Network response was not ok');
                 const dataResponse = await response.json();
                 
@@ -1868,7 +1948,8 @@
                     action: 'edit', no: row.no, name: row.name, idCard: row.idCard, position: row.position, group: row.group,
                     documentStatus: row.documentStatus, trainStatus: trainVal || row.trainStatus, trainDate: formattedTrainDate || row.trainDate, 
                     cardStatus: cardVal || row.cardStatus, birthDate: row.birthDate, age: row.age,
-                    cardReceiveStatus: receiveVal || row.cardReceiveStatus, contractorGroup: row.contractorGroup, imageUrl: row.imageUrl, workStatus: row.workStatus
+                    cardReceiveStatus: receiveVal || row.cardReceiveStatus, contractorGroup: row.contractorGroup, imageUrl: row.imageUrl, workStatus: row.workStatus,
+                    docFolderUrl: row.docFolderUrl || ""
                 };
 
                 const formData = new URLSearchParams(); for (const key in newData) { formData.append(key, newData[key]); }
@@ -2261,7 +2342,8 @@
                     trainDate: formatTrainDateForSheet(rawTrainDate), cardStatus: document.getElementById('inpCard').value,          
                     birthDate: formatDobForSheet(rawDob), age: document.getElementById('inpAge').value,                  
                     cardReceiveStatus: document.getElementById('inpCardReceive').value, contractorGroup: document.getElementById('inpContractor').value,
-                    imageUrl: finalImageUrl, workStatus: document.getElementById('inpWorkStatus').value 
+                    imageUrl: finalImageUrl, workStatus: document.getElementById('inpWorkStatus').value,
+                    docFolderUrl: "" // แฟ้มเอกสารว่างเปล่าตอนเพิ่มใหม่
                 };
 
                 const formData = new URLSearchParams(); for (const key in newData) { formData.append(key, newData[key]); }
@@ -2288,6 +2370,10 @@
             btnSubmit.innerHTML = '<i class="ph ph-spinner animate-spin text-lg"></i> บันทึก...'; btnSubmit.disabled = true;
 
             try {
+                // ดึง row เดิมมาเพื่อเก็บค่า folder url เอาไว้ ไม่ให้โดนลบ
+                const originalRow = localData.find(r => r.no === currentEditNo);
+                let docFolderUrl = originalRow ? (originalRow.docFolderUrl || "") : "";
+
                 let finalImageUrl = currentEditImageUrl; const newImageFile = document.getElementById('editInpProfileImage').files[0];
                 if (newImageFile) { showGlobalLoading(true, "กำลังอัปโหลดรูปภาพใหม่", "กรุณารอสักครู่ ระบบกำลังนำส่งรูปภาพ..."); finalImageUrl = await uploadImageToCloudinary(newImageFile); showGlobalLoading(true, "กำลังบันทึกการแก้ไข", "รอสักครู่..."); } 
                 else showGlobalLoading(true, "กำลังบันทึกการแก้ไข", "รอสักครู่...");
@@ -2300,7 +2386,8 @@
                     trainDate: formatTrainDateForSheet(rawEditTrainDate), cardStatus: document.getElementById('editInpCard').value,          
                     birthDate: formatDobForSheet(rawDob), age: document.getElementById('editInpAge').value,                  
                     cardReceiveStatus: document.getElementById('editInpCardReceive').value, contractorGroup: document.getElementById('editInpContractor').value,
-                    imageUrl: finalImageUrl, workStatus: document.getElementById('editInpWorkStatus').value
+                    imageUrl: finalImageUrl, workStatus: document.getElementById('editInpWorkStatus').value,
+                    docFolderUrl: docFolderUrl
                 };
 
                 const formData = new URLSearchParams(); for (const key in newData) { formData.append(key, newData[key]); }
@@ -2570,6 +2657,16 @@
             else { let initial = String(row.name || 'U').replace('นาย ', '').replace('นางสาว ', '').replace('นาง ', '').charAt(0) || 'U'; profileAvatarHtml = `<div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-tr from-brand-purple to-brand-lightPurple flex items-center justify-center text-white font-bold text-2xl md:text-3xl shadow-lg shadow-brand-purple/20 shrink-0 border-2 border-white">${initial}</div>`; }
 
             const safeIdCard = row.idCard && row.idCard !== 'undefined' ? row.idCard : '-'; const wStatus = String(row.workStatus || '').trim();
+            
+            // ส่วนแสดง UI อัปโหลด และเปิดโฟลเดอร์ Google Drive
+            let docFolderHtml = '';
+            if (row.docFolderUrl && row.docFolderUrl.trim() !== '') {
+                docFolderHtml = `
+                    <a href="${row.docFolderUrl}" target="_blank" class="w-full mt-1.5 px-3 py-2 bg-indigo-50 border border-indigo-100 text-brand-purple rounded-xl text-xs font-bold hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-folder-open text-base"></i> เปิดแฟ้มเอกสาร (Google Drive)
+                    </a>`;
+            }
+
             body.innerHTML = `
                 <div class="flex items-center gap-4 md:gap-5 mb-6 md:mb-8 pb-4 md:pb-6 border-b border-gray-100">
                     ${profileAvatarHtml}
@@ -2584,6 +2681,16 @@
                         <div class="bg-gray-50 rounded-xl p-3 md:p-4 border border-gray-100 flex flex-col gap-1"><span class="text-[10px] md:text-[11px] text-gray-500 font-bold">ตำแหน่ง (Position)</span><span class="text-sm md:text-base font-bold text-gray-800 break-words">${row.position || '-'}</span></div>
                         <div class="grid grid-cols-2 gap-3"><div class="bg-gray-50 rounded-xl p-3 border border-gray-100 flex flex-col gap-1"><span class="text-[10px] md:text-[11px] text-gray-500 font-bold">สังกัด (Group)</span><span class="text-sm md:text-base font-bold text-gray-800 break-words whitespace-normal leading-tight">${row.group || '-'}</span></div><div class="bg-gray-50 rounded-xl p-3 border border-gray-100 flex flex-col gap-1"><span class="text-[10px] md:text-[11px] text-gray-500 font-bold">ชุดผู้รับเหมา</span><span class="text-sm md:text-base font-bold text-gray-800 break-words whitespace-normal leading-tight">${row.contractorGroup || '-'}</span></div></div>
                         <div class="bg-gray-50 rounded-xl p-3 md:p-4 border border-gray-100 flex flex-col gap-1"><span class="text-[10px] md:text-[11px] text-gray-500 font-bold">อายุ / วันเกิด</span><span class="text-sm md:text-base font-bold text-gray-800">${row.age || '-'} <span class="text-gray-400 font-normal ml-1">(${displayDob})</span></span></div>
+                        
+                        <div class="bg-brand-lightPurple/10 rounded-xl p-3 md:p-4 border border-brand-lightPurple/20 flex flex-col gap-2 mt-2">
+                            <span class="text-[10px] md:text-[11px] text-brand-purple font-bold flex items-center gap-1.5"><i class="ph-fill ph-files"></i> แฟ้มเอกสารประจำตัว</span>
+                            <input type="file" id="uploadEmpDocInput_${row.no}" class="hidden" accept=".pdf,image/*" onchange="handleUploadEmployeeDoc(this, ${row.no})">
+                            <button onclick="document.getElementById('uploadEmpDocInput_${row.no}').click()" class="w-full px-3 py-2.5 bg-white border border-brand-purple text-brand-purple rounded-xl text-xs font-bold hover:bg-brand-purple hover:text-white transition-all flex items-center justify-center gap-2 shadow-sm">
+                                <i class="ph-bold ph-upload-simple text-base"></i> อัปโหลดเอกสาร / ใบเซอร์
+                            </button>
+                            ${docFolderHtml}
+                            <p class="text-[9px] text-gray-400 text-center mt-1">* ระบบจะเปลี่ยนชื่อไฟล์เป็นชื่อพนักงานอัตโนมัติ</p>
+                        </div>
                     </div>
                     <div class="space-y-3 md:space-y-4">
                         <h5 class="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 md:mb-3 flex items-center gap-1.5"><i class="ph-fill ph-shield-check"></i> สถานะต่างๆ</h5>
