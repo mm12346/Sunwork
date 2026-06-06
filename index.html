@@ -2651,6 +2651,35 @@
             else { let initial = String(row.name || 'U').replace('นาย ', '').replace('นางสาว ', '').replace('นาง ', '').charAt(0) || 'U'; profileAvatarHtml = `<div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-tr from-brand-purple to-brand-lightPurple flex items-center justify-center text-white font-bold text-2xl md:text-3xl shadow-lg shadow-brand-purple/20 shrink-0 border-2 border-white">${initial}</div>`; }
 
             const safeIdCard = row.idCard && row.idCard !== 'undefined' ? row.idCard : '-'; const wStatus = String(row.workStatus || '').trim();
+            
+            let docFolderHtml = '';
+            if (row.docFolderUrl && row.docFolderUrl !== "") {
+                docFolderHtml = `
+                    <div class="bg-blue-50 rounded-xl p-3 border border-blue-100 flex items-center justify-between mt-2">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center"><i class="ph-fill ph-folder-open text-lg"></i></div>
+                            <div class="flex flex-col">
+                                <span class="text-[10px] text-blue-600 font-bold">แฟ้มเอกสารแนบ</span>
+                                <span class="text-[11px] text-gray-600 font-medium">Google Drive</span>
+                            </div>
+                        </div>
+                        <a href="${row.docFolderUrl}" target="_blank" rel="noopener noreferrer" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-1">
+                            เปิดดู <i class="ph-bold ph-arrow-square-out"></i>
+                        </a>
+                    </div>`;
+            } else {
+                docFolderHtml = `
+                    <div class="bg-gray-50 rounded-xl p-3 border border-gray-200 flex items-center justify-between mt-2 opacity-70">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-gray-200 text-gray-400 rounded-lg flex items-center justify-center"><i class="ph-fill ph-folder-dashed text-lg"></i></div>
+                            <div class="flex flex-col">
+                                <span class="text-[10px] text-gray-500 font-bold">แฟ้มเอกสารแนบ</span>
+                                <span class="text-[11px] text-gray-400 font-medium">ยังไม่มีข้อมูล</span>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
             body.innerHTML = `
                 <div class="flex items-center gap-4 md:gap-5 mb-6 md:mb-8 pb-4 md:pb-6 border-b border-gray-100">
                     ${profileAvatarHtml}
@@ -2665,6 +2694,7 @@
                         <div class="bg-gray-50 rounded-xl p-3 md:p-4 border border-gray-100 flex flex-col gap-1"><span class="text-[10px] md:text-[11px] text-gray-500 font-bold">ตำแหน่ง (Position)</span><span class="text-sm md:text-base font-bold text-gray-800 break-words">${row.position || '-'}</span></div>
                         <div class="grid grid-cols-2 gap-3"><div class="bg-gray-50 rounded-xl p-3 border border-gray-100 flex flex-col gap-1"><span class="text-[10px] md:text-[11px] text-gray-500 font-bold">สังกัด (Group)</span><span class="text-sm md:text-base font-bold text-gray-800 break-words whitespace-normal leading-tight">${row.group || '-'}</span></div><div class="bg-gray-50 rounded-xl p-3 border border-gray-100 flex flex-col gap-1"><span class="text-[10px] md:text-[11px] text-gray-500 font-bold">ชุดผู้รับเหมา</span><span class="text-sm md:text-base font-bold text-gray-800 break-words whitespace-normal leading-tight">${row.contractorGroup || '-'}</span></div></div>
                         <div class="bg-gray-50 rounded-xl p-3 md:p-4 border border-gray-100 flex flex-col gap-1"><span class="text-[10px] md:text-[11px] text-gray-500 font-bold">อายุ / วันเกิด</span><span class="text-sm md:text-base font-bold text-gray-800">${row.age || '-'} <span class="text-gray-400 font-normal ml-1">(${displayDob})</span></span></div>
+                        ${docFolderHtml}
                     </div>
                     <div class="space-y-3 md:space-y-4">
                         <h5 class="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 md:mb-3 flex items-center gap-1.5"><i class="ph-fill ph-shield-check"></i> สถานะต่างๆ</h5>
