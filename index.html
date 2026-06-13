@@ -930,10 +930,10 @@
 
     <!-- ป๊อปอัปแก้ไขหลายรายการ (Bulk Edit Modal) -->
     <div id="bulkEditModal" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0 p-4">
-        <div id="bulkEditModalContent" class="bg-white rounded-[1.5rem] shadow-2xl w-full max-w-md transform scale-95 transition-all duration-300 overflow-hidden flex flex-col max-h-[85vh]">
+        <div id="bulkEditModalContent" class="bg-white rounded-[1.5rem] shadow-2xl w-full max-w-lg transform scale-95 transition-all duration-300 overflow-hidden flex flex-col max-h-[85vh]">
             <div class="bg-gradient-to-r from-brand-sidebar to-brand-purple p-4 md:p-5 text-white flex justify-between items-center shrink-0">
                 <h3 class="text-lg md:text-xl font-bold font-heading flex items-center gap-2">
-                    <i class="ph-fill ph-pencil-simple text-xl"></i> แก้ไขสถานะหลายรายการ
+                    <i class="ph-fill ph-pencil-simple text-xl"></i> แก้ไขหลายรายการ
                 </h3>
                 <button onclick="closeBulkEditModal()" class="text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-2 rounded-full flex items-center justify-center shrink-0">
                     <i class="ph-bold ph-x text-base md:text-lg"></i>
@@ -944,35 +944,83 @@
                 <div class="p-4 md:p-6 overflow-y-auto no-scrollbar space-y-4">
                     <div class="bg-blue-50 text-blue-800 text-[11px] md:text-xs p-3 rounded-xl border border-blue-100 flex gap-2">
                         <i class="ph-fill ph-info text-lg shrink-0"></i>
-                        <p>เลือกสถานะที่ต้องการเปลี่ยนแปลง ข้อมูลไหนที่ไม่ต้องการเปลี่ยนให้คงค่า "-- ไม่เปลี่ยนแปลง --" ไว้ตามเดิม</p>
+                        <p>เลือกเฉพาะข้อมูลที่ต้องการเปลี่ยนแปลง ข้อมูลไหนที่ไม่ต้องการเปลี่ยนให้คงค่า "-- ไม่เปลี่ยนแปลง --" ไว้ตามเดิม</p>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">สถานะการอบรม</label>
-                        <div class="relative">
-                            <select id="bulkInpTrain" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold focus:ring-2 focus:ring-brand-purple/20 outline-none appearance-none cursor-pointer"></select>
-                            <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                    <!-- ฟิลด์ใหม่ที่เพิ่มมา -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">ตำแหน่ง (Position)</label>
+                            <div class="relative">
+                                <select id="bulkInpPos" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold focus:ring-2 focus:ring-brand-purple/20 outline-none appearance-none cursor-pointer"></select>
+                                <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">สังกัดชุด (Group)</label>
+                            <div class="relative">
+                                <select id="bulkInpGroup" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold focus:ring-2 focus:ring-brand-purple/20 outline-none appearance-none cursor-pointer"></select>
+                                <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">ชุดผู้รับเหมา</label>
+                            <div class="relative">
+                                <select id="bulkInpContractor" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold focus:ring-2 focus:ring-brand-purple/20 outline-none appearance-none cursor-pointer"></select>
+                                <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">สถานะการทำงาน</label>
+                            <div class="relative">
+                                <select id="bulkInpWorkStatus" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold focus:ring-2 focus:ring-brand-purple/20 outline-none appearance-none cursor-pointer"></select>
+                                <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">สถานะเอกสาร</label>
+                            <div class="relative">
+                                <select id="bulkInpDocStatus" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold focus:ring-2 focus:ring-brand-purple/20 outline-none appearance-none cursor-pointer"></select>
+                                <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">วันที่อบรม <span class="text-[10px] text-gray-400 font-normal">(ระบุเมื่อต้องการเปลี่ยน)</span></label>
-                        <input type="date" id="bulkInpTrainDate" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-purple/20 outline-none text-sm text-gray-800">
-                    </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">สถานะการทำบัตร</label>
-                        <div class="relative">
-                            <select id="bulkInpCard" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold focus:ring-2 focus:ring-brand-purple/20 outline-none appearance-none cursor-pointer"></select>
-                            <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                    <div class="border-t border-gray-100 pt-4 mt-2"></div>
+
+                    <!-- ฟิลด์เดิมที่เคยมี -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">สถานะการอบรม</label>
+                            <div class="relative">
+                                <select id="bulkInpTrain" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold focus:ring-2 focus:ring-brand-purple/20 outline-none appearance-none cursor-pointer"></select>
+                                <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
                         </div>
-                    </div>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">วันที่อบรม <span class="text-[10px] text-gray-400 font-normal">(เปลี่ยนเมื่อต้องการ)</span></label>
+                            <input type="date" id="bulkInpTrainDate" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-purple/20 outline-none text-sm text-gray-800">
+                        </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">สถานะรับบัตร</label>
-                        <div class="relative">
-                            <select id="bulkInpCardReceive" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold focus:ring-2 focus:ring-brand-purple/20 outline-none appearance-none cursor-pointer"></select>
-                            <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">สถานะการทำบัตร</label>
+                            <div class="relative">
+                                <select id="bulkInpCard" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold focus:ring-2 focus:ring-brand-purple/20 outline-none appearance-none cursor-pointer"></select>
+                                <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">สถานะรับบัตร</label>
+                            <div class="relative">
+                                <select id="bulkInpCardReceive" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold focus:ring-2 focus:ring-brand-purple/20 outline-none appearance-none cursor-pointer"></select>
+                                <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1303,21 +1351,26 @@
             // 1. หมวดหมู่บุคคล/ฟอร์มพนักงาน
             const posHtml = buildOpts(config.positions, 'เลือกตำแหน่ง...');
             document.getElementById('inpPos').innerHTML = posHtml; document.getElementById('editInpPos').innerHTML = posHtml;
+            document.getElementById('bulkInpPos').innerHTML = buildBulkOpts(config.positions);
             
             const groupHtml = buildOpts(config.groups, 'เลือกสังกัดชุด...');
             document.getElementById('inpGroup').innerHTML = groupHtml; document.getElementById('editInpGroup').innerHTML = groupHtml;
+            document.getElementById('bulkInpGroup').innerHTML = buildBulkOpts(config.groups);
             
             const contractorHtml = buildOpts(config.contractors, 'เลือกชุดผู้รับเหมา...');
             document.getElementById('inpContractor').innerHTML = contractorHtml; document.getElementById('editInpContractor').innerHTML = contractorHtml;
             document.getElementById('filterContractor').innerHTML = buildFilterOpts(config.contractors, 'ทุกชุดผู้รับเหมา');
+            document.getElementById('bulkInpContractor').innerHTML = buildBulkOpts(config.contractors);
 
             // 2. หมวดหมู่สถานะ
             const workHtml = buildOpts(config.workStatus, 'เลือกสถานะ...');
             document.getElementById('inpWorkStatus').innerHTML = workHtml; document.getElementById('editInpWorkStatus').innerHTML = workHtml;
             document.getElementById('filterWorkStatus').innerHTML = buildFilterOpts(config.workStatus, 'สถานะงานทั้งหมด');
+            document.getElementById('bulkInpWorkStatus').innerHTML = buildBulkOpts(config.workStatus);
 
             const docHtml = buildOpts(config.documentStatus, 'เลือกสถานะเอกสาร...');
             document.getElementById('inpDocStatus').innerHTML = docHtml; document.getElementById('editInpDocStatus').innerHTML = docHtml;
+            document.getElementById('bulkInpDocStatus').innerHTML = buildBulkOpts(config.documentStatus);
 
             const trainHtml = buildOpts(config.trainStatus, 'เลือกสถานะอบรม...');
             document.getElementById('inpTrain').innerHTML = trainHtml; document.getElementById('editInpTrain').innerHTML = trainHtml;
@@ -1842,8 +1895,16 @@
         }
 
         function openBulkEditModal() {
-            document.getElementById('bulkInpTrain').value = ''; document.getElementById('bulkInpTrainDate').value = '';
-            document.getElementById('bulkInpCard').value = ''; document.getElementById('bulkInpCardReceive').value = '';
+            document.getElementById('bulkInpPos').value = '';
+            document.getElementById('bulkInpGroup').value = '';
+            document.getElementById('bulkInpContractor').value = '';
+            document.getElementById('bulkInpWorkStatus').value = '';
+            document.getElementById('bulkInpDocStatus').value = '';
+            document.getElementById('bulkInpTrain').value = ''; 
+            document.getElementById('bulkInpTrainDate').value = '';
+            document.getElementById('bulkInpCard').value = ''; 
+            document.getElementById('bulkInpCardReceive').value = '';
+            
             const modal = document.getElementById('bulkEditModal'); const content = document.getElementById('bulkEditModalContent');
             modal.classList.remove('hidden');
             requestAnimationFrame(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); content.classList.add('scale-100'); });
@@ -1857,10 +1918,25 @@
 
         async function submitBulkEdit(e) {
             e.preventDefault();
-            const trainVal = document.getElementById('bulkInpTrain').value; const cardVal = document.getElementById('bulkInpCard').value;
-            const receiveVal = document.getElementById('bulkInpCardReceive').value; const rawBulkTrainDate = document.getElementById('bulkInpTrainDate').value;
+            
+            // รับค่าจาก Dropdown ใหม่
+            const posVal = document.getElementById('bulkInpPos').value;
+            const groupVal = document.getElementById('bulkInpGroup').value;
+            const contractorVal = document.getElementById('bulkInpContractor').value;
+            const workStatusVal = document.getElementById('bulkInpWorkStatus').value;
+            const docStatusVal = document.getElementById('bulkInpDocStatus').value;
+            
+            // รับค่าจาก Dropdown เดิม
+            const trainVal = document.getElementById('bulkInpTrain').value; 
+            const cardVal = document.getElementById('bulkInpCard').value;
+            const receiveVal = document.getElementById('bulkInpCardReceive').value; 
+            const rawBulkTrainDate = document.getElementById('bulkInpTrainDate').value;
 
-            if (!trainVal && !cardVal && !receiveVal && !rawBulkTrainDate) { showToast('แจ้งเตือน', 'กรุณาเลือกอย่างน้อย 1 สถานะที่ต้องการแก้ไข', 'error'); return; }
+            // ตรวจสอบว่ามีการเปลี่ยนแปลงอย่างน้อย 1 รายการหรือไม่
+            if (!posVal && !groupVal && !contractorVal && !workStatusVal && !docStatusVal && !trainVal && !cardVal && !receiveVal && !rawBulkTrainDate) { 
+                showToast('แจ้งเตือน', 'กรุณาเลือกอย่างน้อย 1 สถานะที่ต้องการแก้ไข', 'error'); 
+                return; 
+            }
 
             const formattedTrainDate = rawBulkTrainDate ? formatTrainDateForSheet(rawBulkTrainDate) : null;
             const btnSubmit = document.getElementById('btnBulkModalSubmit'); const originalHTML = btnSubmit.innerHTML;
@@ -1874,11 +1950,21 @@
                 const row = localData.find(r => r.no === parseInt(no));
                 if (!row) continue;
 
+                // อัปเดตข้อมูลโดยเอาค่าใหม่ไปทับ ถ้าไม่มีค่าใหม่ก็ใช้ข้อมูลเก่า
                 const newData = {
-                    action: 'edit', no: row.no, name: row.name, idCard: row.idCard, position: row.position, group: row.group,
-                    documentStatus: row.documentStatus, trainStatus: trainVal || row.trainStatus, trainDate: formattedTrainDate || row.trainDate, 
-                    cardStatus: cardVal || row.cardStatus, birthDate: row.birthDate, age: row.age,
-                    cardReceiveStatus: receiveVal || row.cardReceiveStatus, contractorGroup: row.contractorGroup, imageUrl: row.imageUrl, workStatus: row.workStatus
+                    action: 'edit', no: row.no, name: row.name, idCard: row.idCard, 
+                    position: posVal || row.position, 
+                    group: groupVal || row.group,
+                    documentStatus: docStatusVal || row.documentStatus, 
+                    trainStatus: trainVal || row.trainStatus, 
+                    trainDate: formattedTrainDate || row.trainDate, 
+                    cardStatus: cardVal || row.cardStatus, 
+                    birthDate: row.birthDate, age: row.age,
+                    cardReceiveStatus: receiveVal || row.cardReceiveStatus, 
+                    contractorGroup: contractorVal || row.contractorGroup, 
+                    imageUrl: row.imageUrl, 
+                    workStatus: workStatusVal || row.workStatus,
+                    docFolderUrl: row.docFolderUrl // ใส่กันเอกสารแนบหาย
                 };
 
                 const formData = new URLSearchParams(); for (const key in newData) { formData.append(key, newData[key]); }
