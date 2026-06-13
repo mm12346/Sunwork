@@ -154,7 +154,7 @@
                 </button>
                 <div class="hidden md:flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 shrink-0">
                     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V8.1</span>
+                    <span class="text-xs font-bold text-gray-600">ระบบออนไลน์ V8.4</span>
                 </div>
             </div>
         </div>
@@ -371,25 +371,33 @@
                             <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="ค้นหาชื่อ, เลขบัตร..." class="bg-transparent border-none outline-none text-sm w-full ml-2 text-gray-700 placeholder-gray-400 font-sans">
                         </div>
                         
-                        <div class="grid grid-cols-2 sm:flex sm:flex-row w-full md:w-auto gap-2">
-                            <div class="relative w-full sm:w-32 bg-gray-50 rounded-full border border-gray-200 focus-within:border-brand-purple transition-all shrink-0">
-                                <select id="filterWorkStatus" onchange="filterTable()" class="w-full bg-transparent border-none outline-none text-sm text-gray-700 px-3 py-2.5 appearance-none cursor-pointer font-sans">
+                        <div class="grid grid-cols-2 lg:flex w-full md:w-auto gap-2">
+                            <div class="relative w-full lg:w-32 bg-gray-50 rounded-full border border-gray-200 focus-within:border-brand-purple transition-all shrink-0">
+                                <select id="filterWorkStatus" onchange="filterTable()" class="w-full bg-transparent border-none outline-none text-xs md:text-sm text-gray-700 px-3 py-2.5 appearance-none cursor-pointer font-sans">
                                     <option value="all">สถานะงานทั้งหมด</option>
                                     <!-- ตัวเลือกจะถูกแทรกด้วย JS -->
                                 </select>
                                 <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                             </div>
 
-                            <div class="relative w-full sm:w-36 bg-gray-50 rounded-full border border-gray-200 focus-within:border-brand-purple transition-all shrink-0">
-                                <select id="filterStatus" onchange="filterTable()" class="w-full bg-transparent border-none outline-none text-sm text-gray-700 px-3 py-2.5 appearance-none cursor-pointer font-sans">
+                            <div class="relative w-full lg:w-32 bg-gray-50 rounded-full border border-gray-200 focus-within:border-brand-purple transition-all shrink-0">
+                                <select id="filterDocStatus" onchange="filterTable()" class="w-full bg-transparent border-none outline-none text-xs md:text-sm text-gray-700 px-3 py-2.5 appearance-none cursor-pointer font-sans">
+                                    <option value="all">ทุกสถานะเอกสาร</option>
+                                    <!-- ตัวเลือกจะถูกแทรกด้วย JS -->
+                                </select>
+                                <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
+
+                            <div class="relative w-full lg:w-36 bg-gray-50 rounded-full border border-gray-200 focus-within:border-brand-purple transition-all shrink-0">
+                                <select id="filterStatus" onchange="filterTable()" class="w-full bg-transparent border-none outline-none text-xs md:text-sm text-gray-700 px-3 py-2.5 appearance-none cursor-pointer font-sans">
                                     <option value="all">ทุกสถานะอบรม</option>
                                     <!-- ตัวเลือกจะถูกแทรกด้วย JS -->
                                 </select>
                                 <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                             </div>
                             
-                            <div class="relative w-full col-span-2 sm:col-span-1 sm:w-44 bg-gray-50 rounded-full border border-gray-200 focus-within:border-brand-purple transition-all shrink-0">
-                                <select id="filterContractor" onchange="filterTable()" class="w-full bg-transparent border-none outline-none text-sm text-gray-700 px-3 py-2.5 appearance-none cursor-pointer font-sans">
+                            <div class="relative w-full lg:w-44 bg-gray-50 rounded-full border border-gray-200 focus-within:border-brand-purple transition-all shrink-0">
+                                <select id="filterContractor" onchange="filterTable()" class="w-full bg-transparent border-none outline-none text-xs md:text-sm text-gray-700 px-3 py-2.5 appearance-none cursor-pointer font-sans">
                                     <option value="all">ทุกชุดผู้รับเหมา</option>
                                 </select>
                                 <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
@@ -1371,6 +1379,7 @@
             const docHtml = buildOpts(config.documentStatus, 'เลือกสถานะเอกสาร...');
             document.getElementById('inpDocStatus').innerHTML = docHtml; document.getElementById('editInpDocStatus').innerHTML = docHtml;
             document.getElementById('bulkInpDocStatus').innerHTML = buildBulkOpts(config.documentStatus);
+            document.getElementById('filterDocStatus').innerHTML = buildFilterOpts(config.documentStatus, 'ทุกสถานะเอกสาร');
 
             const trainHtml = buildOpts(config.trainStatus, 'เลือกสถานะอบรม...');
             document.getElementById('inpTrain').innerHTML = trainHtml; document.getElementById('editInpTrain').innerHTML = trainHtml;
@@ -1679,6 +1688,7 @@
             const statusFilter = document.getElementById('filterStatus').value;
             const contractorFilter = document.getElementById('filterContractor').value;
             const workStatusFilter = document.getElementById('filterWorkStatus').value;
+            const docStatusFilter = document.getElementById('filterDocStatus').value;
             
             const filteredData = localData.filter(row => {
                 const name = String(row.name || '').toLowerCase().replace(/\s+/g, '');
@@ -1695,7 +1705,10 @@
                 let matchWorkStatus = true;
                 if (workStatusFilter !== 'all') matchWorkStatus = (String(row.workStatus || '').trim() === workStatusFilter);
 
-                return matchText && matchStatus && matchContractor && matchWorkStatus;
+                let matchDocStatus = true;
+                if (docStatusFilter !== 'all') matchDocStatus = String(row.documentStatus || '').trim() === docStatusFilter;
+
+                return matchText && matchStatus && matchContractor && matchWorkStatus && matchDocStatus;
             });
             currentFilteredData = filteredData; 
             renderTable(filteredData);
