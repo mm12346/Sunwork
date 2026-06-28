@@ -1163,6 +1163,15 @@
             </div>
         </div>
     </div>
+
+    <!-- ป๊อปอัปดูรูปภาพขนาดเต็ม (Full Image Modal) -->
+    <div id="fullImageModal" class="fixed inset-0 z-[90] hidden flex items-center justify-center bg-gray-900/90 backdrop-blur-sm transition-opacity duration-300 opacity-0 p-4 cursor-zoom-out" onclick="closeFullImage()">
+        <button type="button" onclick="closeFullImage()" class="absolute top-4 right-4 md:top-8 md:right-8 text-white/80 hover:text-white transition-colors bg-black/40 hover:bg-black/60 p-2 md:p-3 rounded-full flex items-center justify-center z-10 cursor-pointer">
+            <i class="ph-bold ph-x text-xl md:text-2xl"></i>
+        </button>
+        <img id="fullImageElement" src="" class="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl transform scale-95 transition-transform duration-300 cursor-default" onclick="event.stopPropagation()">
+    </div>
+
     <style>
         @keyframes scan {
             0% { top: 0; opacity: 0; }
@@ -1575,7 +1584,7 @@
 
                 let imageThumbnail = '';
                 if (row.imageUrl && row.imageUrl !== "" && row.imageUrl !== "-") {
-                    imageThumbnail = `<img src="${row.imageUrl}" class="w-8 h-8 rounded-full object-cover mx-auto shadow-sm" alt="profile">`;
+                    imageThumbnail = `<img src="${row.imageUrl}" onclick="event.stopPropagation(); openFullImage('${row.imageUrl}')" class="w-8 h-8 rounded-full object-cover mx-auto shadow-sm cursor-pointer hover:opacity-80 hover:ring-2 hover:ring-brand-purple transition-all" title="คลิกเพื่อดูรูปเต็ม" alt="profile">`;
                 } else {
                     let initial = String(row.name || 'U').replace('นาย ', '').replace('นางสาว ', '').replace('นาง ', '').charAt(0) || 'U';
                     imageThumbnail = `<div class="w-8 h-8 rounded-full bg-brand-lightPurple/20 text-brand-purple flex items-center justify-center font-bold text-xs mx-auto">${initial}</div>`;
@@ -2746,7 +2755,7 @@
 
             const body = document.getElementById('detailsModalBody'); const footer = document.getElementById('detailsModalFooter');
             let profileAvatarHtml = '';
-            if (row.imageUrl && row.imageUrl !== "" && row.imageUrl !== "-") profileAvatarHtml = `<img src="${row.imageUrl}" alt="profile" class="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover shadow-lg shadow-brand-purple/20 shrink-0 border-2 border-white">`;
+            if (row.imageUrl && row.imageUrl !== "" && row.imageUrl !== "-") profileAvatarHtml = `<img src="${row.imageUrl}" onclick="openFullImage('${row.imageUrl}')" alt="profile" class="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover shadow-lg shadow-brand-purple/20 shrink-0 border-2 border-white cursor-pointer hover:opacity-80 transition-opacity" title="คลิกเพื่อดูรูปเต็ม">`;
             else { let initial = String(row.name || 'U').replace('นาย ', '').replace('นางสาว ', '').replace('นาง ', '').charAt(0) || 'U'; profileAvatarHtml = `<div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-tr from-brand-purple to-brand-lightPurple flex items-center justify-center text-white font-bold text-2xl md:text-3xl shadow-lg shadow-brand-purple/20 shrink-0 border-2 border-white">${initial}</div>`; }
 
             const safeIdCard = row.idCard && row.idCard !== 'undefined' ? row.idCard : '-'; const wStatus = String(row.workStatus || '').trim();
@@ -2838,6 +2847,32 @@
             document.getElementById('editInpAge').value = row.age || ''; if (document.getElementById('editInpDob').value && !document.getElementById('editInpAge').value) autoCalcAgeEdit();
             document.getElementById('detailsViewMode').classList.add('hidden'); document.getElementById('editViewMode').classList.remove('hidden');
             document.getElementById('detailsModalTitle').innerHTML = '<i class="ph-bold ph-pencil-simple text-xl md:text-2xl"></i> แก้ไขข้อมูลพนักงาน';
+        }
+
+        // ฟังก์ชันเปิดดูรูปเต็ม
+        function openFullImage(url) {
+            const modal = document.getElementById('fullImageModal');
+            const img = document.getElementById('fullImageElement');
+            img.src = url;
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                modal.classList.remove('opacity-0');
+                img.classList.remove('scale-95');
+                img.classList.add('scale-100');
+            });
+        }
+
+        // ฟังก์ชันปิดดูรูปเต็ม
+        function closeFullImage() {
+            const modal = document.getElementById('fullImageModal');
+            const img = document.getElementById('fullImageElement');
+            modal.classList.add('opacity-0');
+            img.classList.remove('scale-100');
+            img.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                img.src = '';
+            }, 300);
         }
 
         function cancelEditMode() { document.getElementById('detailsViewMode').classList.remove('hidden'); document.getElementById('editViewMode').classList.add('hidden'); document.getElementById('detailsModalTitle').innerHTML = '<i class="ph-fill ph-user-circle text-xl md:text-2xl"></i> รายละเอียดพนักงาน'; }
