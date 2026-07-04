@@ -19,6 +19,7 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <!-- SheetJS สำหรับ Export เป็น Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    
     <script>
         tailwind.config = {
             theme: {
@@ -112,13 +113,11 @@
                 <span class="text-[9px] md:hidden mt-1 font-bold">ฟอร์ม</span>
             </a>
             
-            <!-- เมนูปริ้นแบบตรวจวัดแอลกอฮอล์ (เปิดแท็บใหม่) -->
             <a href="https://docs.google.com/spreadsheets/d/1v1buMVSG5mdT-hvtTTtB20l3sw4t2vlBDcZDx5Am4lY/edit?usp=sharing" target="_blank" rel="noopener noreferrer" class="relative flex flex-col md:flex-row items-center justify-center text-brand-lightPurple hover:text-white transition-colors h-full md:h-auto p-2 md:p-3 group w-full md:w-auto" title="ปริ้นแบบตรวจวัดแอลกอฮอล์">
                 <i class="ph ph-printer text-xl md:text-2xl group-hover:scale-110 transition-transform"></i>
                 <span class="text-[9px] md:hidden mt-1 font-bold">ปริ้นเอกสาร</span>
             </a>
 
-            <!-- เมนูตั้งค่า (Settings) -->
             <a href="#" onclick="switchTab('settings')" id="nav-settings" class="relative flex flex-col md:flex-row items-center justify-center text-brand-lightPurple hover:text-white transition-colors h-full md:h-auto p-2 md:p-3 group w-full md:w-auto" title="ตั้งค่าระบบดรอปดาวน์">
                 <div class="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1.5 bg-white rounded-b-full md:hidden nav-indicator transition-opacity duration-300 opacity-0"></div>
                 <div class="absolute left-0 w-1.5 h-8 bg-white rounded-r-full hidden md:block nav-indicator transition-opacity duration-300 opacity-0"></div>
@@ -368,7 +367,7 @@
                     <div class="flex flex-col md:flex-row items-center gap-3 w-full xl:w-auto flex-1">
                         <div class="relative w-full md:w-auto bg-gray-50 rounded-full flex items-center px-4 py-2 border border-gray-200 focus-within:border-brand-purple focus-within:ring-2 focus-within:ring-brand-purple/20 transition-all flex-1">
                             <i class="ph ph-magnifying-glass text-gray-400 text-lg"></i>
-                            <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="ค้นหาชื่อ, เลขบัตร..." class="bg-transparent border-none outline-none text-sm w-full ml-2 text-gray-700 placeholder-gray-400 font-sans">
+                            <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="ค้นหาชื่อ, เลขบัตร, รหัสพนักงาน..." class="bg-transparent border-none outline-none text-sm w-full ml-2 text-gray-700 placeholder-gray-400 font-sans">
                         </div>
                         
                         <div class="grid grid-cols-2 lg:flex w-full md:w-auto gap-2">
@@ -421,12 +420,13 @@
                 </div>
 
                 <div class="overflow-auto max-h-[60vh] table-scrollbar border border-gray-100 rounded-xl relative w-full" id="tableContainer">
-                    <table class="w-full text-left border-collapse min-w-[1050px]">
+                    <table class="w-full text-left border-collapse min-w-[1150px]">
                         <thead class="bg-gray-50 sticky top-0 z-20 shadow-sm outline outline-1 outline-gray-200">
                             <tr class="text-[11px] text-gray-500 uppercase tracking-wider border-b border-gray-200 font-bold">
                                 <th class="py-3 px-4 text-center w-10 bg-gray-50 rounded-tl-xl"><input type="checkbox" id="selectAllCheckbox" class="w-4 h-4 rounded border-gray-300 cursor-pointer" onclick="toggleSelectAll(this)"></th>
                                 <th class="py-3 px-4 text-center w-12 bg-gray-50">รูป</th>
                                 <th class="py-3 px-4 bg-gray-50">ชื่อ-นามสกุล</th>
+                                <th class="py-3 px-4 bg-gray-50">รหัสพนักงาน</th>
                                 <th class="py-3 px-4 bg-gray-50">เลขบัตรประชาชน</th>
                                 <th class="py-3 px-4 bg-gray-50">ตำแหน่ง</th>
                                 <th class="py-3 px-4 bg-gray-50">สังกัดชุด</th>
@@ -633,7 +633,7 @@
                         <div>
                             <label class="block text-xs md:text-sm font-bold text-gray-700 mb-1.5 md:mb-2">สถานะการอบรม <span class="text-red-500">*</span></label>
                             <div class="relative">
-                                <select id="inpTrain" required class="w-full px-3 py-2.5 md:px-4 md:py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-bold text-gray-700 appearance-none cursor-pointer">
+                                <select id="inpTrain" required onchange="toggleEmpIdField('inpTrain', 'inpEmpId')" class="w-full px-3 py-2.5 md:px-4 md:py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-bold text-gray-700 appearance-none cursor-pointer">
                                     <option value="" disabled selected>กำลังโหลดข้อมูล...</option>
                                 </select>
                                 <i class="ph ph-caret-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
@@ -661,10 +661,14 @@
                                 <i class="ph ph-caret-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                             </div>
                         </div>
-                        <!-- New File Upload Section for Documents -->
                         <div>
                             <label class="block text-xs md:text-sm font-bold text-gray-700 mb-1.5 md:mb-2">แนบไฟล์เอกสาร <span class="text-[10px] md:text-xs text-gray-400 font-normal">(PDF/รูปภาพ)</span></label>
                             <input type="file" id="inpDocument" accept=".pdf,image/*" class="w-full px-3 py-2 md:px-3.5 md:py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-brand-purple transition-all text-sm font-sans text-gray-600">
+                        </div>
+                        <!-- เพิ่มช่องรหัสพนักงานใหม่ -->
+                        <div>
+                            <label class="block text-xs md:text-sm font-bold text-gray-700 mb-1.5 md:mb-2">รหัสพนักงาน <span class="text-[10px] md:text-xs text-gray-400 font-normal">(เฉพาะผ่านอบรม)</span></label>
+                            <input type="text" id="inpEmpId" disabled placeholder="รหัสพนักงาน" class="w-full px-3 py-2.5 md:px-4 md:py-3 bg-gray-100 border border-gray-200 rounded-xl cursor-not-allowed text-sm font-sans font-bold text-gray-500 transition-all">
                         </div>
                     </div>
 
@@ -899,7 +903,7 @@
                         </div>
                         <div class="relative">
                             <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">สถานะการอบรม <span class="text-red-500">*</span></label>
-                            <select id="editInpTrain" required class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold appearance-none cursor-pointer"></select>
+                            <select id="editInpTrain" required onchange="toggleEmpIdField('editInpTrain', 'editInpEmpId')" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold appearance-none cursor-pointer"></select>
                             <i class="ph ph-caret-down absolute right-3 top-7 text-gray-400 pointer-events-none"></i>
                         </div>
                         <div>
@@ -916,10 +920,14 @@
                             <select id="editInpCardReceive" required class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-bold appearance-none cursor-pointer"></select>
                             <i class="ph ph-caret-down absolute right-3 top-7 text-gray-400 pointer-events-none"></i>
                         </div>
-                        <!-- New File Upload Section for Edit Documents -->
                         <div>
                             <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">แนบไฟล์เอกสาร <span class="text-gray-400 font-normal">(อัปโหลดใหม่)</span></label>
                             <input type="file" id="editInpDocument" accept=".pdf,image/*" class="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg outline-none text-sm text-gray-800">
+                        </div>
+                        <!-- เพิ่มช่องรหัสพนักงานใหม่ในแก้ไข -->
+                        <div>
+                            <label class="block text-[11px] md:text-xs font-bold text-gray-700 mb-1">รหัสพนักงาน <span class="text-[10px] text-gray-400 font-normal">(เฉพาะผ่านอบรม)</span></label>
+                            <input type="text" id="editInpEmpId" disabled class="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed outline-none text-sm text-gray-500 font-bold transition-all">
                         </div>
                     </div>
                 </div>
@@ -955,7 +963,6 @@
                         <p>เลือกเฉพาะข้อมูลที่ต้องการเปลี่ยนแปลง ข้อมูลไหนที่ไม่ต้องการเปลี่ยนให้คงค่า "-- ไม่เปลี่ยนแปลง --" ไว้ตามเดิม</p>
                     </div>
 
-                    <!-- ฟิลด์ใหม่ที่เพิ่มมา -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-700 mb-1">ตำแหน่ง (Position)</label>
@@ -1000,7 +1007,6 @@
 
                     <div class="border-t border-gray-100 pt-4 mt-2"></div>
 
-                    <!-- ฟิลด์เดิมที่เคยมี -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-700 mb-1">สถานะการอบรม</label>
@@ -1093,9 +1099,8 @@
                     </div>
                     <p class="text-[10px] text-gray-500 mt-2">* หากตั้งค่าเงื่อนไขพิเศษ ระบบจะอ้างอิงจากฐานข้อมูลทั้งหมด (หรือจากที่เลือกไว้) โดยไม่สนใจการค้นหาปัจจุบัน</p>
                 </div>
-                <!-- จบส่วนเงื่อนไขพิเศษ -->
 
-                <!-- ส่วนตั้งค่าหัวกระดาษ (สำหรับส่งออกออนไลน์) -->
+                <!-- ส่วนตั้งค่าหัวกระดาษ -->
                 <div class="bg-yellow-50 border border-yellow-200 p-3 md:p-4 rounded-xl mb-4">
                     <span class="text-sm font-bold text-yellow-800 mb-3 flex items-center gap-2"><i class="ph-fill ph-printer"></i> ตั้งค่าข้อมูลแบบตรวจวัดแอลกอฮอล์ (เฉพาะส่งออก Sheet ออนไลน์)</span>
                     <div class="grid grid-cols-2 lg:grid-cols-6 gap-2">
@@ -1128,7 +1133,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- จบส่วนตั้งค่าหัวกระดาษ -->
 
                 <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
                     <span class="text-sm font-bold text-gray-700">เลือกคอลัมน์ที่ต้องการ</span>
@@ -1200,7 +1204,7 @@
         let currentFilteredData = []; 
         let localMachineData = []; 
         let currentFilteredMachineData = []; 
-        let appConfig = {}; // ตัวแปรเก็บการตั้งค่าดรอปดาวน์ทั้งหมด
+        let appConfig = {}; 
 
         let donutChartInstance = null;
         let currentEditNo = null; 
@@ -1208,7 +1212,6 @@
         let employeeToDeleteNo = null;
         let selectedEmployees = new Set();
 
-        // ตัวแปรสำหรับระบบการตั้งค่า
         let currentConfigCategory = '';
         const configLabels = {
             positions: { icon: "ph-briefcase", name: "ตำแหน่ง (Position)" },
@@ -1222,6 +1225,24 @@
             cardReceiveStatus: { icon: "ph-hand-swipe-right", name: "สถานะรับบัตร" },
             machineStatus: { icon: "ph-power", name: "สถานะเครื่องจักร" }
         };
+
+        // ฟังก์ชันควบคุมช่อง รหัสพนักงาน (เปิดเมื่อเลือก อบรมแล้ว เท่านั้น)
+        function toggleEmpIdField(selectId, inputId) {
+            const select = document.getElementById(selectId);
+            const input = document.getElementById(inputId);
+            if (!select || !input) return;
+            
+            if (select.value && select.value.includes('อบรมแล้ว')) {
+                input.disabled = false;
+                input.classList.remove('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
+                input.classList.add('bg-white', 'text-gray-800');
+            } else {
+                input.disabled = true;
+                input.value = ''; // ล้างค่าทิ้งเมื่อไม่ได้อบรม
+                input.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
+                input.classList.remove('bg-white', 'text-gray-800');
+            }
+        }
 
         let deferredPrompt;
         function initPWA() {
@@ -1263,7 +1284,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             Chart.defaults.font.family = "'Sarabun', sans-serif";
-            renderSettingsCategoryList(); // สร้างรายการเมนูตั้งค่า
+            renderSettingsCategoryList(); 
             fetchData();
         });
 
@@ -1317,7 +1338,7 @@
                 if (dataResponse.employees && dataResponse.config) {
                     localData = dataResponse.employees;
                     localMachineData = dataResponse.machines || []; 
-                    appConfig = dataResponse.config; // เก็บ Config ไว้ในตัวแปร Global
+                    appConfig = dataResponse.config; 
                     populateDropdownsFromConfig(appConfig);
                 } else {
                     localData = Array.isArray(dataResponse) ? dataResponse : [];
@@ -1325,47 +1346,39 @@
                 }
                 processData(localData);
                 
-                // ถ้ายืนอยู่ในหน้า Settings ให้รีเฟรชข้อมูลที่แสดงอยู่ด้วย
                 if (currentConfigCategory) renderConfigItems(currentConfigCategory);
                 
                 hideLoading();
             } catch (error) {
                 console.error("Fetch Data Error:", error); hideLoading();
                 if (error.message === "URL_EMPTY") {
-                    tbody.innerHTML = `<tr><td colspan="11" class="text-center py-10 text-brand-orange font-bold"><i class="ph-fill ph-warning-circle text-4xl mb-3"></i><br>กรุณาตั้งค่าตัวแปร WEB_APP_URL</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="12" class="text-center py-10 text-brand-orange font-bold"><i class="ph-fill ph-warning-circle text-4xl mb-3"></i><br>กรุณาตั้งค่าตัวแปร WEB_APP_URL</td></tr>`;
                     updateDashboardCards([]);
                 } else {
-                    tbody.innerHTML = `<tr><td colspan="11" class="text-center py-10 text-red-500 font-bold"><i class="ph-fill ph-x-circle text-4xl mb-3"></i><br>ไม่สามารถเชื่อมต่อฐานข้อมูลได้</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="12" class="text-center py-10 text-red-500 font-bold"><i class="ph-fill ph-x-circle text-4xl mb-3"></i><br>ไม่สามารถเชื่อมต่อฐานข้อมูลได้</td></tr>`;
                 }
             }
             function hideLoading() { loading.classList.add('hidden'); tableCont.classList.remove('hidden'); }
         }
 
-        // ==========================================
-        // อัปเดตดรอปดาวน์ทุกจุดในแอป
-        // ==========================================
         function populateDropdownsFromConfig(config) {
-            // Helper สำหรับสร้าง Options (ฟอร์มและ Modal)
             const buildOpts = (arr, placeholder) => {
                 if (!arr || arr.length === 0) return `<option value="" disabled selected>ไม่มีข้อมูลในระบบ</option>`;
                 return `<option value="" disabled selected>${placeholder}</option>` + arr.map(p => `<option value="${p}">${p}</option>`).join('');
             };
             
-            // Helper สำหรับสร้าง Options ในช่อง Filter ค้นหา
             const buildFilterOpts = (arr, allText) => {
                 let html = `<option value="all">${allText}</option>`;
                 if (arr) arr.forEach(p => html += `<option value="${p}">${p}</option>`);
                 return html;
             };
 
-            // Helper สำหรับ Bulk Edit
             const buildBulkOpts = (arr) => {
                 let html = `<option value="">-- ไม่เปลี่ยนแปลง --</option>`;
                 if (arr) arr.forEach(p => html += `<option value="${p}">${p}</option>`);
                 return html;
             };
 
-            // 1. หมวดหมู่บุคคล/ฟอร์มพนักงาน
             const posHtml = buildOpts(config.positions, 'เลือกตำแหน่ง...');
             document.getElementById('inpPos').innerHTML = posHtml; document.getElementById('editInpPos').innerHTML = posHtml;
             document.getElementById('bulkInpPos').innerHTML = buildBulkOpts(config.positions);
@@ -1379,7 +1392,6 @@
             document.getElementById('filterContractor').innerHTML = buildFilterOpts(config.contractors, 'ทุกชุดผู้รับเหมา');
             document.getElementById('bulkInpContractor').innerHTML = buildBulkOpts(config.contractors);
 
-            // 2. หมวดหมู่สถานะ
             const workHtml = buildOpts(config.workStatus, 'เลือกสถานะ...');
             document.getElementById('inpWorkStatus').innerHTML = workHtml; document.getElementById('editInpWorkStatus').innerHTML = workHtml;
             document.getElementById('filterWorkStatus').innerHTML = buildFilterOpts(config.workStatus, 'สถานะงานทั้งหมด');
@@ -1403,7 +1415,6 @@
             document.getElementById('inpCardReceive').innerHTML = cardReceiveHtml; document.getElementById('editInpCardReceive').innerHTML = cardReceiveHtml;
             document.getElementById('bulkInpCardReceive').innerHTML = buildBulkOpts(config.cardReceiveStatus);
 
-            // 3. หมวดหมู่เครื่องจักร
             const macNameHtml = buildOpts(config.machineTypes, 'เลือกชื่อเครื่องจักร...');
             document.getElementById('macInpName').innerHTML = macNameHtml;
             
@@ -1419,7 +1430,6 @@
             const selectAllCb = document.getElementById('selectAllCheckbox');
             if(selectAllCb) selectAllCb.checked = false;
             
-            // กรองข้อมูลตาม Dropdown ปัจจุบัน แทนที่จะแสดงข้อมูลทั้งหมดเสมอ
             filterTable();
             filterMachineTable(); 
             
@@ -1591,6 +1601,7 @@
                 }
                 
                 const safeIdCard = row.idCard && row.idCard !== 'undefined' ? row.idCard : '-';
+                const safeEmpId = row.empId && row.empId !== 'undefined' ? row.empId : '-';
                 const safeContractor = row.contractorGroup && row.contractorGroup !== 'undefined' ? row.contractorGroup : '-';
                 const isChecked = selectedEmployees.has(parseInt(row.no)) ? 'checked' : '';
 
@@ -1603,6 +1614,7 @@
                     </td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-center">${imageThumbnail}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap"><div class="font-bold ${!wStatus.includes('ทำงาน') ? 'text-gray-500 line-through' : 'text-gray-800'} group-hover:text-brand-purple transition-colors truncate max-w-[120px] md:max-w-none break-words whitespace-normal leading-tight">${row.name || '-'}</div></td>
+                    <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-brand-purple font-mono font-bold">${safeEmpId}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-gray-600 font-mono tracking-wider">${safeIdCard}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-gray-600 font-medium truncate max-w-[100px] md:max-w-none break-words whitespace-normal leading-tight">${row.position || '-'}</td>
                     <td class="py-2.5 md:py-3 px-3 md:px-4 whitespace-nowrap text-gray-600 break-words whitespace-normal leading-tight">${row.group || '-'}</td>
@@ -1702,8 +1714,9 @@
             const filteredData = localData.filter(row => {
                 const name = String(row.name || '').toLowerCase().replace(/\s+/g, '');
                 const id = String(row.idCard || '').toLowerCase().replace(/[\s\-]/g, '');
+                const empId = String(row.empId || '').toLowerCase().replace(/[\s\-]/g, '');
                 
-                const matchText = name.includes(searchText) || id.includes(searchIdText);
+                const matchText = name.includes(searchText) || id.includes(searchIdText) || empId.includes(searchText);
                 
                 let matchStatus = true;
                 if (statusFilter !== 'all') matchStatus = String(row.trainStatus).trim() === statusFilter;
@@ -1941,20 +1954,16 @@
         async function submitBulkEdit(e) {
             e.preventDefault();
             
-            // รับค่าจาก Dropdown ใหม่
             const posVal = document.getElementById('bulkInpPos').value;
             const groupVal = document.getElementById('bulkInpGroup').value;
             const contractorVal = document.getElementById('bulkInpContractor').value;
             const workStatusVal = document.getElementById('bulkInpWorkStatus').value;
             const docStatusVal = document.getElementById('bulkInpDocStatus').value;
-            
-            // รับค่าจาก Dropdown เดิม
             const trainVal = document.getElementById('bulkInpTrain').value; 
             const cardVal = document.getElementById('bulkInpCard').value;
             const receiveVal = document.getElementById('bulkInpCardReceive').value; 
             const rawBulkTrainDate = document.getElementById('bulkInpTrainDate').value;
 
-            // ตรวจสอบว่ามีการเปลี่ยนแปลงอย่างน้อย 1 รายการหรือไม่
             if (!posVal && !groupVal && !contractorVal && !workStatusVal && !docStatusVal && !trainVal && !cardVal && !receiveVal && !rawBulkTrainDate) { 
                 showToast('แจ้งเตือน', 'กรุณาเลือกอย่างน้อย 1 สถานะที่ต้องการแก้ไข', 'error'); 
                 return; 
@@ -1972,7 +1981,6 @@
                 const row = localData.find(r => r.no === parseInt(no));
                 if (!row) continue;
 
-                // อัปเดตข้อมูลโดยเอาค่าใหม่ไปทับ ถ้าไม่มีค่าใหม่ก็ใช้ข้อมูลเก่า
                 const newData = {
                     action: 'edit', no: row.no, name: row.name, idCard: row.idCard, 
                     position: posVal || row.position, 
@@ -1986,7 +1994,8 @@
                     contractorGroup: contractorVal || row.contractorGroup, 
                     imageUrl: row.imageUrl, 
                     workStatus: workStatusVal || row.workStatus,
-                    docFolderUrl: row.docFolderUrl // ใส่กันเอกสารแนบหาย
+                    docFolderUrl: row.docFolderUrl,
+                    empId: row.empId || ""
                 };
 
                 const formData = new URLSearchParams(); for (const key in newData) { formData.append(key, newData[key]); }
@@ -2007,6 +2016,7 @@
 
         const EXPORT_COL_OPTIONS = [
             { id: 'exp_no', label: 'ลำดับ', width: 8, checked: true }, { id: 'exp_sysno', label: 'รหัสในระบบ', width: 12, checked: false }, 
+            { id: 'exp_empid', label: 'รหัสพนักงาน', width: 15, checked: true },
             { id: 'exp_name', label: 'ชื่อ-นามสกุล', width: 30, checked: true }, { id: 'exp_idcard', label: 'เลขบัตรประชาชน', width: 22, checked: true },
             { id: 'exp_workstatus', label: 'สถานะงาน', width: 15, checked: true }, { id: 'exp_position', label: 'ตำแหน่ง', width: 25, checked: true },
             { id: 'exp_group', label: 'สังกัดชุด', width: 25, checked: true }, { id: 'exp_contractor', label: 'ชุดผู้รับเหมา', width: 25, checked: true },
@@ -2016,9 +2026,7 @@
             { id: 'exp_receive', label: 'สถานะการรับบัตร', width: 18, checked: true }
         ];
 
-
        function openExportModal() {
-            // รีเซ็ตเงื่อนไขพิเศษ
             const chkCard = document.getElementById('expConditionCard');
             const inpDate = document.getElementById('expConditionTrainDate');
             const chkSelected = document.getElementById('expConditionSelectedOnly');
@@ -2027,24 +2035,18 @@
             if(chkCard) chkCard.checked = false;
             if(inpDate) inpDate.value = '';
             
-            // ตั้งค่าวันที่และเวลาปัจจุบันลงในฟอร์มตั้งค่าการพิมพ์อัตโนมัติ
             const today = new Date();
-            today.setDate(today.getDate() + 1); // บวกล่วงหน้า 1 วัน
+            today.setDate(today.getDate() + 1); 
             const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
             
             document.getElementById('expPrintName').value = "นาย ณัฐวุฒิ บัวผา";
             document.getElementById('expPrintDay').value = today.getDate();
             document.getElementById('expPrintMonth').value = thaiMonths[today.getMonth()];
             document.getElementById('expPrintYear').value = today.getFullYear() + 543;
-            document.getElementById('expPrintTime').value = "08:00"; // ระบุเป็น 08:00 เสมอ
+            document.getElementById('expPrintTime').value = "08:00"; 
 
-            // ติ๊กเงื่อนไข "ส่งออกเฉพาะที่เลือก" อัตโนมัติถ้ามีการเลือกไว้
-            if(chkSelected) {
-                chkSelected.checked = selectedEmployees.size > 0;
-            }
-            if(selectedCountSpan) {
-                selectedCountSpan.innerText = selectedEmployees.size;
-            }
+            if(chkSelected) chkSelected.checked = selectedEmployees.size > 0;
+            if(selectedCountSpan) selectedCountSpan.innerText = selectedEmployees.size;
 
             if (!currentFilteredData || currentFilteredData.length === 0) { showToast('ไม่มีข้อมูล', 'ไม่พบข้อมูลที่ตรงกับเงื่อนไขสำหรับการส่งออก', 'error'); return; }
             const container = document.getElementById('exportColsContainer'); container.innerHTML = '';
@@ -2071,7 +2073,6 @@
             btn.innerText = isSelectAll ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด';
         }
 
-        // ฟังก์ชันช่วยสำหรับการเตรียมข้อมูลส่งออก (ใช้ร่วมกันทั้ง Excel และ Google Sheet)
         function getFilteredDataForExport() {
             const cbs = document.querySelectorAll('.export-col-cb:checked');
             if (cbs.length === 0) { showToast('คำเตือน', 'กรุณาเลือกอย่างน้อย 1 คอลัมน์', 'error'); return null; }
@@ -2090,24 +2091,19 @@
             if (isSpecialConditionActive) {
                 dataToExport = localData.filter(row => {
                     let isMatch = true;
-                    
-                    if (useSelectedOnly) {
-                        if (!selectedEmployees.has(parseInt(row.no))) isMatch = false;
-                    }
+                    if (useSelectedOnly) { if (!selectedEmployees.has(parseInt(row.no))) isMatch = false; }
                     
                     if (useCardCondition && isMatch) {
                         const cardStatus = String(row.cardStatus || '').trim();
                         const receiveStatus = String(row.cardReceiveStatus || '').trim();
                         const isCardDone = cardStatus.includes('ทำบัตรแล้ว');
                         const isNotReceived = receiveStatus.includes('ยังไม่') || (!receiveStatus.includes('รับแล้ว'));
-                        
                         if (!(isCardDone && isNotReceived)) isMatch = false;
                     }
                     
                     if (selectedTrainDate && isMatch) {
                         let tDateStr = String(row.trainDate || '').trim();
                         let rowDateFormatted = '';
-                        
                         if (tDateStr && tDateStr !== '-' && tDateStr !== 'ไม่ระบุ' && tDateStr !== 'undefined') {
                             if (tDateStr.includes('T')) {
                                 const d = new Date(tDateStr);
@@ -2119,19 +2115,13 @@
                                 rowDateFormatted = tDateStr.substring(0, 10);
                             }
                         }
-                        
                         if (rowDateFormatted !== selectedTrainDate) isMatch = false;
                     }
-                    
                     return isMatch;
                 });
                 
-                if (dataToExport.length === 0) {
-                    showToast('ไม่พบข้อมูล', 'ไม่พบข้อมูลที่ตรงกับเงื่อนไขพิเศษที่ตั้งไว้', 'error');
-                    return null;
-                }
+                if (dataToExport.length === 0) { showToast('ไม่พบข้อมูล', 'ไม่พบข้อมูลที่ตรงกับเงื่อนไขพิเศษที่ตั้งไว้', 'error'); return null; }
             }
-            
             return { dataToExport, selectedIds, addSignatureColumn };
         }
 
@@ -2154,13 +2144,14 @@
                 if (idCardText !== '-' && idCardText !== 'undefined') {
                     let digitsOnly = idCardText.replace(/\D/g, '');
                     if (digitsOnly.length === 13) idCardText = `${digitsOnly[0]}-${digitsOnly.substring(1,5)}-${digitsOnly.substring(5,10)}-${digitsOnly.substring(10,12)}-${digitsOnly[12]}`;
-                    idCardText = "'" + idCardText; // ใส่เครื่องหมาย ' นำหน้าเพื่อให้ Google Sheet มองเป็นข้อความ
+                    idCardText = "'" + idCardText; 
                 }
 
                 const rowData = {};
                 if (selectedIds.includes('exp_no')) rowData['ลำดับ'] = index + 1;
                 if (selectedIds.includes('exp_sysno')) rowData['รหัสในระบบ'] = row.no || '-';
                 if (selectedIds.includes('exp_name')) rowData['ชื่อ-นามสกุล'] = row.name || '-';
+                if (selectedIds.includes('exp_empid')) rowData['รหัสพนักงาน'] = row.empId || '-';
                 if (selectedIds.includes('exp_idcard')) rowData['เลขบัตรประชาชน'] = idCardText;
                 if (selectedIds.includes('exp_workstatus')) rowData['สถานะงาน'] = row.workStatus || '-';
                 if (selectedIds.includes('exp_position')) rowData['ตำแหน่ง'] = row.position || '-';
@@ -2174,10 +2165,7 @@
                 if (selectedIds.includes('exp_card')) rowData['สถานะการทำบัตร'] = row.cardStatus || '-';
                 if (selectedIds.includes('exp_receive')) rowData['สถานะการรับบัตร'] = row.cardReceiveStatus || '-';
                 
-                if (addSignatureColumn) {
-                    rowData['ลายมือชื่อ (ผู้รับบัตร)'] = '';
-                }
-
+                if (addSignatureColumn) { rowData['ลายมือชื่อ (ผู้รับบัตร)'] = ''; }
                 return rowData;
             });
 
@@ -2188,7 +2176,6 @@
             formData.append('action', 'export_to_sheet');
             formData.append('exportData', JSON.stringify(exportDataArray));
             
-            // เพิ่มข้อมูลตั้งค่าการพิมพ์ไปกับ Request
             formData.append('printName', document.getElementById('expPrintName').value);
             formData.append('printDay', document.getElementById('expPrintDay').value);
             formData.append('printMonth', document.getElementById('expPrintMonth').value);
@@ -2198,13 +2185,9 @@
             fetch(WEB_APP_URL, { method: 'POST', body: formData })
             .then(res => res.json())
             .then(result => {
-
                 showGlobalLoading(false);
-                if(result.status === 'success') {
-                    showToast('ส่งออกสำเร็จ', 'ข้อมูลถูกบันทึกลง Google Sheet ปลายทางแล้ว', 'success');
-                } else {
-                    showToast('เกิดข้อผิดพลาด', 'เซิร์ฟเวอร์แจ้งว่า: ' + (result.message || 'Unknown Error'), 'error');
-                }
+                if(result.status === 'success') showToast('ส่งออกสำเร็จ', 'ข้อมูลถูกบันทึกลง Google Sheet ปลายทางแล้ว', 'success');
+                else showToast('เกิดข้อผิดพลาด', 'เซิร์ฟเวอร์แจ้งว่า: ' + (result.message || 'Unknown Error'), 'error');
             })
             .catch(err => {
                 showGlobalLoading(false);
@@ -2242,6 +2225,7 @@
                             if (selectedIds.includes('exp_no')) rowData['ลำดับ'] = index + 1;
                             if (selectedIds.includes('exp_sysno')) rowData['รหัสในระบบ'] = row.no || '-';
                             if (selectedIds.includes('exp_name')) rowData['ชื่อ-นามสกุล'] = row.name || '-';
+                            if (selectedIds.includes('exp_empid')) rowData['รหัสพนักงาน'] = row.empId || '-';
                             if (selectedIds.includes('exp_idcard')) rowData['เลขบัตรประชาชน'] = idCardText;
                             if (selectedIds.includes('exp_workstatus')) rowData['สถานะงาน'] = row.workStatus || '-';
                             if (selectedIds.includes('exp_position')) rowData['ตำแหน่ง'] = row.position || '-';
@@ -2255,10 +2239,7 @@
                             if (selectedIds.includes('exp_card')) rowData['สถานะการทำบัตร'] = row.cardStatus || '-';
                             if (selectedIds.includes('exp_receive')) rowData['สถานะการรับบัตร'] = row.cardReceiveStatus || '-';
                             
-                            if (addSignatureColumn) {
-                                rowData['ลายมือชื่อ (ผู้รับบัตร)'] = '';
-                            }
-
+                            if (addSignatureColumn) { rowData['ลายมือชื่อ (ผู้รับบัตร)'] = ''; }
                             return rowData;
                         });
 
@@ -2266,10 +2247,7 @@
                         const wscols = [];
                         EXPORT_COL_OPTIONS.forEach(col => { if (selectedIds.includes(col.id)) wscols.push({wch: col.width}); }); 
                         
-                        if (addSignatureColumn) {
-                            wscols.push({wch: 25});
-                        }
-                        
+                        if (addSignatureColumn) wscols.push({wch: 25});
                         worksheet['!cols'] = wscols;
 
                         const nameIndex = selectedIds.indexOf('exp_name'); const range = XLSX.utils.decode_range(worksheet['!ref']);
@@ -2305,10 +2283,7 @@
                         safeName = safeName.substring(0, 28);
                         let finalName = safeName; 
                         let counter = 1; 
-                        while (usedSheetNames.has(finalName.toLowerCase())) { 
-                            finalName = `${safeName.substring(0, 25)}_${counter}`; 
-                            counter++; 
-                        }
+                        while (usedSheetNames.has(finalName.toLowerCase())) { finalName = `${safeName.substring(0, 25)}_${counter}`; counter++; }
                         usedSheetNames.add(finalName.toLowerCase()); 
                         XLSX.utils.book_append_sheet(workbook, wsGroup, finalName);
                     });
@@ -2356,27 +2331,32 @@
             document.getElementById('employeeDataForm').reset(); document.getElementById('inpAge').value = "";
             document.getElementById('inpProfileImage').value = ""; document.getElementById('profileImagePreview').classList.add('hidden');
             document.getElementById('profileImagePreview').src = ""; document.getElementById('profileImagePlaceholder').classList.remove('hidden');
+            
             const inpDoc = document.getElementById('inpDocument');
             if (inpDoc) inpDoc.value = "";
+
+            const inpEmpId = document.getElementById('inpEmpId');
+            if(inpEmpId) {
+                inpEmpId.value = "";
+                inpEmpId.disabled = true;
+                inpEmpId.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
+                inpEmpId.classList.remove('bg-white', 'text-gray-800');
+            }
         }
 
-        // แปลงไฟล์เป็น Base64
         function getBase64(file) {
            return new Promise((resolve, reject) => {
              const reader = new FileReader();
              reader.readAsDataURL(file);
              reader.onload = () => {
                 let encoded = reader.result.toString().replace(/^data:(.*,)?/, '');
-                if ((encoded.length % 4) > 0) {
-                  encoded += '='.repeat(4 - (encoded.length % 4));
-                }
+                if ((encoded.length % 4) > 0) { encoded += '='.repeat(4 - (encoded.length % 4)); }
                 resolve(encoded);
              };
              reader.onerror = error => reject(error);
            });
         }
 
-        // ส่งไฟล์ไป Apps Script
         async function uploadDocumentToDrive(file, employeeName) {
             const base64Data = await getBase64(file);
             const formData = new URLSearchParams();
@@ -2388,11 +2368,8 @@
 
             const response = await fetch(WEB_APP_URL, { method: 'POST', body: formData });
             const result = await response.json();
-            if(result.status === 'success') {
-                return result.folderUrl;
-            } else {
-                throw new Error(result.message || "Upload Failed");
-            }
+            if(result.status === 'success') { return result.folderUrl; } 
+            else { throw new Error(result.message || "Upload Failed"); }
         }
 
         async function submitForm(e) {
@@ -2403,7 +2380,6 @@
             try {
                 if (WEB_APP_URL === "") { showToast('ข้อผิดพลาด', 'ยังไม่ได้ตั้งค่า WEB_APP_URL ในระบบ', 'error'); resetBtn(); return; }
 
-                // 1. อัปโหลดรูปโปรไฟล์ (ถ้ามี)
                 let finalImageUrl = ""; const imageFile = document.getElementById('inpProfileImage').files[0];
                 if (imageFile) { 
                     showGlobalLoading(true, "กำลังอัปโหลดรูปภาพ", "กรุณารอสักครู่ ระบบกำลังนำส่งรูปภาพ..."); 
@@ -2411,8 +2387,6 @@
                 }
 
                 const empName = document.getElementById('inpName').value;
-
-                // 2. อัปโหลดเอกสารเข้า Google Drive (ถ้ามี)
                 let finalDocFolderUrl = ""; const docFile = document.getElementById('inpDocument').files[0];
                 if (docFile) {
                     showGlobalLoading(true, "กำลังอัปโหลดเอกสารแนบ", "กำลังส่งเอกสารไปยัง Google Drive...");
@@ -2432,7 +2406,8 @@
                     birthDate: formatDobForSheet(rawDob), age: document.getElementById('inpAge').value,                  
                     cardReceiveStatus: document.getElementById('inpCardReceive').value, contractorGroup: document.getElementById('inpContractor').value,
                     imageUrl: finalImageUrl, workStatus: document.getElementById('inpWorkStatus').value,
-                    docFolderUrl: finalDocFolderUrl // บันทึกลิงก์โฟลเดอร์เก็บเอกสารลงชีต
+                    docFolderUrl: finalDocFolderUrl,
+                    empId: document.getElementById('inpEmpId').value || ""
                 };
 
                 const formData = new URLSearchParams(); for (const key in newData) { formData.append(key, newData[key]); }
@@ -2459,18 +2434,15 @@
             btnSubmit.innerHTML = '<i class="ph ph-spinner animate-spin text-lg"></i> บันทึก...'; btnSubmit.disabled = true;
 
             try {
-                // ดึงข้อมูลเดิมจาก localData เพื่อเอา docFolderUrl เดิม
                 const rowData = localData.find(r => r.no === currentEditNo);
                 const empName = document.getElementById('editInpName').value;
 
-                // 1. อัปโหลดรูปภาพใหม่
                 let finalImageUrl = currentEditImageUrl; const newImageFile = document.getElementById('editInpProfileImage').files[0];
                 if (newImageFile) { 
                     showGlobalLoading(true, "กำลังอัปโหลดรูปภาพใหม่", "กรุณารอสักครู่ ระบบกำลังนำส่งรูปภาพ..."); 
                     finalImageUrl = await uploadImageToCloudinary(newImageFile); 
                 } 
 
-                // 2. อัปโหลดเอกสารแนบใหม่เข้าโฟลเดอร์เดิม
                 let finalDocFolderUrl = rowData ? (rowData.docFolderUrl || "") : "";
                 const newDocFile = document.getElementById('editInpDocument').files[0];
                 if (newDocFile) {
@@ -2489,7 +2461,8 @@
                     birthDate: formatDobForSheet(rawDob), age: document.getElementById('editInpAge').value,                  
                     cardReceiveStatus: document.getElementById('editInpCardReceive').value, contractorGroup: document.getElementById('editInpContractor').value,
                     imageUrl: finalImageUrl, workStatus: document.getElementById('editInpWorkStatus').value,
-                    docFolderUrl: finalDocFolderUrl // บันทึกลิงก์โฟลเดอร์ทับหรือใช้ค่าเดิม
+                    docFolderUrl: finalDocFolderUrl,
+                    empId: document.getElementById('editInpEmpId').value || ""
                 };
 
                 const formData = new URLSearchParams(); for (const key in newData) { formData.append(key, newData[key]); }
@@ -2522,25 +2495,16 @@
             const activeNav = document.getElementById(`nav-${tab}`);
             if(activeNav) { activeNav.classList.remove('text-brand-lightPurple'); activeNav.classList.add('text-white'); activeNav.querySelectorAll('.nav-indicator').forEach(el => el.classList.replace('opacity-0', 'opacity-100')); const activeIcon = activeNav.querySelector('.nav-icon'); activeIcon.classList.remove('ph'); activeIcon.classList.add('ph-fill'); }
             
-            // เมื่อเปิดเมนูทะเบียนพนักงาน ให้ตั้งค่าค้นหาเป็น "ทำงาน" อัตโนมัติ
             if (tab === 'employee-list') {
                 const workStatusFilter = document.getElementById('filterWorkStatus');
                 if (workStatusFilter) {
                     const hasWorking = Array.from(workStatusFilter.options).some(opt => opt.value === 'ทำงาน');
-                    if (hasWorking) {
-                        workStatusFilter.value = 'ทำงาน';
-                    }
+                    if (hasWorking) { workStatusFilter.value = 'ทำงาน'; }
                 }
-                // สั่งกรองข้อมูลทุกครั้งที่เปิดหน้านี้
-                if (localData.length > 0) {
-                    filterTable();
-                }
+                if (localData.length > 0) { filterTable(); }
             }
         }
 
-        // ==========================================
-        // ระบบการตั้งค่าดรอปดาวน์ (Settings)
-        // ==========================================
         function renderSettingsCategoryList() {
             const container = document.getElementById('settingsCategoryList');
             container.innerHTML = '';
@@ -2556,7 +2520,7 @@
 
         function selectConfigCategory(key) {
             currentConfigCategory = key;
-            renderSettingsCategoryList(); // Re-render buttons
+            renderSettingsCategoryList(); 
             
             document.getElementById('currentSettingsTitle').innerHTML = `<i class="ph-fill ${configLabels[key].icon}"></i> จัดการ: ${configLabels[key].name}`;
             document.getElementById('newConfigItemInput').disabled = false;
@@ -2597,7 +2561,6 @@
             
             if (!appConfig[currentConfigCategory]) appConfig[currentConfigCategory] = [];
             
-            // Check for duplicate
             if (appConfig[currentConfigCategory].includes(val)) {
                 showToast('มีข้อมูลนี้แล้ว', 'ไม่สามารถเพิ่มรายการซ้ำได้', 'error');
                 return;
@@ -2608,14 +2571,12 @@
             renderConfigItems(currentConfigCategory);
             showToast('เพิ่มสำเร็จ', 'เพิ่มรายการใหม่แล้ว (อย่าลืมกดบันทึกการตั้งค่า)', 'success');
             
-            // อัปเดต Dropdown ให้เห็นทันทีแม้ยังไม่เซฟ
             populateDropdownsFromConfig(appConfig);
         }
 
         function removeConfigItem(key, itemToRemove) {
             if (!appConfig[key]) return;
             
-            // ป้องกันการเผลอลบคำสั่งที่เชื่อมโยงกับ Dashboard
             const protectedWords = ['ทำงาน', 'ใช้งาน', 'อบรมแล้ว', 'ทำบัตรแล้ว', 'รับแล้ว'];
             if (protectedWords.some(w => itemToRemove.includes(w))) {
                 if (!confirm(`คำเตือน: คุณกำลังจะลบสถานะ "${itemToRemove}" ซึ่งอาจกระทบต่อการคำนวณในแดชบอร์ด\n\nต้องการลบจริงๆ หรือไม่?`)) {
@@ -2625,7 +2586,7 @@
 
             appConfig[key] = appConfig[key].filter(item => item !== itemToRemove);
             renderConfigItems(key);
-            populateDropdownsFromConfig(appConfig); // อัปเดต Dropdown ทันที
+            populateDropdownsFromConfig(appConfig); 
         }
 
         async function saveConfigToCloud() {
@@ -2648,7 +2609,7 @@
                 
                 if(response.ok && result.status === 'success') {
                     showToast('บันทึกสำเร็จ', 'อัปเดตการตั้งค่าระบบเรียบร้อยแล้ว', 'success');
-                    await fetchData(); // โหลดข้อมูลใหม่ทั้งหมดเพื่อความแน่ใจ
+                    await fetchData(); 
                 } else {
                     throw new Error(result.message || "Save Config Error");
                 }
@@ -2759,7 +2720,8 @@
             else { let initial = String(row.name || 'U').replace('นาย ', '').replace('นางสาว ', '').replace('นาง ', '').charAt(0) || 'U'; profileAvatarHtml = `<div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-tr from-brand-purple to-brand-lightPurple flex items-center justify-center text-white font-bold text-2xl md:text-3xl shadow-lg shadow-brand-purple/20 shrink-0 border-2 border-white">${initial}</div>`; }
 
             const safeIdCard = row.idCard && row.idCard !== 'undefined' ? row.idCard : '-'; const wStatus = String(row.workStatus || '').trim();
-            
+            const safeEmpId = row.empId && row.empId !== 'undefined' && row.empId !== '-' ? row.empId : '-';
+
             let docFolderHtml = '';
             if (row.docFolderUrl && row.docFolderUrl !== "") {
                 docFolderHtml = `
@@ -2793,7 +2755,11 @@
                     ${profileAvatarHtml}
                     <div class="flex-1 min-w-0">
                         <h4 class="text-xl md:text-2xl font-extrabold ${!wStatus.includes('ทำงาน') ? 'text-gray-500 line-through' : 'text-gray-800'} font-heading leading-tight truncate w-full break-words whitespace-normal">${row.name || '-'}</h4>
-                        <div class="flex items-center gap-1.5 md:gap-2 mt-1 md:mt-1.5"><i class="ph-fill ph-identification-card text-brand-purple text-lg"></i><span class="text-xs md:text-sm text-gray-600 font-mono tracking-wide">${safeIdCard}</span><span class="ml-2">${workBadge}</span></div>
+                        <div class="flex items-center gap-1.5 md:gap-2 mt-1 md:mt-1.5 flex-wrap">
+                            <i class="ph-fill ph-identification-card text-brand-purple text-lg"></i><span class="text-xs md:text-sm text-gray-600 font-mono tracking-wide">${safeIdCard}</span>
+                            <i class="ph-fill ph-fingerprint text-brand-orange text-lg ml-2"></i><span class="text-xs md:text-sm text-brand-purple font-mono font-bold tracking-wide">${safeEmpId}</span>
+                            <span class="ml-2">${workBadge}</span>
+                        </div>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
@@ -2819,12 +2785,13 @@
             currentEditNo = no; currentEditImageUrl = row.imageUrl || ""; 
             
             document.getElementById('editInpProfileImage').value = ""; 
-            document.getElementById('editInpDocument').value = ""; // เคลียร์ไฟล์เอกสารเก่าที่อาจค้างอยู่
+            document.getElementById('editInpDocument').value = ""; 
 
             if (currentEditImageUrl && currentEditImageUrl !== "-") { document.getElementById('editProfileImagePreview').src = currentEditImageUrl; document.getElementById('editProfileImagePreview').classList.remove('hidden'); document.getElementById('editProfileImagePlaceholder').classList.add('hidden'); } 
             else { document.getElementById('editProfileImagePreview').src = ""; document.getElementById('editProfileImagePreview').classList.add('hidden'); document.getElementById('editProfileImagePlaceholder').classList.remove('hidden'); }
 
-            document.getElementById('editInpName').value = row.name || ''; document.getElementById('editInpId').value = row.idCard && row.idCard !== 'undefined' ? row.idCard : '';
+            document.getElementById('editInpName').value = row.name || ''; 
+            document.getElementById('editInpId').value = row.idCard && row.idCard !== 'undefined' ? row.idCard : '';
             
             ensureOptionExists('editInpPos', row.position); ensureOptionExists('editInpGroup', row.group); ensureOptionExists('editInpContractor', row.contractorGroup);
             ensureOptionExists('editInpWorkStatus', row.workStatus); ensureOptionExists('editInpDocStatus', row.documentStatus);
@@ -2845,11 +2812,15 @@
             } else document.getElementById('editInpDob').value = '';
             
             document.getElementById('editInpAge').value = row.age || ''; if (document.getElementById('editInpDob').value && !document.getElementById('editInpAge').value) autoCalcAgeEdit();
+            
+            // โหลดรหัสพนักงานเดิมและเช็คสิทธิ์การเปิดปิดช่อง
+            document.getElementById('editInpEmpId').value = row.empId || '';
+            toggleEmpIdField('editInpTrain', 'editInpEmpId');
+            
             document.getElementById('detailsViewMode').classList.add('hidden'); document.getElementById('editViewMode').classList.remove('hidden');
             document.getElementById('detailsModalTitle').innerHTML = '<i class="ph-bold ph-pencil-simple text-xl md:text-2xl"></i> แก้ไขข้อมูลพนักงาน';
         }
 
-        // ฟังก์ชันเปิดดูรูปเต็ม
         function openFullImage(url) {
             const modal = document.getElementById('fullImageModal');
             const img = document.getElementById('fullImageElement');
@@ -2862,7 +2833,6 @@
             });
         }
 
-        // ฟังก์ชันปิดดูรูปเต็ม
         function closeFullImage() {
             const modal = document.getElementById('fullImageModal');
             const img = document.getElementById('fullImageElement');
