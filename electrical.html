@@ -3,968 +3,564 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบจัดการเครื่องมือใช้ไฟฟ้า</title>
+    
+    <meta name="theme-color" content="#5E64D1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SUNWORK">
+    
+    <title>SUNWORK - Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- เปลี่ยน Library สำหรับ Export Excel เป็น ExcelJS เพื่อรองรับการจัดรูปแบบ (สี, เส้นตาราง) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700;900&display=swap" rel="stylesheet">
+    
     <style>
-        body {
-            font-family: 'Prompt', 'Inter', sans-serif;
-            background-color: #f3f4f6;
-        }
-        /* Custom scrollbar */
-        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+        body { font-family: 'Kanit', sans-serif; }
         
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        .manga-bg-dots {
+            background-color: #f8f9fa;
+            background-image: radial-gradient(#d1d5db 20%, transparent 20%);
+            background-size: 16px 16px;
         }
-        .toast-enter { animation: slideIn 0.3s ease-out forwards; }
+
+        .manga-lines {
+            background-image: repeating-linear-gradient(45deg, #000 0, #000 2px, transparent 2px, transparent 10px);
+        }
+
+        .manga-hover-dots {
+            background-image: radial-gradient(#000 15%, transparent 15%);
+            background-size: 10px 10px;
+        }
+
+        .manga-card {
+            border: 4px solid #000;
+            box-shadow: 8px 8px 0px 0px #000;
+            transition: all 0.2s ease-in-out;
+        }
         
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .manga-card:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 12px 12px 0px 0px #000;
         }
-        .fade-in { animation: fadeIn 0.3s ease-in forwards; }
+
+        .manga-card:active {
+            transform: translate(8px, 8px);
+            box-shadow: 0px 0px 0px 0px #000;
+        }
+
+        .manga-input {
+            border: 4px solid #000;
+            box-shadow: 4px 4px 0px 0px #000;
+            transition: all 0.2s;
+        }
         
-        /* Active menu state */
-        .nav-active {
-            background-color: #4f46e5;
-            color: white;
+        .manga-input:focus {
+            outline: none;
+            box-shadow: 6px 6px 0px 0px #000;
+            transform: translate(-2px, -2px);
         }
+
+        .manga-btn {
+            border: 4px solid #000;
+            box-shadow: 4px 4px 0px 0px #000;
+            transition: all 0.1s;
+        }
+        
+        .manga-btn:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0px 0px 0px 0px #000;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #000;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Scrollbar สำหรับ Modal */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-left: 2px solid #000; }
+        ::-webkit-scrollbar-thumb { background: #000; }
     </style>
 </head>
-<body class="text-gray-800 antialiased h-screen overflow-hidden flex">
+<body class="manga-bg-dots min-h-screen relative">
 
-    <!-- Sidebar -->
-    <aside class="w-64 bg-white shadow-xl flex-shrink-0 z-20 flex flex-col transition-all duration-300 hidden md:flex">
-        <div class="h-16 flex items-center px-6 bg-indigo-600 text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span class="font-semibold text-lg tracking-tight truncate">ระบบจัดการอุปกรณ์</span>
+    <div id="login-view" class="absolute inset-0 flex items-center justify-center p-4 z-20 bg-white/80 backdrop-blur-sm">
+        <div class="bg-white border-4 border-black p-8 max-w-md w-full relative">
+            <div class="absolute -top-4 -left-4 w-8 h-8 bg-yellow-300 border-4 border-black rounded-full"></div>
+            <div class="absolute -bottom-4 -right-4 w-12 h-12 bg-pink-400 border-4 border-black manga-lines"></div>
+            
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-black uppercase tracking-wider">SUNWORK</h1>
+                <p class="font-bold text-gray-600 mt-2">ลงชื่อเข้าใช้งานระบบ</p>
+            </div>
+
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label class="block font-bold mb-2">ชื่อผู้ใช้งาน (Username)</label>
+                    <input type="text" id="username" class="manga-input w-full p-3 font-bold text-lg" placeholder="กรอกชื่อผู้ใช้..." required>
+                </div>
+                <div>
+                    <label class="block font-bold mb-2">รหัสผ่าน (Password)</label>
+                    <input type="password" id="password" class="manga-input w-full p-3 font-bold text-lg" placeholder="กรอกรหัสผ่าน..." required>
+                </div>
+                
+                <div id="login-error" class="hidden bg-red-100 border-4 border-red-500 p-3 text-red-700 font-bold text-center text-sm"></div>
+
+                <button type="submit" id="login-btn" class="manga-btn w-full bg-cyan-300 py-3 text-xl font-black uppercase flex justify-center items-center gap-2">
+                    <span id="btn-text">เข้าสู่ระบบ 🚀</span>
+                    <span id="btn-loader" class="loader hidden"></span>
+                </button>
+                
+                <div class="text-center text-sm font-bold text-gray-500 mt-4">
+                    <p>ทดสอบระบบ: admin / 1234</p>
+                </div>
+            </form>
         </div>
+    </div>
+
+    <div id="main-menu-view" class="hidden w-full p-4 md:p-8 lg:p-12">
         
-        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-            <button onclick="switchView('dashboard')" id="nav-dashboard" class="nav-active w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
-                <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-                แดชบอร์ด (Dashboard)
+        <div class="flex justify-between items-center mb-8 bg-white border-4 border-black p-4 shadow-[4px_4px_0px_0px_#000]">
+            <div class="font-bold flex items-center">
+                <span>ยินดีต้อนรับ, <span id="display-user" class="text-blue-600 font-black text-lg ml-1">Guest</span></span>
+                <span id="display-role" class="ml-2 text-xs bg-black text-white px-2 py-1 uppercase rounded-full">User</span>
+            </div>
+            <button onclick="logout()" class="manga-btn bg-red-400 px-4 py-2 font-black text-sm flex items-center gap-2">
+                <i class="ph ph-sign-out"></i> ออกจากระบบ
             </button>
-            <button onclick="switchView('manage')" id="nav-manage" class="w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
-                <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                </svg>
-                จัดการข้อมูลอุปกรณ์
-            </button>
-            <a href="https://docs.google.com/spreadsheets/d/1O1ei7H9fiyQ26lW8XkL1j2uPGLXr6hNnJ_mUwbvUEPM/edit?usp=sharing" target="_blank" class="w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors mt-2">
-                <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                </svg>
-                ปริ้นรายการส่งตรวจ
-            </a>
-        </nav>
-        
-        <div class="p-4 border-t border-gray-200">
-            <div class="flex items-center text-xs text-gray-500">
-                <div class="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-                ระบบออนไลน์
+        </div>
+
+        <div class="mb-10 relative inline-block">
+            <div class="absolute inset-0 manga-lines border-4 border-black translate-x-3 translate-y-3"></div>
+            <div class="relative bg-white border-4 border-black px-6 py-4 z-10">
+                <h1 class="text-3xl md:text-5xl font-black text-black tracking-wide uppercase">⚡ My Applications</h1>
+                <p class="text-black font-bold mt-2 text-lg">เลือกระบบที่คุณต้องการใช้งาน</p>
             </div>
         </div>
-    </aside>
 
-    <!-- Mobile Menu Button (Visible on small screens) -->
-    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around p-2 z-30 shadow-[0_-2px_10px_rgba(0,0,0,0.1)]">
-        <button onclick="switchView('dashboard')" class="flex flex-col items-center p-2 text-indigo-600 font-medium">
-            <svg class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-            <span class="text-xs">แดชบอร์ด</span>
-        </button>
-        <button onclick="switchView('manage')" class="flex flex-col items-center p-2 text-gray-500 hover:text-indigo-600 font-medium">
-            <svg class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
-            <span class="text-xs">จัดการข้อมูล</span>
-        </button>
-        <a href="https://docs.google.com/spreadsheets/d/1O1ei7H9fiyQ26lW8XkL1j2uPGLXr6hNnJ_mUwbvUEPM/edit?usp=sharing" target="_blank" class="flex flex-col items-center p-2 text-gray-500 hover:text-indigo-600 font-medium">
-            <svg class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-            <span class="text-xs">พิมพ์รายการ</span>
-        </a>
-    </div>
-
-    <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col h-screen overflow-hidden bg-gray-100 pb-16 md:pb-0">
-        <!-- Header -->
-        <header class="h-16 bg-white shadow-sm flex items-center justify-between px-6 z-10 flex-shrink-0">
-            <h1 id="pageTitle" class="text-xl font-semibold text-gray-800">แดชบอร์ดภาพรวม</h1>
-            <button id="refreshBtn" class="flex items-center text-sm text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50 px-3 py-2 rounded-lg font-medium">
-                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                รีเฟรชข้อมูล
+        <div id="apps-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+            <!-- ปุ่มแอปต่างๆ จะมาโผล่ตรงนี้ -->
+            
+            <button id="settings-btn" class="manga-card block w-full bg-white group relative overflow-hidden text-left cursor-pointer">
+                <div class="flex items-center p-5">
+                    <div class="w-14 h-14 flex-shrink-0 flex items-center justify-center border-4 border-black bg-gray-300 shadow-[4px_4px_0px_0px_#000] group-hover:scale-110 transition-transform z-10">
+                        <i class="ph ph-gear text-3xl text-black"></i>
+                    </div>
+                    <div class="ml-5 z-10">
+                        <h2 class="text-xl font-black text-black">ตั้งค่าระบบ</h2>
+                        <p class="text-sm font-bold text-gray-700 mt-1">จัดการสิทธิ์และการใช้งาน (Admin)</p>
+                    </div>
+                </div>
+                <div class="absolute inset-0 bg-gray-300 manga-hover-dots opacity-0 group-hover:opacity-20 transition-opacity"></div>
             </button>
-        </header>
-
-        <!-- Content Scrollable -->
-        <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 custom-scrollbar">
-            
-            <!-- VIEW: Dashboard -->
-            <div id="view-dashboard" class="w-full space-y-6 block fade-in">
-                <!-- Summary Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center">
-                        <div class="rounded-full bg-indigo-100 p-3 mr-4">
-                            <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">อุปกรณ์ทั้งหมด</p>
-                            <p class="text-3xl font-bold text-gray-800" id="stat-total">0</p>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm border border-green-100 p-6 flex items-center">
-                        <div class="rounded-full bg-green-100 p-3 mr-4">
-                            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">สถานะใช้งานปกติ</p>
-                            <p class="text-3xl font-bold text-green-600" id="stat-active">0</p>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm border border-red-100 p-6 flex items-center">
-                        <div class="rounded-full bg-red-100 p-3 mr-4">
-                            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">สถานะชำรุด/ไม่ใช้งาน</p>
-                            <p class="text-3xl font-bold text-red-600" id="stat-inactive">0</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Company Stats -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                        สัดส่วนตามบริษัทเจ้าของเครื่องมือ
-                    </h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div class="bg-yellow-50 rounded-lg p-4 text-center border border-yellow-100 shadow-sm">
-                            <p class="text-sm text-yellow-700 font-medium">Sunwork</p>
-                            <p class="text-3xl font-bold text-yellow-800 mt-1" id="stat-comp-sunwork">0</p>
-                            <p class="text-xs text-yellow-600 mt-1">รายการ</p>
-                        </div>
-                        <div class="bg-blue-50 rounded-lg p-4 text-center border border-blue-100 shadow-sm">
-                            <p class="text-sm text-blue-700 font-medium">K-con</p>
-                            <p class="text-3xl font-bold text-blue-800 mt-1" id="stat-comp-kcon">0</p>
-                            <p class="text-xs text-blue-600 mt-1">รายการ</p>
-                        </div>
-                        <div class="bg-teal-50 rounded-lg p-4 text-center border border-teal-100 shadow-sm">
-                            <p class="text-sm text-teal-700 font-medium">Kemlex</p>
-                            <p class="text-3xl font-bold text-teal-800 mt-1" id="stat-comp-kemlex">0</p>
-                            <p class="text-xs text-teal-600 mt-1">รายการ</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Voltage Stats -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                        สัดส่วนระดับแรงดันไฟฟ้า
-                    </h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div class="bg-slate-50 rounded-lg p-4 text-center border border-slate-200">
-                            <p class="text-sm text-slate-600 font-medium">ไม่เกิน 24 V.</p>
-                            <p class="text-2xl font-bold text-slate-700 mt-1" id="stat-vol-low">0</p>
-                        </div>
-                        <div class="bg-orange-50 rounded-lg p-4 text-center border border-orange-200">
-                            <p class="text-sm text-orange-600 font-medium">สูงกว่า 24 V. (220V)</p>
-                            <p class="text-2xl font-bold text-orange-700 mt-1" id="stat-vol-220">0</p>
-                        </div>
-                        <div class="bg-purple-50 rounded-lg p-4 text-center border border-purple-200">
-                            <p class="text-sm text-purple-600 font-medium">สูงกว่า 24 V. (380V)</p>
-                            <p class="text-2xl font-bold text-purple-700 mt-1" id="stat-vol-380">0</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- VIEW: Manage Data -->
-            <div id="view-manage" class="w-full hidden fade-in h-full flex-col">
-                <div class="flex flex-col lg:flex-row gap-6 items-start h-full">
-                    
-                    <!-- Left: Form -->
-                    <div class="w-full lg:w-[400px] xl:w-[450px] flex-shrink-0 lg:h-full">
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col lg:h-full lg:max-h-[calc(100vh-8rem)]">
-                            <!-- Form Header -->
-                            <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex items-center justify-between rounded-t-xl flex-shrink-0">
-                                <h2 id="formTitle" class="text-lg font-medium text-gray-900 flex items-center">
-                                    <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                    เพิ่มข้อมูลใหม่
-                                </h2>
-                            </div>
-                            
-                            <!-- Form Body (Scrollable) -->
-                            <div class="p-6 overflow-y-auto custom-scrollbar flex-1">
-                                <form id="equipmentForm" class="space-y-4">
-                                    <input type="hidden" id="action" name="action" value="add">
-                                    <input type="hidden" id="rowNumber" name="rowNumber" value="">
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">ลำดับที่</label>
-                                        <input type="text" id="no" name="no" required class="w-full rounded-md border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่ออุปกรณ์ไฟฟ้า</label>
-                                        <input type="text" id="name" name="name" required class="w-full rounded-md border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">หมายเลขอุปกรณ์ (Code)</label>
-                                        <input type="text" id="equipmentId" name="equipmentId" required class="w-full rounded-md border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">บริษัทเจ้าของเครื่องมือ</label>
-                                        <select id="company" name="company" required class="w-full rounded-md border border-gray-300 px-4 py-2 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                            <option value="" disabled selected>เลือกบริษัท</option>
-                                            <option value="Sunwork">Sunwork</option>
-                                            <option value="K-con">K-con</option>
-                                            <option value="Kemlex">Kemlex</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">ระดับแรงดันไฟฟ้า</label>
-                                        <select id="voltage" name="voltage" required class="w-full rounded-md border border-gray-300 px-4 py-2 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                            <option value="" disabled selected>เลือกระดับแรงดัน</option>
-                                            <option value="ไม่เกิน 24 V.">ไม่เกิน 24 V.</option>
-                                            <option value="สูงกว่า 24 V. (220V)">สูงกว่า 24 V. (220V)</option>
-                                            <option value="สูงกว่า 24 V. (380V)">สูงกว่า 24 V. (380V)</option>
-                                            <option value="อื่นๆ">อื่นๆ</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">หมายเลขสติ๊กเกอร์</label>
-                                        <input type="text" id="stickerNo" name="stickerNo" required class="w-full rounded-md border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">สถานะ</label>
-                                        <div class="flex gap-4">
-                                            <label class="flex items-center cursor-pointer">
-                                                <input type="radio" id="statusActive" name="status" value="ใช้งาน" checked class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
-                                                <span class="ml-2 text-gray-700 text-sm">ใช้งานได้ปกติ</span>
-                                            </label>
-                                            <label class="flex items-center cursor-pointer">
-                                                <input type="radio" id="statusInactive" name="status" value="ไม่ใช้งาน" class="w-4 h-4 text-red-600 focus:ring-red-500">
-                                                <span class="ml-2 text-gray-700 text-sm">ไม่ใช้งาน/ชำรุด</span>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">รูปภาพอุปกรณ์ (ตัวเลือก)</label>
-                                        <input type="file" id="imageFile" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 mb-2">
-                                        <input type="hidden" id="imageUrl" name="imageUrl" value="">
-                                        <div id="imagePreviewContainer" class="hidden mt-2 border border-gray-200 rounded-md p-2 bg-gray-50 text-center relative">
-                                            <img id="imagePreview" src="" alt="Preview" class="max-h-40 mx-auto rounded object-contain shadow-sm">
-                                            <button type="button" id="removeImageBtn" class="mt-2 text-xs px-3 py-1 bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-full font-medium transition-colors">
-                                                เอาภาพออก
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div class="pt-4 flex gap-2 pb-2">
-                                        <button type="submit" id="submitBtn" class="flex-1 flex justify-center items-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                            <svg id="loadingSpinner" class="animate-spin -ml-1 mr-2 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                            <span id="btnText">บันทึกข้อมูล</span>
-                                        </button>
-                                        <button type="button" id="cancelEditBtn" onclick="resetFormMode()" class="hidden px-4 py-2.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                                            ยกเลิก
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right: Table -->
-                    <div class="w-full flex-1 min-w-0 lg:h-full flex flex-col">
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col lg:h-full lg:max-h-[calc(100vh-8rem)]">
-                            <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center rounded-t-xl flex-shrink-0">
-                                <h2 class="text-lg font-medium text-gray-900">รายการอุปกรณ์ในระบบ</h2>
-                                <div class="flex items-center gap-2">
-                                    <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-1 rounded-full hidden sm:inline-block" id="tableCountBadge">0 รายการ</span>
-                                    <button onclick="exportToExcel()" class="flex items-center px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 rounded-md text-sm font-medium transition-colors shadow-sm">
-                                        <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                        ส่งออก Excel
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Filter Section -->
-                            <div class="bg-white p-4 border-b border-gray-100 flex flex-col md:flex-row gap-3 flex-shrink-0">
-                                <div class="flex-1">
-                                    <input type="text" id="searchInput" placeholder="ค้นหาชื่ออุปกรณ์, รหัส, หรือสติ๊กเกอร์..." class="w-full rounded-md border border-gray-300 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
-                                </div>
-                                <div class="w-full md:w-auto">
-                                    <select id="filterCompany" class="w-full rounded-md border border-gray-300 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white outline-none">
-                                        <option value="">ทุกบริษัท</option>
-                                        <option value="Sunwork">Sunwork</option>
-                                        <option value="K-con">K-con</option>
-                                        <option value="Kemlex">Kemlex</option>
-                                    </select>
-                                </div>
-                                <div class="w-full md:w-auto">
-                                    <select id="filterVoltage" class="w-full rounded-md border border-gray-300 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white outline-none">
-                                        <option value="">ทุกระดับแรงดัน</option>
-                                        <option value="ไม่เกิน 24 V.">ไม่เกิน 24 V.</option>
-                                        <option value="สูงกว่า 24 V. (220V)">สูงกว่า 24 V. (220V)</option>
-                                        <option value="สูงกว่า 24 V. (380V)">สูงกว่า 24 V. (380V)</option>
-                                        <option value="อื่นๆ">อื่นๆ</option>
-                                    </select>
-                                </div>
-                                <div class="w-full md:w-auto">
-                                    <select id="filterStatus" class="w-full rounded-md border border-gray-300 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white outline-none">
-                                        <option value="">ทุกสถานะ</option>
-                                        <option value="ใช้งาน">ใช้งานได้ปกติ</option>
-                                        <option value="ไม่ใช้งาน">ไม่ใช้งาน/ชำรุด</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <!-- Table Wrapper with Scroll & Sticky Header -->
-                            <div class="flex-1 overflow-auto custom-scrollbar p-0 relative">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-100 sticky top-0 z-10 shadow-sm whitespace-nowrap">
-                                        <tr>
-                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ลำดับ</th>
-                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">รูปภาพ</th>
-                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ชื่ออุปกรณ์/รหัส</th>
-                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">บริษัท</th>
-                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">แรงดันไฟฟ้า</th>
-                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">สถานะ</th>
-                                            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">จัดการ</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="dataTableBody" class="bg-white divide-y divide-gray-200">
-                                        <tr>
-                                            <td colspan="7" class="px-6 py-12 text-center text-gray-500">กำลังโหลดข้อมูล...</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-2 text-center">💡 สามารถคลิกที่แถวของตารางเพื่อดูรายละเอียดเพิ่มเติม</p>
-                    </div>
-
-                </div>
-            </div>
-
-        </main>
-    </div>
-
-    <!-- Modal Detail View -->
-    <div id="detailModal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <!-- Background overlay -->
-            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
-            
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            
-            <!-- Modal Panel -->
-            <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full fade-in">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 relative">
-                    <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                    
-                    <div class="sm:flex sm:items-start">
-                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                            <h3 class="text-lg leading-6 font-semibold text-gray-900 mb-4 border-b pb-2 flex items-center" id="modal-title">
-                                <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                ข้อมูลอุปกรณ์
-                            </h3>
-                            
-                            <!-- Image Display -->
-                            <div class="mb-5 flex justify-center bg-gray-100 rounded-lg p-3 border border-gray-200 w-full" id="modal-image-container">
-                                <img id="modal-image" src="" alt="ภาพอุปกรณ์" class="max-h-72 object-contain rounded w-full shadow-sm">
-                            </div>
-                            
-                            <!-- Detail Grid -->
-                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                                <div class="grid grid-cols-3 gap-y-3 gap-x-4 text-sm">
-                                    <div class="text-gray-500 font-medium">ลำดับที่</div>
-                                    <div class="col-span-2 font-semibold text-gray-900" id="modal-no">-</div>
-                                    
-                                    <div class="text-gray-500 font-medium">ชื่ออุปกรณ์</div>
-                                    <div class="col-span-2 text-gray-900" id="modal-name">-</div>
-                                    
-                                    <div class="text-gray-500 font-medium">รหัสอุปกรณ์</div>
-                                    <div class="col-span-2 text-gray-900" id="modal-id">-</div>
-                                    
-                                    <div class="text-gray-500 font-medium">บริษัท</div>
-                                    <div class="col-span-2 text-indigo-700 font-medium" id="modal-company">-</div>
-                                    
-                                    <div class="text-gray-500 font-medium">ระดับแรงดัน</div>
-                                    <div class="col-span-2 text-gray-900" id="modal-voltage">-</div>
-                                    
-                                    <div class="text-gray-500 font-medium">สติ๊กเกอร์</div>
-                                    <div class="col-span-2 text-gray-900" id="modal-sticker">-</div>
-                                    
-                                    <div class="text-gray-500 font-medium">สถานะ</div>
-                                    <div class="col-span-2" id="modal-status">-</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-100">
-                    <button type="button" onclick="closeModal()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
-                        ปิดหน้าต่าง
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 
-    <!-- Toast Container -->
-    <div id="toastContainer" class="fixed bottom-5 right-5 flex flex-col gap-3 z-50"></div>
+    <div id="custom-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+        <div class="bg-white border-4 border-black shadow-[12px_12px_0px_0px_#000] max-w-2xl w-full max-h-[90vh] flex flex-col relative">
+            
+            <div id="modal-header" class="bg-yellow-300 border-b-4 border-black p-4 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-3">
+                    <button id="modal-back-btn" onclick="renderSettingsMenu()" class="hidden w-8 h-8 flex justify-center items-center bg-white border-4 border-black shadow-[2px_2px_0px_0px_#000] active:translate-y-0.5 active:shadow-none transition-all">
+                        <i class="ph ph-caret-left font-black"></i>
+                    </button>
+                    <h3 id="modal-title" class="font-black text-xl uppercase">แจ้งเตือน</h3>
+                </div>
+                <button onclick="closeModal()" class="w-8 h-8 flex justify-center items-center bg-white border-4 border-black shadow-[2px_2px_0px_0px_#000] active:translate-y-0.5 active:shadow-none transition-all">
+                    <i class="ph ph-x font-black"></i>
+                </button>
+            </div>
+            
+            <div id="modal-body" class="p-6 font-bold text-base overflow-y-auto grow">
+                <!-- เนื้อหาจะเปลี่ยนไปตามเมนู -->
+            </div>
+        </div>
+    </div>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTdlSdtUu9SJzZrMOWqdN_iMQ664b2SlvmAuULsi35IFdr-lNnyXm7fgA4i5x8ch1Gdw/exec'; 
+        /**
+         * นำ URL ของ Apps Script ที่ได้จากการ Deploy มาใส่ที่ตัวแปรด้านล่าง
+         */
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZfk-K3CMlRU0TDcZsob9t7neFOeOikzZxXz6Jnk-6RvvDdcAk5h2kD2evJTkX58m_7w/exec'; // เปลี่ยนตรงนี้
         
-        // --- ตั้งค่า Cloudinary (นำค่าของคุณมาใส่ที่นี่) ---
-        const CLOUDINARY_CLOUD_NAME = 'dwfaxbxjn'; 
-        const CLOUDINARY_UPLOAD_PRESET = 'electrical'; 
-        // ---------------------------------------------
-        
-        let localData = [];
+        let currentUser = null;
 
-        // UI Elements
-        const form = document.getElementById('equipmentForm');
-        const actionInput = document.getElementById('action');
-        const rowNumberInput = document.getElementById('rowNumber');
-        const formTitle = document.getElementById('formTitle');
-        const btnText = document.getElementById('btnText');
-        const cancelEditBtn = document.getElementById('cancelEditBtn');
-        const submitBtn = document.getElementById('submitBtn');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const dataTableBody = document.getElementById('dataTableBody');
+        const COLOR_OPTIONS = [
+            { value: 'bg-red-400', label: '🔴 แดง (Red)' },
+            { value: 'bg-orange-400', label: '🟠 ส้ม (Orange)' },
+            { value: 'bg-yellow-300', label: '🟡 เหลือง (Yellow)' },
+            { value: 'bg-green-400', label: '🟢 เขียว (Green)' },
+            { value: 'bg-emerald-400', label: '🟢 เขียวมรกต (Emerald)' },
+            { value: 'bg-cyan-300', label: '🧊 ฟ้า (Cyan)' },
+            { value: 'bg-blue-400', label: '🔵 น้ำเงิน (Blue)' },
+            { value: 'bg-indigo-400', label: '🫐 คราม (Indigo)' },
+            { value: 'bg-purple-400', label: '🟣 ม่วง (Purple)' },
+            { value: 'bg-pink-400', label: '🌸 ชมพู (Pink)' },
+            { value: 'bg-gray-300', label: '⚪ เทา (Gray)' },
+            { value: 'bg-lime-400', label: '🍋 มะนาว (Lime)' }
+        ];
 
-        // UI Image Elements
-        const imageFileInput = document.getElementById('imageFile');
-        const imageUrlInput = document.getElementById('imageUrl');
-        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
-        const imagePreview = document.getElementById('imagePreview');
-        const removeImageBtn = document.getElementById('removeImageBtn');
-
-        // Filter Elements
-        const searchInput = document.getElementById('searchInput');
-        const filterCompany = document.getElementById('filterCompany');
-        const filterVoltage = document.getElementById('filterVoltage');
-        const filterStatus = document.getElementById('filterStatus');
-
-        // ผูก Event ให้ช่องค้นหาและตัวกรองทำงานเมื่อมีการเปลี่ยนแปลง
-        if(searchInput) searchInput.addEventListener('input', renderTable);
-        if(filterCompany) filterCompany.addEventListener('change', renderTable);
-        if(filterVoltage) filterVoltage.addEventListener('change', renderTable);
-        if(filterStatus) filterStatus.addEventListener('change', renderTable);
-
-        // Navigation Switcher
-        function switchView(viewName) {
-            document.getElementById('view-dashboard').classList.add('hidden');
-            document.getElementById('view-manage').classList.add('hidden');
+        const loginForm = document.getElementById('login-form');
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
             
-            // Desktop active state
-            document.getElementById('nav-dashboard').classList.remove('nav-active', 'text-gray-700');
-            document.getElementById('nav-manage').classList.remove('nav-active', 'text-gray-700');
-            
-            if(viewName === 'dashboard') {
-                document.getElementById('view-dashboard').classList.remove('hidden');
-                document.getElementById('nav-dashboard').classList.add('nav-active');
-                document.getElementById('nav-manage').classList.add('text-gray-700');
-                document.getElementById('pageTitle').textContent = 'แดชบอร์ดภาพรวม';
-                updateDashboardStats();
-            } else {
-                document.getElementById('view-manage').classList.remove('hidden');
-                document.getElementById('nav-manage').classList.add('nav-active');
-                document.getElementById('nav-dashboard').classList.add('text-gray-700');
-                document.getElementById('pageTitle').textContent = 'จัดการข้อมูลอุปกรณ์';
-            }
-            
-            // Scroll to top
-            window.scrollTo(0, 0);
-        }
+            toggleLoginLoading(true);
 
-        // Toast Message
-        function showToast(message, type = 'success') {
-            const toast = document.createElement('div');
-            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
-            toast.className = `${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center toast-enter max-w-sm`;
-            toast.innerHTML = `<span class="text-sm font-medium">${message}</span>`;
-            document.getElementById('toastContainer').appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        // จัดการพรีวิวรูปภาพ
-        imageFileInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    imagePreview.src = e.target.result;
-                    imagePreviewContainer.classList.remove('hidden');
-                }
-                reader.readAsDataURL(file);
-            }
-        });
-
-        removeImageBtn.addEventListener('click', function() {
-            imageFileInput.value = ''; 
-            imageUrlInput.value = ''; 
-            imagePreview.src = '';
-            imagePreviewContainer.classList.add('hidden');
-        });
-
-        // Fetch Data
-        async function fetchRealTimeData() {
             try {
-                document.getElementById('refreshBtn').querySelector('svg').classList.add('animate-spin');
-                const response = await fetch(SCRIPT_URL);
-                const result = await response.json();
-
-                if (result.status === 'success') {
-                    // เก็บล็อกข้อมูล
-                    localData = result.data;
-                    
-                    // จัดเรียงข้อมูลตาม "ลำดับที่ (no)" จากน้อยไปมาก
-                    localData.sort((a, b) => {
-                        const noA = a.no ? String(a.no).trim() : '';
-                        const noB = b.no ? String(b.no).trim() : '';
-                        
-                        // รองรับการเรียงตัวเลข (เช่น 1, 2, 10 จะเรียงถูก) 
-                        // และรองรับการเรียงตัวอักษรปนตัวเลข (A1, A2) ด้วย localeCompare
-                        return noA.localeCompare(noB, 'th', { numeric: true, ignorePunctuation: true });
+                if (SCRIPT_URL && !SCRIPT_URL.includes('YOUR_GOOGLE_APPS_SCRIPT')) {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'login', username: user, password: pass }),
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                     });
+                    const data = await response.json();
                     
-                    renderTable();
-                    updateDashboardStats();
+                    if (data.status === 'success') {
+                        processLoginSuccess(data.username, data.role, data.allowedApps, data.buttons);
+                    } else {
+                        throw new Error(data.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+                    }
                 } else {
-                    showToast('ไม่สามารถดึงข้อมูลได้', 'error');
+                    // MOCK LOGIN
+                    await new Promise(r => setTimeout(r, 1000)); 
+                    const mockButtons = [
+                        { name: 'ทะเบียนพนักงาน', url: 'hr.html', appId: '1', icon: 'ph-users', color: 'bg-green-400', desc: 'ข้อมูลบุคลากรและทีมงาน' },
+                        { name: 'ตรวจเครื่องมือ', url: '#', appId: '2', icon: 'ph-wrench', color: 'bg-yellow-300', desc: 'ระบบตรวจสอบเครื่องมือไฟฟ้า' }
+                    ];
+
+                    if (user === 'admin' && pass === '1234') {
+                        processLoginSuccess('Admin Mock', 'admin', 'ALL', mockButtons);
+                    } else {
+                        throw new Error('กรุณาใส่ SCRIPT_URL ก่อน (ตอนนี้ใช้ระบบ Mock - รหัส: admin/1234)');
+                    }
                 }
             } catch (error) {
-                console.error(error);
-                showToast('เชื่อมต่อฐานข้อมูลล้มเหลว', 'error');
+                showLoginError(error.message);
             } finally {
-                document.getElementById('refreshBtn').querySelector('svg').classList.remove('animate-spin');
+                toggleLoginLoading(false);
             }
+        });
+
+        function toggleLoginLoading(isLoading) {
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('btn-text').classList.toggle('hidden', isLoading);
+            document.getElementById('btn-loader').classList.toggle('hidden', !isLoading);
+            document.getElementById('login-btn').disabled = isLoading;
         }
 
-        // Update Dashboard Stats
-        function updateDashboardStats() {
-            let active = 0, inactive = 0;
-            let volLow = 0, vol220 = 0, vol380 = 0;
-            let compSunwork = 0, compKcon = 0, compKemlex = 0;
-            
-            localData.forEach(item => {
-                // Status
-                if (item.status === 'ใช้งาน') active++;
-                else inactive++;
-                
-                // Voltage
-                const v = String(item.voltage || '');
-                if (v.includes('ไม่เกิน 24')) volLow++;
-                else if (v.includes('220V')) vol220++;
-                else if (v.includes('380V')) vol380++;
-                
-                // Company
-                const c = String(item.company || '');
-                if (c === 'Sunwork') compSunwork++;
-                else if (c === 'K-con') compKcon++;
-                else if (c === 'Kemlex') compKemlex++;
-            });
-
-            // Update UI
-            document.getElementById('stat-total').textContent = localData.length;
-            document.getElementById('stat-active').textContent = active;
-            document.getElementById('stat-inactive').textContent = inactive;
-            
-            document.getElementById('stat-vol-low').textContent = volLow;
-            document.getElementById('stat-vol-220').textContent = vol220;
-            document.getElementById('stat-vol-380').textContent = vol380;
-            
-            document.getElementById('stat-comp-sunwork').textContent = compSunwork;
-            document.getElementById('stat-comp-kcon').textContent = compKcon;
-            document.getElementById('stat-comp-kemlex').textContent = compKemlex;
+        function showLoginError(msg) {
+            const errEl = document.getElementById('login-error');
+            errEl.classList.remove('hidden');
+            errEl.textContent = msg;
         }
 
-        // Modal Functions
-        function openModal(rowNum) {
-            const item = localData.find(d => String(d.rowNumber) === String(rowNum));
-            if(!item) return;
-
-            // ป้อนข้อมูลลง Modal
-            document.getElementById('modal-no').textContent = item.no || '-';
-            document.getElementById('modal-name').textContent = item.name || '-';
-            document.getElementById('modal-id').textContent = item.equipmentId || '-';
-            document.getElementById('modal-company').textContent = item.company || '-';
-            document.getElementById('modal-voltage').textContent = item.voltage || '-';
-            document.getElementById('modal-sticker').textContent = item.stickerNo || '-';
+        function processLoginSuccess(username, role, allowedApps, buttonsData) {
+            currentUser = { username, role };
             
-            const statusClass = item.status === 'ใช้งาน' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-            document.getElementById('modal-status').innerHTML = `<span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">${item.status || '-'}</span>`;
+            // บันทึก Session ข้อมูลผู้ใช้และปุ่มลงใน LocalStorage
+            localStorage.setItem('sunwork_user_session', JSON.stringify({
+                username: username,
+                role: role,
+                allowedApps: allowedApps,
+                buttonsData: buttonsData
+            }));
+            
+            document.getElementById('display-user').textContent = currentUser.username;
+            const roleEl = document.getElementById('display-role');
+            roleEl.textContent = currentUser.role;
+            roleEl.className = role === 'admin' 
+                ? "ml-2 text-xs bg-red-500 text-white px-2 py-1 uppercase rounded-full font-bold"
+                : "ml-2 text-xs bg-black text-white px-2 py-1 uppercase rounded-full font-bold";
 
-            // แสดงรูปภาพ
-            const imgContainer = document.getElementById('modal-image-container');
-            const imgEl = document.getElementById('modal-image');
-            if(item.imageUrl) {
-                imgEl.src = item.imageUrl;
-                imgContainer.classList.remove('hidden');
-            } else {
-                imgContainer.classList.add('hidden');
-                imgEl.src = '';
+            // ลบปุ่มเก่าออกก่อนวาดใหม่
+            document.querySelectorAll('.dynamic-app-btn').forEach(btn => btn.remove());
+            const appsGrid = document.getElementById('apps-grid');
+            const settingsBtn = document.getElementById('settings-btn');
+
+            let allowedArray = allowedApps === 'ALL' ? [] : String(allowedApps).split(',').map(id => id.trim());
+
+            if (buttonsData && buttonsData.length > 0) {
+                buttonsData.forEach(btn => {
+                    if (allowedApps === 'ALL' || allowedArray.includes(btn.appId)) {
+                        const btnEl = document.createElement('a');
+                        btnEl.href = btn.url || '#';
+                        btnEl.className = 'dynamic-app-btn manga-card block bg-white group relative overflow-hidden';
+                        btnEl.innerHTML = `
+                            <div class="flex items-center p-5">
+                                <div class="w-14 h-14 flex-shrink-0 flex items-center justify-center border-4 border-black ${btn.color} shadow-[4px_4px_0px_0px_#000] group-hover:scale-110 transition-transform z-10">
+                                    <i class="ph ${btn.icon} text-3xl text-black"></i>
+                                </div>
+                                <div class="ml-5 z-10">
+                                    <h2 class="text-xl font-black text-black">${btn.name}</h2>
+                                    <p class="text-sm font-bold text-gray-700 mt-1">${btn.desc}</p>
+                                </div>
+                            </div>
+                            <div class="absolute inset-0 ${btn.color} manga-hover-dots opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                        `;
+                        appsGrid.insertBefore(btnEl, settingsBtn);
+                    }
+                });
             }
 
-            // เปิด Modal
-            document.getElementById('detailModal').classList.remove('hidden');
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('main-menu-view').classList.remove('hidden');
+            loginForm.reset();
+        }
+
+        function logout() {
+            currentUser = null;
+            // ลบ Session ออกเมื่อออกจากระบบ
+            localStorage.removeItem('sunwork_user_session');
+            
+            document.getElementById('main-menu-view').classList.add('hidden');
+            document.getElementById('login-view').classList.remove('hidden');
         }
 
         function closeModal() {
-            document.getElementById('detailModal').classList.add('hidden');
+            document.getElementById('custom-modal').classList.add('hidden');
         }
 
-        // ฟังก์ชันสำหรับส่งออก Excel
-        async function exportToExcel() {
-            if (localData.length === 0) {
-                showToast('ไม่มีข้อมูลสำหรับส่งออก', 'error');
-                return;
+        function setModalContent(title, html, colorClass = 'bg-gray-300', showBack = true) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-body').innerHTML = html;
+            document.getElementById('modal-header').className = `${colorClass} border-b-4 border-black p-4 flex justify-between items-center shrink-0`;
+            document.getElementById('modal-back-btn').classList.toggle('hidden', !showBack);
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+
+        async function callApi(action, dataObj = {}) {
+            if (!SCRIPT_URL || SCRIPT_URL.includes('YOUR_GOOGLE_APPS_SCRIPT')) {
+                alert("กรุณาเชื่อมต่อ Google Apps Script ก่อน (ระบุ URL ในโค้ด)");
+                return null;
             }
-
-            // ดึงค่าการค้นหาตัวกรองปัจจุบัน เพื่อให้ส่งออกเฉพาะข้อมูลที่เห็นอยู่
-            const searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
-            const companyVal = filterCompany ? filterCompany.value : '';
-            const voltageVal = filterVoltage ? filterVoltage.value : '';
-            const statusVal = filterStatus ? filterStatus.value : '';
-
-            const filteredData = localData.filter(item => {
-                const matchSearch = !searchVal || 
-                    (item.name && item.name.toLowerCase().includes(searchVal)) || 
-                    (item.equipmentId && item.equipmentId.toLowerCase().includes(searchVal)) || 
-                    (item.stickerNo && item.stickerNo.toLowerCase().includes(searchVal));
+            
+            document.getElementById('modal-body').innerHTML = `
+                <div class="flex flex-col items-center justify-center py-10">
+                    <div class="loader mb-4"></div>
+                    <p class="text-xl">กำลังดึงข้อมูล...</p>
+                </div>`;
                 
-                const matchCompany = !companyVal || item.company === companyVal;
-                const matchVoltage = !voltageVal || item.voltage === voltageVal;
-                const matchStatus = !statusVal || item.status === statusVal;
-
-                return matchSearch && matchCompany && matchVoltage && matchStatus;
-            });
-
-            if(filteredData.length === 0) {
-                showToast('ไม่พบข้อมูลตามเงื่อนไขที่เลือก', 'error');
-                return;
-            }
-
             try {
-                // สร้าง Workbook ใหม่ด้วย ExcelJS
-                const workbook = new ExcelJS.Workbook();
-                const worksheet = workbook.addWorksheet('ข้อมูลอุปกรณ์');
-
-                // 1. กำหนดหัวคอลัมน์และความกว้าง
-                worksheet.columns = [
-                    { header: 'ลำดับที่', key: 'no', width: 12 },
-                    { header: 'ชื่ออุปกรณ์ไฟฟ้า', key: 'name', width: 35 },
-                    { header: 'หมายเลขอุปกรณ์', key: 'equipmentId', width: 22 },
-                    { header: 'บริษัท', key: 'company', width: 20 },
-                    { header: 'ระดับแรงดันไฟฟ้า', key: 'voltage', width: 25 },
-                    { header: 'หมายเลขสติ๊กเกอร์', key: 'stickerNo', width: 20 },
-                    { header: 'สถานะ', key: 'status', width: 18 },
-                    { header: 'รูปภาพ', key: 'imageUrl', width: 20 }
-                ];
-
-                // 2. ตกแต่งแถวหัวตาราง (Header)
-                const headerRow = worksheet.getRow(1);
-                headerRow.height = 30;
-                headerRow.eachCell((cell) => {
-                    cell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
-                    // สีพื้นหลังหัวตาราง สีม่วง (Indigo 600) ให้เข้ากับ Theme เว็บ
-                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }; 
-                    cell.alignment = { vertical: 'middle', horizontal: 'center' };
-                    // เส้นขอบสีดำ
-                    cell.border = {
-                        top: { style: 'thin', color: { argb: 'FF000000' } },
-                        left: { style: 'thin', color: { argb: 'FF000000' } },
-                        bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                        right: { style: 'thin', color: { argb: 'FF000000' } }
-                    };
-                });
-
-                // 3. ใส่ข้อมูลลงในตาราง
-                filteredData.forEach(item => {
-                    const row = worksheet.addRow({
-                        no: item.no || '',
-                        name: item.name || '',
-                        equipmentId: item.equipmentId || '',
-                        company: item.company || '',
-                        voltage: item.voltage || '',
-                        stickerNo: item.stickerNo || '',
-                        status: item.status || '',
-                        imageUrl: item.imageUrl || '' // จะถูกเปลี่ยนเป็นลิงก์ในขั้นตอนถัดไป
-                    });
-
-                    // ตกแต่งแต่ละเซลล์ในแถวข้อมูล
-                    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-                        cell.font = { name: 'Arial', size: 10 };
-                        cell.border = {
-                            top: { style: 'thin', color: { argb: 'FF000000' } },
-                            left: { style: 'thin', color: { argb: 'FF000000' } },
-                            bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                            right: { style: 'thin', color: { argb: 'FF000000' } }
-                        };
-                        
-                        // จัดตำแหน่ง (คอลัมน์ 1 ลำดับ, 7 สถานะ, 8 รูปภาพ ให้อยู่ตรงกลาง)
-                        if (colNumber === 1 || colNumber === 7 || colNumber === 8) {
-                            cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-                        } else {
-                            cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
-                        }
-                    });
-
-                    // ทำให้ลิงก์ภาพคลิกได้ (ถ้ารูปมี)
-                    const imageCell = row.getCell(8);
-                    if (item.imageUrl) {
-                        imageCell.value = { text: 'คลิกเพื่อดูรูปภาพ', hyperlink: item.imageUrl };
-                        imageCell.font = { name: 'Arial', size: 10, color: { argb: 'FF0000FF' }, underline: true };
-                    } else {
-                        imageCell.value = 'ไม่มี';
-                        imageCell.font = { name: 'Arial', size: 10, color: { argb: 'FF999999' } };
-                    }
-                });
-
-                // 4. บันทึกและดาวน์โหลดไฟล์
-                const buffer = await workbook.xlsx.writeBuffer();
-                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                
-                const today = new Date().toISOString().split('T')[0];
-                saveAs(blob, `รายการอุปกรณ์_${today}.xlsx`);
-                
-                showToast('ส่งออกไฟล์ Excel สำเร็จ', 'success');
-            } catch (error) {
-                console.error(error);
-                showToast('เกิดข้อผิดพลาดในการสร้างไฟล์ Excel', 'error');
-            }
-        }
-
-        // Render Table
-        function renderTable() {
-            if (localData.length === 0) {
-                dataTableBody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-gray-500">ไม่มีข้อมูลในระบบ</td></tr>`;
-                document.getElementById('tableCountBadge').textContent = `0 รายการ`;
-                return;
-            }
-
-            // รับค่าจากช่องค้นหาและตัวกรอง
-            const searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
-            const companyVal = filterCompany ? filterCompany.value : '';
-            const voltageVal = filterVoltage ? filterVoltage.value : '';
-            const statusVal = filterStatus ? filterStatus.value : '';
-
-            // กรองข้อมูลตามเงื่อนไข
-            const filteredData = localData.filter(item => {
-                const matchSearch = !searchVal || 
-                    (item.name && item.name.toLowerCase().includes(searchVal)) || 
-                    (item.equipmentId && item.equipmentId.toLowerCase().includes(searchVal)) || 
-                    (item.stickerNo && item.stickerNo.toLowerCase().includes(searchVal));
-                
-                const matchCompany = !companyVal || item.company === companyVal;
-                const matchVoltage = !voltageVal || item.voltage === voltageVal;
-                const matchStatus = !statusVal || item.status === statusVal;
-
-                return matchSearch && matchCompany && matchVoltage && matchStatus;
-            });
-
-            // อัปเดตจำนวนรายการบนหัวตาราง
-            document.getElementById('tableCountBadge').textContent = `${filteredData.length} รายการ`;
-
-            // กรณีไม่พบข้อมูลจากการค้นหา
-            if (filteredData.length === 0) {
-                dataTableBody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-gray-500">ไม่พบข้อมูลที่ตรงกับเงื่อนไขการค้นหา</td></tr>`;
-                return;
-            }
-
-            dataTableBody.innerHTML = '';
-            filteredData.forEach((item) => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-indigo-50 cursor-pointer transition-colors border-b border-gray-100";
-                
-                // การคลิกที่แถว จะเปิดหน้าต่างรายละเอียด
-                tr.onclick = () => openModal(item.rowNumber);
-                
-                const statusClass = item.status === 'ใช้งาน' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-                
-                const imgHtml = item.imageUrl 
-                    ? `<img src="${item.imageUrl}" class="h-10 w-10 rounded object-cover border border-gray-200">` 
-                    : `<div class="h-10 w-10 rounded bg-gray-100 flex items-center justify-center text-gray-400 text-[10px] border border-gray-200">ไม่มีรูป</div>`;
-                
-                const compHtml = item.company ? `<span class="text-sm font-medium text-gray-700">${item.company}</span>` : `<span class="text-sm text-gray-400">-</span>`;
-
-                tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">${item.no || '-'}</td>
-                    <td class="px-6 py-3 whitespace-nowrap">${imgHtml}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-bold text-gray-900">${item.name || '-'}</div>
-                        <div class="text-xs text-gray-500">ID: ${item.equipmentId || '-'}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">${compHtml}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-600">${item.voltage || '-'}</div>
-                        <div class="text-xs text-gray-500">สติ๊กเกอร์: ${item.stickerNo || '-'}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
-                            ${item.status || '-'}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <!-- หยุดการกระจาย Event ไม่ให้คลิกปุ่มแล้วกลายเป็นการคลิกแถว -->
-                        <button onclick="event.stopPropagation(); editEquipment('${item.rowNumber}')" class="text-indigo-600 hover:text-white hover:bg-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md transition-colors border border-indigo-200">
-                            แก้ไข
-                        </button>
-                    </td>
-                `;
-                dataTableBody.appendChild(tr);
-            });
-        }
-
-        // Edit Equipment (Triggered from Table)
-        function editEquipment(rowNum) {
-            const item = localData.find(d => String(d.rowNumber) === String(rowNum));
-            if(!item) return;
-
-            // นำข้อมูลไปใส่ในฟอร์ม
-            document.getElementById('no').value = item.no || '';
-            document.getElementById('name').value = item.name || '';
-            document.getElementById('equipmentId').value = item.equipmentId || '';
-            document.getElementById('company').value = item.company || '';
-            document.getElementById('voltage').value = item.voltage || '';
-            document.getElementById('stickerNo').value = item.stickerNo || '';
-            
-            if(item.status === 'ใช้งาน') document.getElementById('statusActive').checked = true;
-            else document.getElementById('statusInactive').checked = true;
-
-            // จัดการพรีวิวรูปเก่า
-            imageFileInput.value = ''; 
-            imageUrlInput.value = item.imageUrl || '';
-            if (item.imageUrl) {
-                imagePreview.src = item.imageUrl;
-                imagePreviewContainer.classList.remove('hidden');
-            } else {
-                imagePreviewContainer.classList.add('hidden');
-            }
-
-            // เปลี่ยนโหมด
-            actionInput.value = 'edit';
-            rowNumberInput.value = item.rowNumber;
-            
-            formTitle.innerHTML = `<svg class="w-5 h-5 mr-2 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg> แก้ไขข้อมูลลำดับที่ ${item.no}`;
-            btnText.textContent = 'อัปเดตข้อมูล';
-            cancelEditBtn.classList.remove('hidden');
-            
-            // บนมือถือ ให้เลื่อนกลับขึ้นไปที่ฟอร์ม
-            const formElement = document.getElementById('equipmentForm');
-            formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-
-        // Reset Form Mode
-        function resetFormMode() {
-            form.reset();
-            actionInput.value = 'add';
-            rowNumberInput.value = '';
-            
-            imageUrlInput.value = '';
-            imagePreviewContainer.classList.add('hidden');
-            imagePreview.src = '';
-            
-            formTitle.innerHTML = `<svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> เพิ่มข้อมูลใหม่`;
-            btnText.textContent = 'บันทึกข้อมูล';
-            cancelEditBtn.classList.add('hidden');
-        }
-
-        // Form Submit
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            submitBtn.disabled = true;
-            loadingSpinner.classList.remove('hidden');
-            btnText.textContent = 'กำลังตรวจสอบ...';
-
-            try {
-                // Cloudinary Upload
-                const file = imageFileInput.files[0];
-                if (file) {
-                    btnText.textContent = 'อัปโหลดรูปภาพ...';
-                    const formDataCloudinary = new FormData();
-                    formDataCloudinary.append('file', file);
-                    formDataCloudinary.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-                    
-                    const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
-                        method: 'POST',
-                        body: formDataCloudinary
-                    });
-                    
-                    if (!cloudinaryRes.ok) throw new Error('อัปโหลดรูปภาพไม่สำเร็จ');
-                    
-                    const cloudinaryData = await cloudinaryRes.json();
-                    imageUrlInput.value = cloudinaryData.secure_url; 
-                }
-
-                btnText.textContent = actionInput.value === 'edit' ? 'กำลังอัปเดต...' : 'กำลังบันทึก...';
-                
-                const formData = new FormData(form);
-                const dataObj = Object.fromEntries(formData.entries());
-
-                const response = await fetch(SCRIPT_URL, {
+                const res = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(dataObj)
+                    body: JSON.stringify({ action: action, ...dataObj }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
-                const result = await response.json();
+                return await res.json();
+            } catch (e) {
+                alert('เกิดข้อผิดพลาด: ' + e.message);
+                return null;
+            }
+        }
 
-                if (result.status === 'success') {
-                    showToast(result.message);
-                    resetFormMode();
-                    fetchRealTimeData(); 
-                } else {
-                    showToast('เกิดข้อผิดพลาดจากฐานข้อมูล', 'error');
+        document.getElementById('settings-btn').addEventListener('click', () => {
+            if (!currentUser) return;
+            if (currentUser.role !== 'admin') {
+                setModalContent('Access Denied ❌', '<p class="text-red-600 text-center py-4">คุณไม่มีสิทธิ์เข้าถึงเมนูตั้งค่าระบบ <br>เฉพาะระดับ "Admin" เท่านั้น</p>', 'bg-red-400', false);
+                return;
+            }
+            renderSettingsMenu();
+        });
+
+        function renderSettingsMenu() {
+            const html = `
+                <div class="space-y-4">
+                    <p class="mb-2 text-gray-700">เลือกระบบที่ต้องการจัดการ:</p>
+                    <button onclick="fetchUsers()" class="manga-btn w-full bg-cyan-300 p-4 text-left flex items-center justify-between text-xl">
+                        <span>👥 จัดการบัญชีผู้ใช้ (Users)</span>
+                        <i class="ph ph-users-three"></i>
+                    </button>
+                    <button onclick="fetchButtons()" class="manga-btn w-full bg-purple-300 p-4 text-left flex items-center justify-between text-xl">
+                        <span>📱 จัดการปุ่ม (Buttons)</span>
+                        <i class="ph ph-app-window"></i>
+                    </button>
+                </div>
+            `;
+            setModalContent('⚙️ ตั้งค่าระบบ', html, 'bg-gray-300', false);
+        }
+
+        async function fetchUsers() {
+            setModalContent('👥 จัดการบัญชีผู้ใช้', '', 'bg-cyan-300', true);
+            const res = await callApi('getUsers');
+            if (!res) { renderSettingsMenu(); return; }
+
+            let listHtml = `<button onclick="editUser(null)" class="manga-btn mb-6 bg-green-400 px-4 py-2 text-sm flex items-center gap-2"><i class="ph ph-plus-circle text-lg"></i> เพิ่มผู้ใช้ใหม่</button>`;
+            
+            res.data.forEach(row => {
+                listHtml += `
+                <div class="border-4 border-black p-4 mb-4 flex justify-between items-center bg-gray-50">
+                    <div>
+                        <div class="text-lg font-black">${row[0]} <span class="text-sm bg-black text-white px-2 py-0.5 rounded-full ml-2">${row[3]}</span></div>
+                        <div class="text-sm font-normal text-gray-600">ชื่อ: ${row[2]} | สิทธิ์ปุ่ม: ${row[4]}</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="editUser(['${row[0]}','${row[1]}','${row[2]}','${row[3]}','${row[4]}'])" class="w-10 h-10 bg-yellow-300 border-2 border-black flex justify-center items-center active:translate-y-1"><i class="ph ph-pencil-simple text-xl"></i></button>
+                        <button onclick="deleteUser('${row[0]}')" class="w-10 h-10 bg-red-400 border-2 border-black flex justify-center items-center active:translate-y-1"><i class="ph ph-trash text-xl"></i></button>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('modal-body').innerHTML = listHtml;
+        }
+
+        function editUser(userData) {
+            const isEdit = !!userData;
+            const u = isEdit ? userData : ['', '', '', 'user', ''];
+            
+            const html = `
+                <form id="user-form" class="space-y-4">
+                    <div><label class="block mb-1">Username (Key)</label><input type="text" id="u-user" class="manga-input w-full p-2 bg-gray-100" value="${u[0]}" ${isEdit ? 'readonly' : 'required'}></div>
+                    <div><label class="block mb-1">Password</label><input type="text" id="u-pass" class="manga-input w-full p-2" value="${u[1]}" required></div>
+                    <div><label class="block mb-1">ชื่อแสดงผล (Display)</label><input type="text" id="u-name" class="manga-input w-full p-2" value="${u[2]}" required></div>
+                    <div>
+                        <label class="block mb-1">ระดับสิทธิ์ (Role)</label>
+                        <select id="u-role" class="manga-input w-full p-2">
+                            <option value="user" ${u[3] === 'user' ? 'selected' : ''}>User (ทั่วไป)</option>
+                            <option value="admin" ${u[3] === 'admin' ? 'selected' : ''}>Admin (ผู้ดูแล)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block mb-1">App IDs ที่อนุญาต (คั่นด้วยลูกน้ำ หรือใส่ ALL)</label>
+                        <input type="text" id="u-apps" class="manga-input w-full p-2" value="${u[4]}" placeholder="เช่น 1,2,5 หรือ ALL" required>
+                    </div>
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" onclick="fetchUsers()" class="manga-btn flex-1 bg-gray-300 p-2">ยกเลิก</button>
+                        <button type="button" onclick="saveUser()" class="manga-btn flex-1 bg-green-400 p-2">💾 บันทึก</button>
+                    </div>
+                </form>
+            `;
+            setModalContent(isEdit ? '✏️ แก้ไขผู้ใช้' : '✨ เพิ่มผู้ใช้ใหม่', html, 'bg-cyan-300', true);
+        }
+
+        async function saveUser() {
+            const data = {
+                username: document.getElementById('u-user').value,
+                password: document.getElementById('u-pass').value,
+                displayName: document.getElementById('u-name').value,
+                role: document.getElementById('u-role').value,
+                allowedApps: document.getElementById('u-apps').value
+            };
+            if(!data.username) return alert('กรุณากรอก Username');
+            
+            const res = await callApi('saveUser', data);
+            if(res && res.status === 'success') fetchUsers();
+        }
+
+        async function deleteUser(username) {
+            if (username === 'admin') return alert('ไม่สามารถลบ admin หลักได้!');
+            if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้: ${username} ?`)) {
+                const res = await callApi('deleteUser', { username });
+                if(res && res.status === 'success') fetchUsers();
+            }
+        }
+
+        async function fetchButtons() {
+            setModalContent('📱 จัดการปุ่มแอป', '', 'bg-purple-300', true);
+            const res = await callApi('getButtons');
+            if (!res) { renderSettingsMenu(); return; }
+
+            let listHtml = `<button onclick="editButton(null)" class="manga-btn mb-6 bg-green-400 px-4 py-2 text-sm flex items-center gap-2"><i class="ph ph-plus-circle text-lg"></i> เพิ่มปุ่มใหม่</button>`;
+            
+            res.data.forEach(row => {
+                if(!row[0]) return; // ข้ามแถวว่าง
+                listHtml += `
+                <div class="border-4 border-black p-3 mb-4 flex justify-between items-center bg-gray-50">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 flex justify-center items-center border-2 border-black ${row[4]} shrink-0"><i class="ph ${row[3]} text-2xl"></i></div>
+                        <div>
+                            <div class="text-lg font-black leading-tight">${row[0]} <span class="text-xs bg-black text-white px-1 ml-1">ID:${row[2]}</span></div>
+                            <div class="text-xs font-normal text-gray-500 truncate max-w-[150px] md:max-w-[300px]">${row[1]}</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <button onclick="editButton(['${row[0]}','${row[1]}','${row[2]}','${row[3]}','${row[4]}','${row[5]}'])" class="w-10 h-10 bg-yellow-300 border-2 border-black flex justify-center items-center active:translate-y-1"><i class="ph ph-pencil-simple text-xl"></i></button>
+                        <button onclick="deleteButton('${row[2]}')" class="w-10 h-10 bg-red-400 border-2 border-black flex justify-center items-center active:translate-y-1"><i class="ph ph-trash text-xl"></i></button>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('modal-body').innerHTML = listHtml;
+        }
+
+        function editButton(btnData) {
+            const isEdit = !!btnData;
+            const b = isEdit ? btnData : ['', '#', '', 'ph-app-window', 'bg-gray-300', '']; 
+            
+            let colorOptionsHtml = COLOR_OPTIONS.map(c => 
+                `<option value="${c.value}" class="${c.value}" ${b[4] === c.value ? 'selected' : ''}>${c.label}</option>`
+            ).join('');
+
+            const html = `
+                <form id="btn-form" class="space-y-4">
+                    <div>
+                        <label class="block mb-1">รหัส App ID (ห้ามซ้ำ)</label>
+                        <input type="text" id="b-id" class="manga-input w-full p-2 bg-gray-100" value="${b[2]}" placeholder="เช่น 12" ${isEdit ? 'readonly' : 'required'}>
+                    </div>
+                    <div><label class="block mb-1">ชื่อปุ่ม (ชื่อระบบ)</label><input type="text" id="b-name" class="manga-input w-full p-2" value="${b[0]}" required></div>
+                    <div><label class="block mb-1">ลิงก์ URL</label><input type="text" id="b-url" class="manga-input w-full p-2" value="${b[1]}" required></div>
+                    <div>
+                        <label class="block mb-1">รหัสไอคอน <a href="https://phosphoricons.com/" target="_blank" class="text-blue-600 underline text-sm">(ค้นหาไอคอน)</a></label>
+                        <input type="text" id="b-icon" class="manga-input w-full p-2" value="${b[3]}" placeholder="เช่น ph-users">
+                    </div>
+                    <div>
+                        <label class="block mb-1">สีพื้นหลังปุ่ม (Dropdown)</label>
+                        <select id="b-color" class="manga-input w-full p-2 font-bold cursor-pointer">
+                            ${colorOptionsHtml}
+                        </select>
+                    </div>
+                    <div><label class="block mb-1">คำอธิบายสั้นๆ</label><input type="text" id="b-desc" class="manga-input w-full p-2" value="${b[5]}"></div>
+                    
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" onclick="fetchButtons()" class="manga-btn flex-1 bg-gray-300 p-2">ยกเลิก</button>
+                        <button type="button" onclick="saveButton()" class="manga-btn flex-1 bg-green-400 p-2">💾 บันทึก</button>
+                    </div>
+                </form>
+            `;
+            setModalContent(isEdit ? '✏️ แก้ไขปุ่ม' : '✨ เพิ่มปุ่มใหม่', html, 'bg-purple-300', true);
+        }
+
+        async function saveButton() {
+            const data = {
+                appId: document.getElementById('b-id').value,
+                name: document.getElementById('b-name').value,
+                url: document.getElementById('b-url').value,
+                icon: document.getElementById('b-icon').value,
+                color: document.getElementById('b-color').value,
+                desc: document.getElementById('b-desc').value
+            };
+            if(!data.appId || !data.name) return alert('กรุณากรอก App ID และ ชื่อปุ่ม');
+            
+            const res = await callApi('saveButton', data);
+            if(res && res.status === 'success') fetchButtons();
+        }
+
+        async function deleteButton(appId) {
+            if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบปุ่ม (App ID: ${appId}) ?`)) {
+                const res = await callApi('deleteButton', { appId });
+                if(res && res.status === 'success') fetchButtons();
+            }
+        }
+
+        // ตรวจสอบสถานะการล็อกอินทันทีที่โหลดหน้าเว็บ (Auto-login)
+        const sessionData = localStorage.getItem('sunwork_user_session');
+        if (sessionData) {
+            try {
+                const data = JSON.parse(sessionData);
+                if (data && data.username) {
+                    // หากพบ Session ให้ส่งข้อมูลไปวาดปุ่มและซ่อนหน้า Login ทันที
+                    processLoginSuccess(data.username, data.role, data.allowedApps, data.buttonsData);
                 }
-            } catch (error) {
-                console.error(error);
-                showToast(error.message || 'เชื่อมต่อล้มเหลว', 'error');
-            } finally {
-                submitBtn.disabled = false;
-                loadingSpinner.classList.add('hidden');
-                btnText.textContent = actionInput.value === 'edit' ? 'อัปเดตข้อมูล' : 'บันทึกข้อมูล';
+            } catch (e) {
+                console.error("Session data is invalid or expired.");
+                localStorage.removeItem('sunwork_user_session');
             }
-        });
-
-        // Event listener สำหรับการปิดหน้าต่าง Detail เมื่อกดปุ่ม ESC
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' && !document.getElementById('detailModal').classList.contains('hidden')) {
-                closeModal();
-            }
-        });
-
-        // Initialize
-        document.getElementById('refreshBtn').addEventListener('click', fetchRealTimeData);
-        window.addEventListener('DOMContentLoaded', fetchRealTimeData);
+        }
 
     </script>
 </body>
