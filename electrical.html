@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบจัดการเครื่องมือใช้ไฟฟ้า</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- เพิ่ม Library สำหรับ Export Excel -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- เปลี่ยน Library สำหรับ Export Excel เป็น ExcelJS เพื่อรองรับการจัดรูปแบบ (สี, เส้นตาราง) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         body {
@@ -642,7 +643,7 @@
         }
 
         // ฟังก์ชันสำหรับส่งออก Excel
-        function exportToExcel() {
+        async function exportToExcel() {
             if (localData.length === 0) {
                 showToast('ไม่มีข้อมูลสำหรับส่งออก', 'error');
                 return;
@@ -672,27 +673,89 @@
                 return;
             }
 
-            // จัดรูปแบบข้อมูลสำหรับ Excel
-            const excelData = filteredData.map(item => ({
-                'ลำดับที่': item.no || '',
-                'ชื่ออุปกรณ์ไฟฟ้า': item.name || '',
-                'หมายเลขอุปกรณ์ (Code)': item.equipmentId || '',
-                'บริษัทเจ้าของเครื่องมือ': item.company || '',
-                'ระดับแรงดันไฟฟ้า': item.voltage || '',
-                'หมายเลขสติ๊กเกอร์': item.stickerNo || '',
-                'สถานะ': item.status || '',
-                'ลิงก์รูปภาพ': item.imageUrl || 'ไม่มี'
-            }));
-
-            // สร้าง Workbook และดาวน์โหลด
             try {
-                const worksheet = XLSX.utils.json_to_sheet(excelData);
-                const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, "ข้อมูลอุปกรณ์");
+                // สร้าง Workbook ใหม่ด้วย ExcelJS
+                const workbook = new ExcelJS.Workbook();
+                const worksheet = workbook.addWorksheet('ข้อมูลอุปกรณ์');
+
+                // 1. กำหนดหัวคอลัมน์และความกว้าง
+                worksheet.columns = [
+                    { header: 'ลำดับที่', key: 'no', width: 12 },
+                    { header: 'ชื่ออุปกรณ์ไฟฟ้า', key: 'name', width: 35 },
+                    { header: 'หมายเลขอุปกรณ์', key: 'equipmentId', width: 22 },
+                    { header: 'บริษัท', key: 'company', width: 20 },
+                    { header: 'ระดับแรงดันไฟฟ้า', key: 'voltage', width: 25 },
+                    { header: 'หมายเลขสติ๊กเกอร์', key: 'stickerNo', width: 20 },
+                    { header: 'สถานะ', key: 'status', width: 18 },
+                    { header: 'รูปภาพ', key: 'imageUrl', width: 20 }
+                ];
+
+                // 2. ตกแต่งแถวหัวตาราง (Header)
+                const headerRow = worksheet.getRow(1);
+                headerRow.height = 30;
+                headerRow.eachCell((cell) => {
+                    cell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+                    // สีพื้นหลังหัวตาราง สีม่วง (Indigo 600) ให้เข้ากับ Theme เว็บ
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }; 
+                    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                    // เส้นขอบสีดำ
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FF000000' } },
+                        left: { style: 'thin', color: { argb: 'FF000000' } },
+                        bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                        right: { style: 'thin', color: { argb: 'FF000000' } }
+                    };
+                });
+
+                // 3. ใส่ข้อมูลลงในตาราง
+                filteredData.forEach(item => {
+                    const row = worksheet.addRow({
+                        no: item.no || '',
+                        name: item.name || '',
+                        equipmentId: item.equipmentId || '',
+                        company: item.company || '',
+                        voltage: item.voltage || '',
+                        stickerNo: item.stickerNo || '',
+                        status: item.status || '',
+                        imageUrl: item.imageUrl || '' // จะถูกเปลี่ยนเป็นลิงก์ในขั้นตอนถัดไป
+                    });
+
+                    // ตกแต่งแต่ละเซลล์ในแถวข้อมูล
+                    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                        cell.font = { name: 'Arial', size: 10 };
+                        cell.border = {
+                            top: { style: 'thin', color: { argb: 'FF000000' } },
+                            left: { style: 'thin', color: { argb: 'FF000000' } },
+                            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                            right: { style: 'thin', color: { argb: 'FF000000' } }
+                        };
+                        
+                        // จัดตำแหน่ง (คอลัมน์ 1 ลำดับ, 7 สถานะ, 8 รูปภาพ ให้อยู่ตรงกลาง)
+                        if (colNumber === 1 || colNumber === 7 || colNumber === 8) {
+                            cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+                        } else {
+                            cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+                        }
+                    });
+
+                    // ทำให้ลิงก์ภาพคลิกได้ (ถ้ารูปมี)
+                    const imageCell = row.getCell(8);
+                    if (item.imageUrl) {
+                        imageCell.value = { text: 'คลิกเพื่อดูรูปภาพ', hyperlink: item.imageUrl };
+                        imageCell.font = { name: 'Arial', size: 10, color: { argb: 'FF0000FF' }, underline: true };
+                    } else {
+                        imageCell.value = 'ไม่มี';
+                        imageCell.font = { name: 'Arial', size: 10, color: { argb: 'FF999999' } };
+                    }
+                });
+
+                // 4. บันทึกและดาวน์โหลดไฟล์
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                 
-                // ดาวน์โหลดไฟล์ชื่อ "รายการอุปกรณ์_วันเวลา.xlsx"
                 const today = new Date().toISOString().split('T')[0];
-                XLSX.writeFile(workbook, `รายการอุปกรณ์_${today}.xlsx`);
+                saveAs(blob, `รายการอุปกรณ์_${today}.xlsx`);
+                
                 showToast('ส่งออกไฟล์ Excel สำเร็จ', 'success');
             } catch (error) {
                 console.error(error);
