@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ทะเบียนเครื่องจักร</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Kanit', 'sans-serif'],
+                        heading: ['Kanit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            purple: '#000000',      
+                            lightPurple: '#9ca3af', 
+                            orange: '#f472b6',      
+                            lightOrange: '#fbcfe8', 
+                            sidebar: '#ffffff',     
+                            bg: '#f8f9fa',        
+                            textDark: '#000000',  
+                            textMuted: '#4b5563', 
+                        }
+                    },
+                    boxShadow: {
+                        'card': '6px 6px 0px 0px rgba(0, 0, 0, 1)',
+                        'sm-card': '4px 4px 0px 0px rgba(0, 0, 0, 1)',
+                        'hover-card': '10px 10px 0px 0px rgba(0, 0, 0, 1)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Kanit', sans-serif; }
+        
+        .manga-bg-dots {
+            background-color: #f8f9fa;
+            background-image: radial-gradient(#d1d5db 20%, transparent 20%);
+            background-size: 16px 16px;
+        }
+
+        .manga-lines {
+            background-image: repeating-linear-gradient(45deg, #000 0, #000 2px, transparent 2px, transparent 10px);
+        }
+        
+        .manga-lines-yellow {
+            background-image: repeating-linear-gradient(45deg, #fde047 0, #fde047 2px, transparent 2px, transparent 10px);
+        }
+
+        .manga-card {
+            border: 4px solid #000;
+            box-shadow: 6px 6px 0px 0px #000;
+            transition: all 0.2s ease-in-out;
+            background-color: #fff;
+        }
+        
+        .manga-card:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 8px 8px 0px 0px #000;
+        }
+
+        .manga-input {
+            border: 3px solid #000;
+            box-shadow: 4px 4px 0px 0px #000;
+            transition: all 0.2s;
+            border-radius: 0;
+            background-color: #fff;
+        }
+        
+        .manga-input:focus {
+            outline: none;
+            box-shadow: 6px 6px 0px 0px #000;
+            transform: translate(-2px, -2px);
+            background-color: #fef08a; /* yellow focus */
+        }
+
+        .manga-btn {
+            border: 3px solid #000;
+            box-shadow: 4px 4px 0px 0px #000;
+            transition: all 0.1s;
+            border-radius: 0;
+            text-transform: uppercase;
+            font-weight: 900;
+        }
+        
+        .manga-btn:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0px 0px 0px 0px #000;
+        }
+
+        .manga-badge {
+            border: 2px solid #000;
+            box-shadow: 2px 2px 0px 0px #000;
+            font-weight: 900;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .table-scrollbar::-webkit-scrollbar { height: 10px; width: 10px; }
+        .table-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-top: 3px solid #000; }
+        .table-scrollbar::-webkit-scrollbar-thumb { background: #000; border: 2px solid #f1f1f1; }
+        
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .loader {
+            border-top-color: #000;
+            -webkit-animation: spinner 1.5s linear infinite;
+            animation: spinner 1.5s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="manga-bg-dots text-brand-textDark h-screen flex flex-col md:flex-row overflow-hidden font-sans">
+
+    <!-- Sidebar -->
+    <aside class="fixed md:relative bottom-0 w-full md:w-24 h-16 md:h-full bg-white border-t-4 md:border-t-0 md:border-r-4 border-black flex flex-row md:flex-col items-center py-0 md:py-6 justify-around md:justify-between z-50 shrink-0 shadow-[0_-6px_0px_0px_#000] md:shadow-[6px_0px_0px_0px_#000] order-last md:order-first">
+        <div class="hidden md:flex flex-col items-center gap-8">
+            <div class="w-14 h-14 bg-orange-400 border-4 border-black shadow-[4px_4px_0px_0px_#000] flex items-center justify-center p-1 transform -rotate-3 hover:rotate-0 transition-transform">
+                <!-- เปลี่ยนไอคอนเป็นเครื่องจักร (gear) -->
+                <i class="ph-bold ph-gear-six text-3xl text-black"></i>
+            </div>
+        </div>
+        
+        <nav class="flex flex-row md:flex-col w-full md:w-auto h-full md:h-auto gap-1 md:gap-4 justify-around md:justify-start items-center md:mt-4 px-2 md:px-0">
+            <a href="#" onclick="switchView('dashboard')" id="nav-dashboard" class="relative flex flex-col items-center justify-center text-black h-full md:h-auto p-2 md:p-3 group w-full md:w-auto" title="แดชบอร์ด">
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1.5 bg-black md:hidden nav-indicator transition-opacity duration-300 opacity-100"></div>
+                <div class="absolute left-0 w-1.5 h-8 bg-black hidden md:block nav-indicator transition-opacity duration-300 opacity-100"></div>
+                <div class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center border-2 border-transparent border-black bg-cyan-300 shadow-[2px_2px_0px_0px_#000] transition-all nav-icon-bg">
+                    <i class="ph-bold ph-chart-pie-slice text-xl md:text-2xl nav-icon text-black"></i>
+                </div>
+                <span class="text-[9px] md:hidden mt-1 font-black uppercase">ภาพรวม</span>
+            </a>
+
+            <a href="#" onclick="switchView('add')" id="nav-add" class="relative flex flex-col items-center justify-center text-gray-400 hover:text-black transition-colors h-full md:h-auto p-2 md:p-3 group w-full md:w-auto" title="เพิ่มข้อมูล">
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1.5 bg-black md:hidden nav-indicator transition-opacity duration-300 opacity-0"></div>
+                <div class="absolute left-0 w-1.5 h-8 bg-black hidden md:block nav-indicator transition-opacity duration-300 opacity-0"></div>
+                <div class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center border-2 border-transparent group-hover:border-black group-hover:bg-green-300 group-hover:shadow-[2px_2px_0px_0px_#000] transition-all nav-icon-bg">
+                    <i class="ph-bold ph-plus-circle text-xl md:text-2xl nav-icon text-current group-hover:text-black"></i>
+                </div>
+                <span class="text-[9px] md:hidden mt-1 font-black uppercase">เพิ่มข้อมูล</span>
+            </a>
+
+            <a href="#" onclick="switchView('list')" id="nav-list" class="relative flex flex-col items-center justify-center text-gray-400 hover:text-black transition-colors h-full md:h-auto p-2 md:p-3 group w-full md:w-auto" title="รายการเครื่องจักร">
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1.5 bg-black md:hidden nav-indicator transition-opacity duration-300 opacity-0"></div>
+                <div class="absolute left-0 w-1.5 h-8 bg-black hidden md:block nav-indicator transition-opacity duration-300 opacity-0"></div>
+                <div class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center border-2 border-transparent group-hover:border-black group-hover:bg-pink-300 group-hover:shadow-[2px_2px_0px_0px_#000] transition-all nav-icon-bg">
+                    <i class="ph-bold ph-list-dashes text-xl md:text-2xl nav-icon text-current group-hover:text-black"></i>
+                </div>
+                <span class="text-[9px] md:hidden mt-1 font-black uppercase">รายการ</span>
+            </a>
+
+            <a href="#" target="_blank" rel="noopener noreferrer" class="relative flex flex-col items-center justify-center text-gray-400 hover:text-black transition-colors h-full md:h-auto p-2 md:p-3 group w-full md:w-auto" title="ปริ้นรายการ">
+                <div class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center border-2 border-transparent group-hover:border-black group-hover:bg-purple-300 group-hover:shadow-[2px_2px_0px_0px_#000] transition-all">
+                    <i class="ph-bold ph-printer text-xl md:text-2xl text-current group-hover:text-black"></i>
+                </div>
+                <span class="text-[9px] md:hidden mt-1 font-black uppercase">ปริ้น</span>
+            </a>
+        </nav>
+        
+        <div class="hidden md:flex mt-auto flex-col items-center gap-4 w-full pb-4">
+            <a href="index.html" class="relative flex flex-col items-center justify-center text-gray-400 hover:text-black transition-colors p-2 md:p-3 group w-full" title="กลับหน้าหลัก">
+                <div class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center border-2 border-transparent group-hover:border-black group-hover:bg-red-400 group-hover:shadow-[2px_2px_0px_0px_#000] transition-all">
+                    <i class="ph-bold ph-house text-xl md:text-2xl text-current group-hover:text-black"></i>
+                </div>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col h-screen overflow-hidden pb-16 md:pb-0 w-full relative">
+        
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-2 md:mb-3 gap-2 md:gap-4 pt-2 md:pt-0 bg-white border-4 border-black p-4 shadow-card flex-shrink-0 z-10 relative mt-4 md:mt-5 mx-4 md:mx-8 w-[calc(100%-2rem)] md:w-[calc(100%-4rem)]">
+            <div class="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
+                <div class="md:hidden w-12 h-12 bg-orange-400 border-4 border-black flex items-center justify-center shadow-sm shrink-0 p-1">
+                    <img src="https://raw.githubusercontent.com/mm12346/Sunwork/refs/heads/main/Sunwork.png" alt="SUNWORK Logo" class="w-full h-full object-contain">
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h1 class="text-xl md:text-3xl font-black text-black uppercase tracking-wider truncate border-b-4 border-black inline-block pb-1">ทะเบียนเครื่องจักร</h1>
+                    <p class="text-gray-600 font-bold text-xs md:text-sm mt-1 truncate">SUNWORK COMPANY LIMITED</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+                <button id="refreshBtn" onclick="fetchMachineData()" class="manga-btn flex items-center justify-center gap-2 bg-yellow-300 p-2 md:px-4 md:py-2 hover:bg-yellow-400 transition-colors shrink-0 group" title="รีเฟรชข้อมูล">
+                    <i class="ph-bold ph-arrows-clockwise text-xl md:text-lg group-hover:rotate-180 transition-transform duration-500"></i>
+                    <span class="hidden md:inline text-sm font-black">อัปเดตข้อมูล</span>
+                </button>
+                <div class="hidden md:flex items-center gap-2 bg-white px-4 py-2 border-4 border-black shadow-sm shrink-0">
+                    <div class="w-3 h-3 border-2 border-black bg-green-400 animate-pulse"></div>
+                    <span class="text-sm font-black text-black uppercase">ออนไลน์ V1.0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Scrollable -->
+        <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8 pt-0 table-scrollbar">
+            
+            <!-- VIEW: Dashboard -->
+            <div id="view-dashboard" class="w-full space-y-6 block fade-in mt-2">
+                
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                    <div class="manga-card p-5 md:p-6 flex flex-col justify-between border-t-8 border-t-cyan-400 relative overflow-hidden group bg-white">
+                        <div class="absolute -right-6 -top-6 w-24 h-24 bg-cyan-100 rounded-full manga-lines opacity-20 group-hover:scale-150 transition-transform duration-500"></div>
+                        <div class="flex justify-between items-start mb-2 relative z-10">
+                            <h3 class="font-black text-black text-sm uppercase">เครื่องจักรทั้งหมด</h3>
+                            <div class="p-2 bg-cyan-300 border-2 border-black text-black"><i class="ph-bold ph-gear-six text-xl"></i></div>
+                        </div>
+                        <div class="flex items-end gap-2 mt-4 relative z-10">
+                            <span id="stat-total" class="text-4xl md:text-5xl font-black text-black">0</span>
+                            <span class="text-sm font-bold text-gray-500 mb-1">รายการ</span>
+                        </div>
+                    </div>
+
+                    <div class="manga-card p-5 md:p-6 flex flex-col justify-between border-t-8 border-t-green-400 relative overflow-hidden group bg-white">
+                        <div class="absolute -right-6 -top-6 w-24 h-24 bg-green-100 rounded-full manga-lines opacity-20 group-hover:scale-150 transition-transform duration-500"></div>
+                        <div class="flex justify-between items-start mb-2 relative z-10">
+                            <h3 class="font-black text-black text-sm uppercase">พร้อมใช้งาน</h3>
+                            <div class="p-2 bg-green-400 border-2 border-black text-black"><i class="ph-bold ph-check-circle text-xl"></i></div>
+                        </div>
+                        <div class="flex items-end gap-2 mt-4 relative z-10">
+                            <span id="stat-active" class="text-4xl md:text-5xl font-black text-green-600 drop-shadow-[2px_2px_0px_#000]">0</span>
+                            <span class="text-sm font-bold text-gray-500 mb-1">รายการ</span>
+                        </div>
+                    </div>
+
+                    <div class="manga-card p-5 md:p-6 flex flex-col justify-between border-t-8 border-t-red-400 relative overflow-hidden group bg-white sm:col-span-2 lg:col-span-1">
+                        <div class="absolute -right-6 -top-6 w-24 h-24 bg-red-100 rounded-full manga-lines opacity-20 group-hover:scale-150 transition-transform duration-500"></div>
+                        <div class="flex justify-between items-start mb-2 relative z-10">
+                            <h3 class="font-black text-black text-sm uppercase">ซ่อมบำรุง / ชำรุด</h3>
+                            <div class="p-2 bg-red-400 border-2 border-black text-black"><i class="ph-bold ph-warning-circle text-xl"></i></div>
+                        </div>
+                        <div class="flex items-end gap-2 mt-4 relative z-10">
+                            <span id="stat-inactive" class="text-4xl md:text-5xl font-black text-red-500 drop-shadow-[2px_2px_0px_#000]">0</span>
+                            <span class="text-sm font-bold text-gray-500 mb-1">รายการ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <!-- Company Stats -->
+                    <div class="manga-card p-5 md:p-6 bg-white">
+                        <div class="flex justify-between items-center mb-6 pb-2 border-b-4 border-black">
+                            <h3 class="font-black text-black text-base flex items-center gap-2 uppercase">
+                                <div class="w-8 h-8 bg-yellow-300 border-2 border-black flex items-center justify-center"><i class="ph-bold ph-buildings text-black"></i></div> 
+                                สัดส่วนตามบริษัทเจ้าของ
+                            </h3>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div class="bg-white border-4 border-black p-4 flex flex-col justify-center items-center shadow-[4px_4px_0px_0px_#000] hover:-translate-y-1 transition-transform">
+                                <span class="text-sm font-black text-black bg-yellow-300 px-2 border-2 border-black mb-2">Sunwork</span>
+                                <div class="flex items-baseline gap-1"><span id="stat-comp-sunwork" class="text-3xl font-black text-black">0</span></div>
+                            </div>
+                            <div class="bg-white border-4 border-black p-4 flex flex-col justify-center items-center shadow-[4px_4px_0px_0px_#000] hover:-translate-y-1 transition-transform">
+                                <span class="text-sm font-black text-black bg-blue-300 px-2 border-2 border-black mb-2">K-con</span>
+                                <div class="flex items-baseline gap-1"><span id="stat-comp-kcon" class="text-3xl font-black text-black">0</span></div>
+                            </div>
+                            <div class="bg-white border-4 border-black p-4 flex flex-col justify-center items-center shadow-[4px_4px_0px_0px_#000] hover:-translate-y-1 transition-transform">
+                                <span class="text-sm font-black text-black bg-teal-300 px-2 border-2 border-black mb-2">KEMREX</span>
+                                <div class="flex items-baseline gap-1"><span id="stat-comp-kemrex" class="text-3xl font-black text-black">0</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: Add Data (ฟอร์มเพิ่มข้อมูล) -->
+            <div id="view-add" class="w-full hidden fade-in mt-2 flex-col min-h-0 h-full pb-4">
+                <div class="w-full max-w-2xl mx-auto flex flex-col h-full max-h-[calc(100vh-12rem)] md:max-h-[calc(100vh-9rem)] min-h-0">
+                    <div class="manga-card bg-white relative flex flex-col h-full w-full overflow-hidden">
+                        <!-- Form Header -->
+                        <div class="bg-yellow-300 px-5 py-4 border-b-4 border-black flex items-center justify-between shrink-0">
+                            <h2 id="formTitle" class="text-lg font-black text-black uppercase flex items-center gap-2 tracking-wide">
+                                <i class="ph-bold ph-plus-circle text-2xl"></i> เพิ่มข้อมูลเครื่องจักร
+                            </h2>
+                            <button onclick="switchView('list')" type="button" class="manga-btn flex items-center gap-2 bg-pink-300 px-3 py-1.5 hover:bg-pink-400 text-sm transition-colors shadow-[2px_2px_0px_0px_#000]">
+                                <i class="ph-bold ph-list-dashes text-lg"></i> <span class="hidden sm:inline">ดูรายการเครื่องจักร</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Form Body -->
+                        <div class="p-5 bg-gray-50 manga-lines relative z-0 flex-1 overflow-y-auto table-scrollbar">
+                            <div class="absolute inset-0 bg-white/80 z-[-1]"></div>
+                            
+                            <form id="machineForm" class="space-y-4 relative z-10">
+                                <input type="hidden" id="action" name="action" value="add">
+                                <input type="hidden" id="rowNumber" name="rowNumber" value="">
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-black text-black mb-1 uppercase bg-white inline-block px-2 border-2 border-black">ลำดับที่ <span class="text-red-500">*</span></label>
+                                        <input type="text" id="no" name="no" required class="manga-input w-full px-4 py-2 mt-1 font-bold text-sm bg-white">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-black text-black mb-1 uppercase bg-white inline-block px-2 border-2 border-black">รหัสเครื่องจักร (ID) <span class="text-red-500">*</span></label>
+                                        <input type="text" id="machineId" name="machineId" required class="manga-input w-full px-4 py-2 mt-1 font-mono tracking-wider font-black text-pink-600 bg-white">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-black text-black mb-1 uppercase bg-white inline-block px-2 border-2 border-black">ชื่อเครื่องจักร / รุ่น <span class="text-red-500">*</span></label>
+                                    <input type="text" id="name" name="name" required class="manga-input w-full px-4 py-2 mt-1 font-bold text-sm bg-white">
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-black text-black mb-1 uppercase bg-white inline-block px-2 border-2 border-black">บริษัทเจ้าของ <span class="text-red-500">*</span></label>
+                                        <div class="relative mt-1">
+                                            <select id="company" name="company" required class="manga-input w-full px-4 py-2 appearance-none cursor-pointer font-bold text-sm bg-white">
+                                                <option value="" disabled selected>เลือกบริษัท</option>
+                                                <option value="Sunwork">Sunwork</option>
+                                                <option value="K-con">K-con</option>
+                                                <option value="KEMREX">KEMREX</option>
+                                            </select>
+                                            <div class="absolute right-0 top-0 bottom-0 w-10 bg-black pointer-events-none flex items-center justify-center border-l-3 border-black"><i class="ph-bold ph-caret-down text-white"></i></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-black text-black mb-1 uppercase bg-white inline-block px-2 border-2 border-black">ประเภทเครื่องจักร <span class="text-red-500">*</span></label>
+                                        <div class="relative mt-1">
+                                            <select id="type" name="type" required class="manga-input w-full px-4 py-2 appearance-none cursor-pointer font-bold text-sm bg-white">
+                                                <option value="" disabled selected>เลือกประเภท</option>
+                                                <option value="รถแบคโฮ (Excavator)">รถแบคโฮ (Excavator)</option>
+                                                <option value="รถเครน (Crane)">รถเครน (Crane)</option>
+                                                <option value="เครื่องปั่นไฟ (Generator)">เครื่องปั่นไฟ (Generator)</option>
+                                                <option value="ปั๊มน้ำ (Water Pump)">ปั๊มน้ำ (Water Pump)</option>
+                                                <option value="รถกระเช้า (Boom Lift)">รถกระเช้า (Boom Lift)</option>
+                                                <option value="อื่นๆ">อื่นๆ</option>
+                                            </select>
+                                            <div class="absolute right-0 top-0 bottom-0 w-10 bg-black pointer-events-none flex items-center justify-center border-l-3 border-black"><i class="ph-bold ph-caret-down text-white"></i></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-white border-4 border-black p-3 shadow-[4px_4px_0px_0px_#000]">
+                                    <label class="block text-sm font-black text-black mb-2 uppercase">สถานะการทำงาน <span class="text-red-500">*</span></label>
+                                    <div class="flex flex-wrap gap-4">
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="radio" id="statusActive" name="status" value="พร้อมใช้งาน" checked class="w-5 h-5 border-2 border-black accent-black">
+                                            <span class="ml-2 text-black font-bold text-sm">พร้อมใช้งาน</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="radio" id="statusMaintenance" name="status" value="ซ่อมบำรุง" class="w-5 h-5 border-2 border-black accent-black">
+                                            <span class="ml-2 text-black font-bold text-sm">ซ่อมบำรุง</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="radio" id="statusInactive" name="status" value="ชำรุด" class="w-5 h-5 border-2 border-black accent-black">
+                                            <span class="ml-2 text-black font-bold text-sm">ชำรุด/เลิกใช้</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="bg-gray-100 border-4 border-black border-dashed p-3">
+                                    <label class="block text-sm font-black text-black mb-2 uppercase bg-white inline-block px-2 border-2 border-black">รูปรถ/เครื่องจักร <span class="text-[10px] text-gray-500 lowercase">(ตัวเลือก)</span></label>
+                                    <input type="file" id="imageFile" accept="image/*" class="w-full text-sm font-bold file:mr-4 file:py-2 file:px-4 file:border-2 file:border-black file:text-sm file:font-black file:bg-cyan-300 file:text-black cursor-pointer bg-white manga-input p-1">
+                                    <input type="hidden" id="imageUrl" name="imageUrl" value="">
+                                    <div id="imagePreviewContainer" class="hidden mt-3 text-center relative border-4 border-black bg-white p-2">
+                                        <img id="imagePreview" src="" alt="Preview" class="max-h-40 mx-auto object-contain shadow-sm border-2 border-gray-200">
+                                        <button type="button" id="removeImageBtn" class="mt-2 text-xs px-3 py-1 bg-red-400 border-2 border-black text-black hover:bg-red-500 font-black uppercase shadow-[2px_2px_0px_0px_#000] active:translate-y-0.5 active:shadow-none">
+                                            เอาภาพออก
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" id="hiddenSubmitBtn" class="hidden"></button>
+                            </form>
+                        </div>
+
+                        <div class="bg-gray-100 p-4 border-t-4 border-black flex gap-3 shrink-0 relative z-10">
+                            <button type="button" id="cancelEditBtn" onclick="resetFormMode()" class="hidden manga-btn flex-1 py-3 bg-white text-black hover:bg-gray-200">
+                                ยกเลิก
+                            </button>
+                            <button type="button" onclick="document.getElementById('hiddenSubmitBtn').click()" id="submitBtn" class="manga-btn flex-1 flex justify-center items-center py-3 bg-cyan-300 text-black hover:bg-cyan-400 gap-2">
+                                <div id="loadingSpinner" class="loader !border-t-white !w-5 !h-5 !border-2 hidden"></div>
+                                <i class="ph-bold ph-floppy-disk text-xl"></i> <span id="btnText">บันทึกข้อมูล</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: Data List (ตารางข้อมูล) -->
+            <div id="view-list" class="w-full hidden fade-in mt-2 flex-col min-h-0 h-full pb-8">
+                <div class="manga-card bg-white flex flex-col h-full lg:max-h-[calc(100vh-10rem)]">
+                    
+                    <div class="bg-gray-50 px-4 md:px-6 py-4 border-b-4 border-black flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shrink-0">
+                        <h2 class="text-lg font-black text-black uppercase flex items-center gap-2">
+                            <i class="ph-bold ph-list-numbers text-2xl"></i> รายการเครื่องจักรในระบบ
+                        </h2>
+                        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                            <span class="bg-white border-2 border-black text-black text-xs font-black px-2 py-1.5 shadow-[2px_2px_0px_0px_#000] shrink-0" id="tableCountBadge">0 รายการ</span>
+                            <button onclick="switchView('add')" class="manga-btn flex-1 sm:flex-none flex justify-center items-center px-3 py-1.5 bg-green-300 text-black hover:bg-green-400 gap-1 sm:gap-2 text-sm shadow-[2px_2px_0px_0px_#000]">
+                                <i class="ph-bold ph-plus-circle text-lg"></i> <span class="whitespace-nowrap">เพิ่มข้อมูล</span>
+                            </button>
+                            <button onclick="exportToExcel()" class="manga-btn flex-1 sm:flex-none flex justify-center items-center px-3 py-1.5 bg-blue-300 text-black hover:bg-blue-400 gap-1 sm:gap-2 text-sm shadow-[2px_2px_0px_0px_#000]">
+                                <i class="ph-bold ph-file-xls text-lg"></i> <span class="whitespace-nowrap">ส่งออก</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter Section -->
+                    <div class="bg-gray-100 p-4 border-b-4 border-black flex flex-col lg:flex-row flex-wrap gap-3 shrink-0 manga-lines relative z-0">
+                        <div class="absolute inset-0 bg-white/70 z-[-1]"></div>
+                        
+                        <div class="flex-1 w-full lg:min-w-[200px] relative z-10">
+                            <div class="relative w-full flex">
+                                <div class="bg-black text-white px-3 flex items-center justify-center border-3 border-r-0 border-black shrink-0"><i class="ph-bold ph-magnifying-glass text-xl"></i></div>
+                                <input type="text" id="searchInput" placeholder="ค้นหาชื่อ, รหัสเครื่องจักร..." class="manga-input w-full p-2 flex-1 font-bold text-sm">
+                            </div>
+                        </div>
+                        <div class="w-full sm:w-[calc(50%-0.375rem)] lg:w-52 xl:w-64 relative z-10">
+                            <div class="relative">
+                                <select id="filterCompany" class="manga-input w-full px-3 py-2 text-sm font-bold appearance-none cursor-pointer bg-white">
+                                    <option value="">ทุกบริษัท</option>
+                                    <option value="Sunwork">Sunwork</option>
+                                    <option value="K-con">K-con</option>
+                                    <option value="KEMREX">KEMREX</option>
+                                </select>
+                                <div class="absolute right-0 top-0 bottom-0 w-8 bg-black pointer-events-none flex items-center justify-center border-l-3 border-black"><i class="ph-bold ph-caret-down text-white"></i></div>
+                            </div>
+                        </div>
+                        <div class="w-full sm:w-[calc(50%-0.375rem)] lg:w-auto relative z-10">
+                            <div class="relative">
+                                <select id="filterType" class="manga-input w-full px-3 py-2 text-sm font-bold appearance-none cursor-pointer bg-white">
+                                    <option value="">ทุกประเภท</option>
+                                    <option value="รถแบคโฮ (Excavator)">รถแบคโฮ</option>
+                                    <option value="รถเครน (Crane)">รถเครน</option>
+                                    <option value="เครื่องปั่นไฟ (Generator)">เครื่องปั่นไฟ</option>
+                                    <option value="ปั๊มน้ำ (Water Pump)">ปั๊มน้ำ</option>
+                                    <option value="รถกระเช้า (Boom Lift)">รถกระเช้า</option>
+                                </select>
+                                <div class="absolute right-0 top-0 bottom-0 w-8 bg-black pointer-events-none flex items-center justify-center border-l-3 border-black"><i class="ph-bold ph-caret-down text-white"></i></div>
+                            </div>
+                        </div>
+                        <div class="w-full sm:w-[calc(50%-0.375rem)] lg:w-auto relative z-10">
+                            <div class="relative">
+                                <select id="filterStatus" class="manga-input w-full px-3 py-2 text-sm font-bold appearance-none cursor-pointer bg-white">
+                                    <option value="">ทุกสถานะ</option>
+                                    <option value="พร้อมใช้งาน">พร้อมใช้งาน</option>
+                                    <option value="ซ่อมบำรุง">ซ่อมบำรุง</option>
+                                    <option value="ชำรุด">ชำรุด/เลิกใช้</option>
+                                </select>
+                                <div class="absolute right-0 top-0 bottom-0 w-8 bg-black pointer-events-none flex items-center justify-center border-l-3 border-black"><i class="ph-bold ph-caret-down text-white"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Table Wrapper -->
+                    <div class="flex-1 overflow-auto table-scrollbar relative">
+                        <table class="min-w-full divide-y-2 divide-black border-collapse">
+                            <thead class="bg-orange-300 sticky top-0 z-20 outline outline-4 outline-black border-b-4 border-black">
+                                <tr>
+                                    <th class="px-4 py-3 text-center text-xs font-black text-black uppercase tracking-wider border-r-2 border-black w-12">ลำดับ</th>
+                                    <th class="px-4 py-3 text-center text-xs font-black text-black uppercase tracking-wider border-r-2 border-black w-16">รูปภาพ</th>
+                                    <th class="px-4 py-3 text-left text-xs font-black text-black uppercase tracking-wider border-r-2 border-black">ชื่อ/รหัสเครื่องจักร</th>
+                                    <th class="px-4 py-3 text-left text-xs font-black text-black uppercase tracking-wider border-r-2 border-black">บริษัท</th>
+                                    <th class="px-4 py-3 text-left text-xs font-black text-black uppercase tracking-wider border-r-2 border-black">ประเภท</th>
+                                    <th class="px-4 py-3 text-center text-xs font-black text-black uppercase tracking-wider border-r-2 border-black">สถานะ</th>
+                                    <th class="px-4 py-3 text-center text-xs font-black text-black uppercase tracking-wider">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataTableBody" class="bg-white divide-y-2 divide-black">
+                                <tr>
+                                    <td colspan="7" class="px-6 py-12 text-center text-gray-500 font-bold uppercase"><div class="loader !w-6 !h-6 mb-2"></div><br>กำลังเตรียมระบบ...<br><span class="text-xs text-red-500 font-normal">*อย่าลืมเชื่อมต่อ Google Apps Script URL</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal Detail View -->
+    <div id="detailModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-opacity opacity-0">
+        <div id="detailModalContent" class="manga-card bg-white w-full max-w-lg transform scale-95 transition-all duration-300 flex flex-col max-h-[90vh]">
+            
+            <div class="bg-orange-300 border-b-4 border-black p-4 flex justify-between items-center shrink-0">
+                <h3 class="text-xl font-black text-black flex items-center gap-2 uppercase tracking-wide">
+                    <i class="ph-bold ph-info text-2xl"></i> ข้อมูลเครื่องจักร
+                </h3>
+                <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center bg-white border-2 border-black shadow-[2px_2px_0px_0px_#000] active:translate-y-1 transition-all shrink-0">
+                    <i class="ph-bold ph-x text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="p-5 md:p-6 overflow-y-auto table-scrollbar flex-1 bg-gray-50">
+                <!-- Image Display -->
+                <div class="mb-6 flex justify-center bg-white border-4 border-black p-2 shadow-[4px_4px_0px_0px_#000] rotate-1 hidden" id="modal-image-container">
+                    <img id="modal-image" src="" alt="ภาพเครื่องจักร" class="max-h-64 object-contain">
+                </div>
+                
+                <!-- Detail Grid -->
+                <div class="bg-white border-4 border-black p-4 shadow-sm-card manga-lines relative z-0">
+                    <div class="absolute inset-0 bg-white/90 z-[-1]"></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-y-4 gap-x-4 text-sm relative z-10">
+                        <div class="text-gray-600 font-black uppercase bg-white border-2 border-black px-2 self-start inline-block w-max">ลำดับที่</div>
+                        <div class="sm:col-span-2 font-black text-xl text-black" id="modal-no">-</div>
+                        
+                        <div class="text-gray-600 font-black uppercase bg-white border-2 border-black px-2 self-start inline-block w-max">ชื่อเครื่องจักร</div>
+                        <div class="sm:col-span-2 font-bold text-black text-base" id="modal-name">-</div>
+                        
+                        <div class="text-gray-600 font-black uppercase bg-white border-2 border-black px-2 self-start inline-block w-max">รหัสเครื่องจักร</div>
+                        <div class="sm:col-span-2 font-mono font-black text-pink-600 tracking-wider text-base" id="modal-id">-</div>
+                        
+                        <div class="text-gray-600 font-black uppercase bg-white border-2 border-black px-2 self-start inline-block w-max">บริษัท</div>
+                        <div class="sm:col-span-2 font-black text-black text-base" id="modal-company">-</div>
+                        
+                        <div class="text-gray-600 font-black uppercase bg-white border-2 border-black px-2 self-start inline-block w-max">ประเภท</div>
+                        <div class="sm:col-span-2 font-bold text-black" id="modal-type">-</div>
+                        
+                        <div class="text-gray-600 font-black uppercase bg-white border-2 border-black px-2 self-start inline-block w-max">สถานะ</div>
+                        <div class="sm:col-span-2" id="modal-status">-</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gray-100 p-4 border-t-4 border-black flex justify-end shrink-0">
+                <button type="button" onclick="closeModal()" class="manga-btn w-full sm:w-auto px-6 py-2.5 bg-white text-black hover:bg-gray-200">
+                    ปิดหน้าต่าง
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 left-1/2 transform -translate-x-1/2 md:left-auto md:transform-none md:top-8 md:right-8 z-[110] flex flex-col gap-3"></div>
+
+    <script>
+        // --- เปลี่ยน URL ตรงนี้ให้เป็น Google Apps Script ของระบบเครื่องจักร ---
+        const SCRIPT_URL = ''; 
+        
+        // --- ตั้งค่า Cloudinary สำหรับรูปเครื่องจักร ---
+        const CLOUDINARY_CLOUD_NAME = 'dwfaxbxjn'; 
+        const CLOUDINARY_UPLOAD_PRESET = 'machine'; // อาจจะต้องเปลี่ยน preset หากแยกโฟลเดอร์
+        // ---------------------------------------------
+        
+        let localData = [];
+
+        // UI Elements
+        const form = document.getElementById('machineForm');
+        const actionInput = document.getElementById('action');
+        const rowNumberInput = document.getElementById('rowNumber');
+        const formTitle = document.getElementById('formTitle');
+        const btnText = document.getElementById('btnText');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const dataTableBody = document.getElementById('dataTableBody');
+
+        // UI Image Elements
+        const imageFileInput = document.getElementById('imageFile');
+        const imageUrlInput = document.getElementById('imageUrl');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        const removeImageBtn = document.getElementById('removeImageBtn');
+
+        // Filter Elements
+        const searchInput = document.getElementById('searchInput');
+        const filterCompany = document.getElementById('filterCompany');
+        const filterType = document.getElementById('filterType');
+        const filterStatus = document.getElementById('filterStatus');
+
+        if(searchInput) searchInput.addEventListener('input', renderTable);
+        if(filterCompany) filterCompany.addEventListener('change', renderTable);
+        if(filterType) filterType.addEventListener('change', renderTable);
+        if(filterStatus) filterStatus.addEventListener('change', renderTable);
+
+        // Navigation Switcher
+        function switchView(viewName) {
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-add').classList.add('hidden');
+            document.getElementById('view-list').classList.add('hidden');
+            
+            document.querySelectorAll('nav > a[id^="nav-"]').forEach(nav => {
+                nav.classList.remove('text-black');
+                nav.classList.add('text-gray-400');
+                nav.querySelectorAll('.nav-indicator').forEach(el => el.classList.replace('opacity-100', 'opacity-0'));
+                
+                const iconBg = nav.querySelector('.nav-icon-bg');
+                if (iconBg) {
+                    iconBg.classList.remove('border-black', 'shadow-[2px_2px_0px_0px_#000]', 'bg-cyan-300', 'bg-pink-300', 'bg-green-300');
+                    iconBg.classList.add('border-transparent');
+                }
+            });
+
+            if(viewName === 'dashboard') {
+                document.getElementById('view-dashboard').classList.remove('hidden');
+                updateDashboardStats();
+
+                const activeNav = document.getElementById('nav-dashboard');
+                activeNav.classList.remove('text-gray-400');
+                activeNav.classList.add('text-black');
+                activeNav.querySelectorAll('.nav-indicator').forEach(el => el.classList.replace('opacity-0', 'opacity-100'));
+                const iconBg = activeNav.querySelector('.nav-icon-bg');
+                iconBg.classList.remove('border-transparent');
+                iconBg.classList.add('border-black', 'shadow-[2px_2px_0px_0px_#000]', 'bg-cyan-300');
+
+            } else if (viewName === 'add') {
+                document.getElementById('view-add').classList.remove('hidden');
+
+                const activeNav = document.getElementById('nav-add');
+                activeNav.classList.remove('text-gray-400');
+                activeNav.classList.add('text-black');
+                activeNav.querySelectorAll('.nav-indicator').forEach(el => el.classList.replace('opacity-0', 'opacity-100'));
+                const iconBg = activeNav.querySelector('.nav-icon-bg');
+                iconBg.classList.remove('border-transparent');
+                iconBg.classList.add('border-black', 'shadow-[2px_2px_0px_0px_#000]', 'bg-green-300');
+
+            } else if (viewName === 'list') {
+                document.getElementById('view-list').classList.remove('hidden');
+
+                const activeNav = document.getElementById('nav-list');
+                activeNav.classList.remove('text-gray-400');
+                activeNav.classList.add('text-black');
+                activeNav.querySelectorAll('.nav-indicator').forEach(el => el.classList.replace('opacity-0', 'opacity-100'));
+                const iconBg = activeNav.querySelector('.nav-icon-bg');
+                iconBg.classList.remove('border-transparent');
+                iconBg.classList.add('border-black', 'shadow-[2px_2px_0px_0px_#000]', 'bg-pink-300');
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-400' : type === 'error' ? 'bg-red-400' : 'bg-blue-400';
+            const icon = type === 'success' ? 'ph-check' : 'ph-x';
+            
+            toast.className = `bg-white border-4 border-black text-black p-3 shadow-[6px_6px_0px_0px_#000] flex items-center gap-3 w-full max-w-sm fade-in`;
+            toast.innerHTML = `
+                <div class="w-10 h-10 border-2 border-black ${bgColor} flex items-center justify-center shrink-0">
+                    <i class="ph-bold ${icon} text-black text-xl"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-black text-gray-800 leading-tight">${message}</p>
+                </div>
+            `;
+            
+            document.getElementById('toastContainer').appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        imageFileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreviewContainer.classList.remove('hidden');
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        removeImageBtn.addEventListener('click', function() {
+            imageFileInput.value = ''; 
+            imageUrlInput.value = ''; 
+            imagePreview.src = '';
+            imagePreviewContainer.classList.add('hidden');
+        });
+
+        async function fetchMachineData() {
+            if(!SCRIPT_URL) {
+                showToast('กรุณาตั้งค่า SCRIPT_URL สำหรับระบบเครื่องจักร', 'error');
+                return;
+            }
+
+            const refreshIcon = document.getElementById('refreshBtn').querySelector('i');
+            refreshIcon.classList.add('animate-spin');
+            
+            try {
+                const response = await fetch(SCRIPT_URL);
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    localData = result.data;
+                    
+                    localData.sort((a, b) => {
+                        const noA = a.no ? String(a.no).trim() : '';
+                        const noB = b.no ? String(b.no).trim() : '';
+                        return noA.localeCompare(noB, 'th', { numeric: true, ignorePunctuation: true });
+                    });
+                    
+                    renderTable();
+                    updateDashboardStats();
+                } else {
+                    showToast('ไม่สามารถดึงข้อมูลได้', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                showToast('เชื่อมต่อฐานข้อมูลล้มเหลว', 'error');
+            } finally {
+                refreshIcon.classList.remove('animate-spin');
+            }
+        }
+
+        function updateDashboardStats() {
+            let active = 0, inactive = 0;
+            let compSunwork = 0, compKcon = 0, compKEMREX = 0;
+            
+            localData.forEach(item => {
+                if (item.status === 'พร้อมใช้งาน') active++;
+                else inactive++;
+                
+                const c = String(item.company || '');
+                if (c === 'Sunwork') compSunwork++;
+                else if (c === 'K-con') compKcon++;
+                else if (c === 'KEMREX') compKEMREX++;
+            });
+
+            document.getElementById('stat-total').textContent = localData.length;
+            document.getElementById('stat-active').textContent = active;
+            document.getElementById('stat-inactive').textContent = inactive;
+            
+            document.getElementById('stat-comp-sunwork').textContent = compSunwork;
+            document.getElementById('stat-comp-kcon').textContent = compKcon;
+            document.getElementById('stat-comp-kemrex').textContent = compKEMREX;
+        }
+
+        function openModal(rowNum) {
+            const item = localData.find(d => String(d.rowNumber) === String(rowNum));
+            if(!item) return;
+
+            document.getElementById('modal-no').textContent = item.no || '-';
+            document.getElementById('modal-name').textContent = item.name || '-';
+            document.getElementById('modal-id').textContent = item.machineId || '-';
+            document.getElementById('modal-company').textContent = item.company || '-';
+            document.getElementById('modal-type').textContent = item.type || '-';
+            
+            let statusBadge = '';
+            if (item.status === 'พร้อมใช้งาน') statusBadge = `<span class="px-2 py-1 text-xs font-black bg-green-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_#000] uppercase">${item.status}</span>`;
+            else if (item.status === 'ซ่อมบำรุง') statusBadge = `<span class="px-2 py-1 text-xs font-black bg-yellow-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_#000] uppercase">${item.status}</span>`;
+            else statusBadge = `<span class="px-2 py-1 text-xs font-black bg-red-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_#000] uppercase">${item.status || '-'}</span>`;
+            
+            document.getElementById('modal-status').innerHTML = statusBadge;
+
+            const imgContainer = document.getElementById('modal-image-container');
+            const imgEl = document.getElementById('modal-image');
+            if(item.imageUrl) {
+                imgEl.src = item.imageUrl;
+                imgContainer.classList.remove('hidden');
+                imgContainer.classList.add('inline-block'); 
+            } else {
+                imgContainer.classList.add('hidden');
+                imgContainer.classList.remove('inline-block');
+                imgEl.src = '';
+            }
+
+            const modal = document.getElementById('detailModal');
+            const content = document.getElementById('detailModalContent');
+            modal.classList.remove('hidden');
+            
+            void modal.offsetWidth;
+            
+            modal.classList.remove('opacity-0');
+            content.classList.remove('scale-95');
+            content.classList.add('scale-100');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('detailModal');
+            const content = document.getElementById('detailModalContent');
+            
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        async function exportToExcel() {
+            if (localData.length === 0) {
+                showToast('ไม่มีข้อมูลสำหรับส่งออก', 'error');
+                return;
+            }
+
+            const searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            const companyVal = filterCompany ? filterCompany.value : '';
+            const typeVal = filterType ? filterType.value : '';
+            const statusVal = filterStatus ? filterStatus.value : '';
+
+            const filteredData = localData.filter(item => {
+                const matchSearch = !searchVal || 
+                    (item.name && item.name.toLowerCase().includes(searchVal)) || 
+                    (item.machineId && item.machineId.toLowerCase().includes(searchVal));
+                
+                const matchCompany = !companyVal || item.company === companyVal;
+                const matchType = !typeVal || item.type === typeVal;
+                const matchStatus = !statusVal || item.status === statusVal;
+
+                return matchSearch && matchCompany && matchType && matchStatus;
+            });
+
+            if(filteredData.length === 0) {
+                showToast('ไม่พบข้อมูลตามเงื่อนไขที่เลือก', 'error');
+                return;
+            }
+
+            showToast('กำลังเตรียมไฟล์ Excel...', 'success');
+
+            try {
+                const workbook = new ExcelJS.Workbook();
+                const worksheet = workbook.addWorksheet('ข้อมูลเครื่องจักร');
+
+                worksheet.columns = [
+                    { header: 'ลำดับที่', key: 'no', width: 12 },
+                    { header: 'ชื่อเครื่องจักร', key: 'name', width: 35 },
+                    { header: 'รหัสเครื่องจักร', key: 'machineId', width: 22 },
+                    { header: 'บริษัท', key: 'company', width: 20 },
+                    { header: 'ประเภท', key: 'type', width: 25 },
+                    { header: 'สถานะ', key: 'status', width: 18 },
+                    { header: 'รูปภาพ', key: 'imageUrl', width: 20 }
+                ];
+
+                const headerRow = worksheet.getRow(1);
+                headerRow.height = 30;
+                headerRow.eachCell((cell) => {
+                    cell.font = { name: 'Kanit', size: 11, bold: true, color: { argb: 'FF000000' } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF67E8F9' } }; 
+                    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                    cell.border = {
+                        top: { style: 'medium', color: { argb: 'FF000000' } },
+                        left: { style: 'medium', color: { argb: 'FF000000' } },
+                        bottom: { style: 'medium', color: { argb: 'FF000000' } },
+                        right: { style: 'medium', color: { argb: 'FF000000' } }
+                    };
+                });
+
+                filteredData.forEach(item => {
+                    const row = worksheet.addRow({
+                        no: item.no || '',
+                        name: item.name || '',
+                        machineId: item.machineId || '',
+                        company: item.company || '',
+                        type: item.type || '',
+                        status: item.status || '',
+                        imageUrl: item.imageUrl || '' 
+                    });
+
+                    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                        cell.font = { name: 'Kanit', size: 10 };
+                        cell.border = {
+                            top: { style: 'thin', color: { argb: 'FF000000' } },
+                            left: { style: 'thin', color: { argb: 'FF000000' } },
+                            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                            right: { style: 'thin', color: { argb: 'FF000000' } }
+                        };
+                        
+                        if (colNumber === 1 || colNumber === 6 || colNumber === 7) {
+                            cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+                        } else {
+                            cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+                        }
+                    });
+
+                    const imageCell = row.getCell(7);
+                    if (item.imageUrl) {
+                        imageCell.value = { text: 'คลิกดูรูป', hyperlink: item.imageUrl };
+                        imageCell.font = { name: 'Kanit', size: 10, color: { argb: 'FFDB2777' }, underline: true }; 
+                    } else {
+                        imageCell.value = 'ไม่มี';
+                        imageCell.font = { name: 'Kanit', size: 10, color: { argb: 'FF9CA3AF' } };
+                    }
+                });
+
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                
+                const today = new Date().toISOString().split('T')[0];
+                saveAs(blob, `SUNWORK_Machine_${today}.xlsx`);
+                
+            } catch (error) {
+                console.error(error);
+                showToast('เกิดข้อผิดพลาดในการสร้างไฟล์ Excel', 'error');
+            }
+        }
+
+        function renderTable() {
+            if (localData.length === 0) {
+                // เปลี่ยนเป็นแสดงข้อความแจ้งเตือนให้เชื่อมต่อ SCRIPT ก่อน (ในกรณีเพิ่งเปิดไฟล์ใหม่)
+                const msg = SCRIPT_URL ? 'ไม่มีข้อมูลในระบบ' : 'กรุณาใส่ลิงก์ Google Apps Script <br><span class="text-xs text-red-500 font-normal">แก้ไขโค้ดบรรทัดที่ 464 (const SCRIPT_URL = "...");</span>';
+                dataTableBody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-gray-500 font-bold uppercase border-b-2 border-black">${msg}</td></tr>`;
+                document.getElementById('tableCountBadge').textContent = `0 รายการ`;
+                return;
+            }
+
+            const searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            const companyVal = filterCompany ? filterCompany.value : '';
+            const typeVal = filterType ? filterType.value : '';
+            const statusVal = filterStatus ? filterStatus.value : '';
+
+            const filteredData = localData.filter(item => {
+                const matchSearch = !searchVal || 
+                    (item.name && item.name.toLowerCase().includes(searchVal)) || 
+                    (item.machineId && item.machineId.toLowerCase().includes(searchVal));
+                
+                const matchCompany = !companyVal || item.company === companyVal;
+                const matchType = !typeVal || item.type === typeVal;
+                const matchStatus = !statusVal || item.status === statusVal;
+
+                return matchSearch && matchCompany && matchType && matchStatus;
+            });
+
+            document.getElementById('tableCountBadge').textContent = `${filteredData.length} รายการ`;
+
+            if (filteredData.length === 0) {
+                dataTableBody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-gray-500 font-bold uppercase border-b-2 border-black">ไม่พบข้อมูลที่ตรงกับเงื่อนไขการค้นหา</td></tr>`;
+                return;
+            }
+
+            dataTableBody.innerHTML = '';
+            filteredData.forEach((item) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-yellow-100 cursor-pointer transition-colors duration-100 bg-white";
+                
+                tr.onclick = () => openModal(item.rowNumber);
+                
+                let statusBadge = '';
+                if (item.status === 'พร้อมใช้งาน') {
+                    statusBadge = `<span class="px-2 py-1 text-[11px] font-black bg-green-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_#000] uppercase">${item.status}</span>`;
+                } else if (item.status === 'ซ่อมบำรุง') {
+                    statusBadge = `<span class="px-2 py-1 text-[11px] font-black bg-yellow-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_#000] uppercase">${item.status}</span>`;
+                } else {
+                    statusBadge = `<span class="px-2 py-1 text-[11px] font-black bg-gray-200 text-gray-500 border-2 border-black shadow-[2px_2px_0px_0px_#000] uppercase">${item.status || '-'}</span>`;
+                    tr.className += " opacity-80 manga-lines";
+                }
+                
+                const imgHtml = item.imageUrl 
+                    ? `<img src="${item.imageUrl}" class="w-10 h-10 border-2 border-black object-cover mx-auto shadow-[2px_2px_0px_0px_#000] bg-white">` 
+                    : `<div class="w-10 h-10 border-2 border-black bg-gray-200 text-gray-400 flex items-center justify-center font-black text-[10px] mx-auto shadow-[2px_2px_0px_0px_#000]">N/A</div>`;
+                
+                tr.innerHTML = `
+                    <td class="px-3 py-2 whitespace-nowrap text-center font-black text-black border-r-2 border-black">${item.no || '-'}</td>
+                    <td class="px-3 py-2 whitespace-nowrap text-center border-r-2 border-black">${imgHtml}</td>
+                    <td class="px-3 py-2 whitespace-nowrap border-r-2 border-black">
+                        <div class="font-black text-black text-sm">${item.name || '-'}</div>
+                        <div class="text-[11px] text-pink-600 font-mono font-black tracking-widest">${item.machineId || '-'}</div>
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap border-r-2 border-black text-black font-bold text-sm">${item.company || '-'}</td>
+                    <td class="px-3 py-2 whitespace-nowrap border-r-2 border-black">
+                        <div class="text-sm font-bold text-black">${item.type || '-'}</div>
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-center border-r-2 border-black">
+                        ${statusBadge}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-center">
+                        <button onclick="event.stopPropagation(); editEquipment('${item.rowNumber}')" class="bg-yellow-300 text-black border-2 border-black shadow-[2px_2px_0px_0px_#000] p-1.5 active:translate-y-0.5 active:shadow-none transition-all" title="แก้ไขข้อมูล">
+                            <i class="ph-bold ph-pencil-simple text-xl"></i>
+                        </button>
+                    </td>
+                `;
+                dataTableBody.appendChild(tr);
+            });
+        }
+
+        function editEquipment(rowNum) {
+            const item = localData.find(d => String(d.rowNumber) === String(rowNum));
+            if(!item) return;
+
+            switchView('add');
+
+            document.getElementById('no').value = item.no || '';
+            document.getElementById('name').value = item.name || '';
+            document.getElementById('machineId').value = item.machineId || '';
+            document.getElementById('company').value = item.company || '';
+            document.getElementById('type').value = item.type || '';
+            
+            if(item.status === 'พร้อมใช้งาน') document.getElementById('statusActive').checked = true;
+            else if(item.status === 'ซ่อมบำรุง') document.getElementById('statusMaintenance').checked = true;
+            else document.getElementById('statusInactive').checked = true;
+
+            imageFileInput.value = ''; 
+            imageUrlInput.value = item.imageUrl || '';
+            if (item.imageUrl) {
+                imagePreview.src = item.imageUrl;
+                imagePreviewContainer.classList.remove('hidden');
+            } else {
+                imagePreviewContainer.classList.add('hidden');
+            }
+
+            actionInput.value = 'edit';
+            rowNumberInput.value = item.rowNumber;
+            
+            formTitle.innerHTML = `<i class="ph-bold ph-pencil-simple text-2xl"></i> แก้ไขลำดับที่ ${item.no}`;
+            btnText.textContent = 'อัปเดตข้อมูล';
+            cancelEditBtn.classList.remove('hidden');
+            
+            const formElement = document.getElementById('machineForm');
+            formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function resetFormMode() {
+            form.reset();
+            actionInput.value = 'add';
+            rowNumberInput.value = '';
+            
+            imageUrlInput.value = '';
+            imagePreviewContainer.classList.add('hidden');
+            imagePreview.src = '';
+            
+            formTitle.innerHTML = `<i class="ph-bold ph-plus-circle text-2xl"></i> เพิ่มข้อมูลเครื่องจักร`;
+            btnText.textContent = 'บันทึกข้อมูล';
+            cancelEditBtn.classList.add('hidden');
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if(!SCRIPT_URL) {
+                showToast('กรุณาตั้งค่าลิงก์ SCRIPT_URL ก่อนบันทึกข้อมูล', 'error');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            loadingSpinner.classList.remove('hidden');
+            btnText.textContent = 'ตรวจสอบ...';
+            submitBtn.classList.add('opacity-70', 'cursor-not-allowed');
+
+            try {
+                const file = imageFileInput.files[0];
+                if (file) {
+                    btnText.textContent = 'อัปโหลดรูป...';
+                    const formDataCloudinary = new FormData();
+                    formDataCloudinary.append('file', file);
+                    formDataCloudinary.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+                    
+                    const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                        method: 'POST',
+                        body: formDataCloudinary
+                    });
+                    
+                    if (!cloudinaryRes.ok) throw new Error('อัปโหลดรูปภาพไม่สำเร็จ');
+                    
+                    const cloudinaryData = await cloudinaryRes.json();
+                    imageUrlInput.value = cloudinaryData.secure_url; 
+                }
+
+                btnText.textContent = actionInput.value === 'edit' ? 'อัปเดต...' : 'บันทึก...';
+                
+                const formData = new FormData(form);
+                const dataObj = Object.fromEntries(formData.entries());
+
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(dataObj)
+                });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showToast(result.message);
+                    resetFormMode();
+                    fetchMachineData(); 
+                    switchView('list'); 
+                } else {
+                    showToast('เกิดข้อผิดพลาดจากฐานข้อมูล', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                showToast(error.message || 'เชื่อมต่อล้มเหลว', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+                loadingSpinner.classList.add('hidden');
+                btnText.textContent = actionInput.value === 'edit' ? 'อัปเดตข้อมูล' : 'บันทึกข้อมูล';
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            switchView('dashboard');
+            if(SCRIPT_URL) {
+                fetchMachineData();
+            } else {
+                renderTable(); // จะขึ้นแจ้งเตือนให้เชื่อมลิงก์ Google Script
+            }
+        });
+
+    </script>
+</body>
+</html>
