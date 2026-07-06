@@ -11,6 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
     <script>
         tailwind.config = {
             theme: {
@@ -302,6 +303,20 @@
                                 <div class="flex items-baseline gap-1 bg-white border-2 border-black px-2"><span id="stat-vol-380" class="text-2xl font-black text-black">0</span></div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- สรุปตามชื่ออุปกรณ์ -->
+                <div class="manga-card p-5 md:p-6 bg-white">
+                    <div class="flex justify-between items-center mb-6 pb-2 border-b-4 border-black">
+                        <h3 class="font-black text-black text-base flex items-center gap-2 uppercase">
+                            <div class="w-8 h-8 bg-pink-300 border-2 border-black flex items-center justify-center"><i class="ph-bold ph-toolbox text-black"></i></div> 
+                            สรุปจำนวนตามชื่ออุปกรณ์
+                        </h3>
+                    </div>
+                    <!-- ตารางกริดใส่ป้ายชื่ออุปกรณ์ (เลื่อน Scroll ได้ถ้าเยอะ) -->
+                    <div id="stat-names-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-64 overflow-y-auto table-scrollbar pr-2 pb-2 pt-1">
+                        <!-- สร้างขึ้นด้วย Javascript -->
                     </div>
                 </div>
 
@@ -748,6 +763,8 @@
             let volLow = 0, vol220 = 0, vol380 = 0;
             let compSunwork = 0, compKcon = 0, compKEMREX = 0;
             
+            const nameCounts = {};
+            
             localData.forEach(item => {
                 // Status
                 if (item.status === 'ใช้งาน') active++;
@@ -764,6 +781,12 @@
                 if (c === 'Sunwork') compSunwork++;
                 else if (c === 'K-con') compKcon++;
                 else if (c === 'KEMREX') compKEMREX++;
+
+                // นับชื่ออุปกรณ์ (Name)
+                const n = String(item.name || 'ไม่ระบุ').trim();
+                if (n) {
+                    nameCounts[n] = (nameCounts[n] || 0) + 1;
+                }
             });
 
             // Update UI
@@ -778,6 +801,43 @@
             document.getElementById('stat-comp-sunwork').textContent = compSunwork;
             document.getElementById('stat-comp-kcon').textContent = compKcon;
             document.getElementById('stat-comp-KEMREX').textContent = compKEMREX;
+
+            // Update Name Stats UI
+            const nameContainer = document.getElementById('stat-names-container');
+            if (nameContainer) {
+                nameContainer.innerHTML = '';
+                // เรียงลำดับจากจำนวนมากไปน้อย
+                const sortedNames = Object.entries(nameCounts).sort((a, b) => b[1] - a[1]);
+                
+                if (sortedNames.length === 0) {
+                    nameContainer.innerHTML = '<div class="col-span-full text-center text-gray-500 font-bold py-4 border-2 border-black bg-gray-50">ไม่มีข้อมูลอุปกรณ์</div>';
+                } else {
+                    // ชุดสีที่เตรียมไว้สำหรับวนลูป
+                    const colors = [
+                        { bg: 'bg-pink-300', textHover: 'group-hover:text-pink-600' },
+                        { bg: 'bg-cyan-300', textHover: 'group-hover:text-cyan-600' },
+                        { bg: 'bg-green-300', textHover: 'group-hover:text-green-600' },
+                        { bg: 'bg-yellow-300', textHover: 'group-hover:text-yellow-600' },
+                        { bg: 'bg-purple-300', textHover: 'group-hover:text-purple-600' },
+                        { bg: 'bg-orange-300', textHover: 'group-hover:text-orange-600' },
+                        { bg: 'bg-blue-300', textHover: 'group-hover:text-blue-600' },
+                        { bg: 'bg-red-300', textHover: 'group-hover:text-red-600' },
+                        { bg: 'bg-lime-300', textHover: 'group-hover:text-lime-600' }
+                    ];
+
+                    sortedNames.forEach(([name, count], index) => {
+                        // เลือกสีตามลำดับโดยใช้ Modulo (%) เพื่อให้วนลูปสีเดิมหากรายการมีเยอะ
+                        const color = colors[index % colors.length];
+                        
+                        nameContainer.innerHTML += `
+                            <div class="bg-white border-4 border-black p-3 flex justify-between items-center shadow-[4px_4px_0px_0px_#000] hover:-translate-y-1 transition-transform group cursor-default">
+                                <span class="text-sm font-black text-black truncate pr-2 ${color.textHover} transition-colors" title="${name}">${name}</span>
+                                <div class="flex items-baseline gap-1 ${color.bg} border-2 border-black px-2 py-0.5 shrink-0"><span class="text-lg font-black text-black">${count}</span></div>
+                            </div>
+                        `;
+                    });
+                }
+            }
         }
 
         // Modal Functions
