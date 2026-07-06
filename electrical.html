@@ -148,13 +148,22 @@
                 <span class="text-[9px] md:hidden mt-1 font-black uppercase">ภาพรวม</span>
             </a>
 
-            <a href="#" onclick="switchView('manage')" id="nav-manage" class="relative flex flex-col items-center justify-center text-gray-400 hover:text-black transition-colors h-full md:h-auto p-2 md:p-3 group w-full md:w-auto" title="จัดการข้อมูล">
+            <a href="#" onclick="switchView('add')" id="nav-add" class="relative flex flex-col items-center justify-center text-gray-400 hover:text-black transition-colors h-full md:h-auto p-2 md:p-3 group w-full md:w-auto" title="เพิ่มข้อมูล">
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1.5 bg-black md:hidden nav-indicator transition-opacity duration-300 opacity-0"></div>
+                <div class="absolute left-0 w-1.5 h-8 bg-black hidden md:block nav-indicator transition-opacity duration-300 opacity-0"></div>
+                <div class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center border-2 border-transparent group-hover:border-black group-hover:bg-green-300 group-hover:shadow-[2px_2px_0px_0px_#000] transition-all nav-icon-bg">
+                    <i class="ph-bold ph-plus-circle text-xl md:text-2xl nav-icon text-current group-hover:text-black"></i>
+                </div>
+                <span class="text-[9px] md:hidden mt-1 font-black uppercase">เพิ่มข้อมูล</span>
+            </a>
+
+            <a href="#" onclick="switchView('list')" id="nav-list" class="relative flex flex-col items-center justify-center text-gray-400 hover:text-black transition-colors h-full md:h-auto p-2 md:p-3 group w-full md:w-auto" title="รายการอุปกรณ์">
                 <div class="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1.5 bg-black md:hidden nav-indicator transition-opacity duration-300 opacity-0"></div>
                 <div class="absolute left-0 w-1.5 h-8 bg-black hidden md:block nav-indicator transition-opacity duration-300 opacity-0"></div>
                 <div class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center border-2 border-transparent group-hover:border-black group-hover:bg-pink-300 group-hover:shadow-[2px_2px_0px_0px_#000] transition-all nav-icon-bg">
                     <i class="ph-bold ph-list-dashes text-xl md:text-2xl nav-icon text-current group-hover:text-black"></i>
                 </div>
-                <span class="text-[9px] md:hidden mt-1 font-black uppercase">จัดการ</span>
+                <span class="text-[9px] md:hidden mt-1 font-black uppercase">รายการ</span>
             </a>
 
             <a href="https://docs.google.com/spreadsheets/d/1O1ei7H9fiyQ26lW8XkL1j2uPGLXr6hNnJ_mUwbvUEPM/edit?usp=sharing" target="_blank" rel="noopener noreferrer" class="relative flex flex-col items-center justify-center text-gray-400 hover:text-black transition-colors h-full md:h-auto p-2 md:p-3 group w-full md:w-auto" title="ปริ้นรายการ">
@@ -178,7 +187,7 @@
     <div class="flex-1 flex flex-col h-screen overflow-hidden pb-16 md:pb-0 w-full relative">
         
         <!-- Header (รูปแบบใหม่ตามที่ผู้ใช้งานต้องการ) -->
-        <header class="flex justify-between items-center mb-6 md:mb-8 gap-2 md:gap-4 pt-2 md:pt-0 w-full bg-white border-4 border-black p-4 shadow-card flex-shrink-0 z-10 relative mt-4 md:mt-8 mx-4 md:mx-8" style="width: calc(100% - 2rem); md:width: calc(100% - 4rem);">
+        <header class="flex justify-between items-center mb-2 md:mb-3 gap-2 md:gap-4 pt-2 md:pt-0 w-full bg-white border-4 border-black p-4 shadow-card flex-shrink-0 z-10 relative mt-4 md:mt-5 mx-4 md:mx-8" style="width: calc(100% - 2rem); md:width: calc(100% - 4rem);">
             <div class="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
                 <div class="md:hidden w-12 h-12 bg-yellow-300 border-4 border-black flex items-center justify-center shadow-sm shrink-0 p-1">
                     <img src="https://raw.githubusercontent.com/mm12346/Sunwork/refs/heads/main/Sunwork.png" alt="SUNWORK Logo" class="w-full h-full object-contain">
@@ -299,45 +308,44 @@
 
             </div>
 
-            <!-- VIEW: Manage Data -->
-            <div id="view-manage" class="w-full hidden fade-in mt-2 flex-col min-h-0">
-                <div class="flex flex-col xl:flex-row gap-6 items-start h-full pb-4">
-                    
-                    <!-- Left: Form -->
-                    <div class="w-full xl:w-[450px] flex-shrink-0">
-                        <div class="manga-card bg-white relative overflow-hidden">
-                            <!-- Form Header -->
-                            <div class="bg-yellow-300 px-5 py-4 border-b-4 border-black flex items-center justify-between shrink-0">
-                                <h2 id="formTitle" class="text-lg font-black text-black uppercase flex items-center gap-2 tracking-wide">
-                                    <i class="ph-bold ph-plus-circle text-2xl"></i> เพิ่มข้อมูลใหม่
-                                </h2>
-                            </div>
+            <!-- VIEW: Add Data (ฟอร์มเพิ่มข้อมูล) -->
+            <div id="view-add" class="w-full hidden fade-in mt-2 flex-col min-h-0 h-full items-center justify-start pb-4">
+                <div class="w-full max-w-2xl flex flex-col h-full max-h-[calc(100vh-12rem)] md:max-h-[calc(100vh-9rem)] min-h-0">
+                    <div class="manga-card bg-white relative flex flex-col h-full w-full overflow-hidden">
+                        <!-- Form Header -->
+                        <div class="bg-yellow-300 px-5 py-4 border-b-4 border-black flex items-center justify-between shrink-0">
+                            <h2 id="formTitle" class="text-lg font-black text-black uppercase flex items-center gap-2 tracking-wide">
+                                <i class="ph-bold ph-plus-circle text-2xl"></i> เพิ่มข้อมูลใหม่
+                            </h2>
+                        </div>
+                        
+                        <!-- Form Body -->
+                        <div class="p-5 bg-gray-50 manga-lines relative z-0 flex-1 overflow-y-auto table-scrollbar">
+                            <div class="absolute inset-0 bg-white/80 z-[-1]"></div>
                             
-                            <!-- Form Body -->
-                            <div class="p-5 overflow-y-auto table-scrollbar max-h-none xl:max-h-[65vh] bg-gray-50 manga-lines relative z-0">
-                                <div class="absolute inset-0 bg-white/80 z-[-1]"></div>
-                                
-                                <form id="equipmentForm" class="space-y-4 relative z-10">
-                                    <input type="hidden" id="action" name="action" value="add">
-                                    <input type="hidden" id="rowNumber" name="rowNumber" value="">
+                            <form id="equipmentForm" class="space-y-4 relative z-10">
+                                <input type="hidden" id="action" name="action" value="add">
+                                <input type="hidden" id="rowNumber" name="rowNumber" value="">
 
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-black text-black mb-1 uppercase bg-white inline-block px-2 border-2 border-black">ลำดับที่ <span class="text-red-500">*</span></label>
                                         <input type="text" id="no" name="no" required class="manga-input w-full px-4 py-2 mt-1 font-bold text-sm bg-white">
                                     </div>
-
-                                    <div>
-                                        <label class="block text-sm font-black text-black mb-1 uppercase bg-white inline-block px-2 border-2 border-black">ชื่ออุปกรณ์ไฟฟ้า <span class="text-red-500">*</span></label>
-                                        <input type="text" id="name" name="name" required class="manga-input w-full px-4 py-2 mt-1 font-bold text-sm bg-white">
-                                    </div>
-
                                     <div>
                                         <label class="block text-sm font-black text-black mb-1 uppercase bg-white inline-block px-2 border-2 border-black">หมายเลขอุปกรณ์ (Code) <span class="text-red-500">*</span></label>
                                         <input type="text" id="equipmentId" name="equipmentId" required class="manga-input w-full px-4 py-2 mt-1 font-mono tracking-wider font-black text-pink-600 bg-white">
                                     </div>
-                                    
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-black text-black mb-1 uppercase bg-white inline-block px-2 border-2 border-black">ชื่ออุปกรณ์ไฟฟ้า <span class="text-red-500">*</span></label>
+                                    <input type="text" id="name" name="name" required class="manga-input w-full px-4 py-2 mt-1 font-bold text-sm bg-white">
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-sm font-black text-black mb-1 uppercase bg-white inline-block px-2 border-2 border-black">บริษัทเจ้าของเครื่องมือ <span class="text-red-500">*</span></label>
+                                        <label class="block text-sm font-black text-black mb-1 uppercase bg-white inline-block px-2 border-2 border-black">บริษัทเจ้าของ <span class="text-red-500">*</span></label>
                                         <div class="relative mt-1">
                                             <select id="company" name="company" required class="manga-input w-full px-4 py-2 appearance-none cursor-pointer font-bold text-sm bg-white">
                                                 <option value="" disabled selected>เลือกบริษัท</option>
@@ -348,7 +356,6 @@
                                             <div class="absolute right-0 top-0 bottom-0 w-10 bg-black pointer-events-none flex items-center justify-center border-l-3 border-black"><i class="ph-bold ph-caret-down text-white"></i></div>
                                         </div>
                                     </div>
-
                                     <div>
                                         <label class="block text-sm font-black text-black mb-1 uppercase bg-white inline-block px-2 border-2 border-black">ระดับแรงดันไฟฟ้า <span class="text-red-500">*</span></label>
                                         <div class="relative mt-1">
@@ -362,140 +369,138 @@
                                             <div class="absolute right-0 top-0 bottom-0 w-10 bg-black pointer-events-none flex items-center justify-center border-l-3 border-black"><i class="ph-bold ph-caret-down text-white"></i></div>
                                         </div>
                                     </div>
-
-                                    <div>
-                                        <label class="block text-sm font-black text-black mb-1 uppercase bg-white inline-block px-2 border-2 border-black">หมายเลขสติ๊กเกอร์ <span class="text-red-500">*</span></label>
-                                        <input type="text" id="stickerNo" name="stickerNo" required class="manga-input w-full px-4 py-2 mt-1 font-bold text-sm bg-white">
-                                    </div>
-
-                                    <div class="bg-white border-4 border-black p-3 shadow-[4px_4px_0px_0px_#000]">
-                                        <label class="block text-sm font-black text-black mb-2 uppercase">สถานะ <span class="text-red-500">*</span></label>
-                                        <div class="flex gap-4">
-                                            <label class="flex items-center cursor-pointer">
-                                                <input type="radio" id="statusActive" name="status" value="ใช้งาน" checked class="w-5 h-5 border-2 border-black accent-black">
-                                                <span class="ml-2 text-black font-bold text-sm">ใช้งานได้ปกติ</span>
-                                            </label>
-                                            <label class="flex items-center cursor-pointer">
-                                                <input type="radio" id="statusInactive" name="status" value="ไม่ใช้งาน" class="w-5 h-5 border-2 border-black accent-black">
-                                                <span class="ml-2 text-black font-bold text-sm">ไม่ใช้งาน/ชำรุด</span>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <div class="bg-gray-100 border-4 border-black border-dashed p-3">
-                                        <label class="block text-sm font-black text-black mb-2 uppercase bg-white inline-block px-2 border-2 border-black">รูปภาพอุปกรณ์ <span class="text-[10px] text-gray-500 lowercase">(ตัวเลือก)</span></label>
-                                        <input type="file" id="imageFile" accept="image/*" class="w-full text-sm font-bold file:mr-4 file:py-2 file:px-4 file:border-2 file:border-black file:text-sm file:font-black file:bg-cyan-300 file:text-black cursor-pointer bg-white manga-input p-1">
-                                        <input type="hidden" id="imageUrl" name="imageUrl" value="">
-                                        <div id="imagePreviewContainer" class="hidden mt-3 text-center relative border-4 border-black bg-white p-2">
-                                            <img id="imagePreview" src="" alt="Preview" class="max-h-40 mx-auto object-contain shadow-sm border-2 border-gray-200">
-                                            <button type="button" id="removeImageBtn" class="mt-2 text-xs px-3 py-1 bg-red-400 border-2 border-black text-black hover:bg-red-500 font-black uppercase shadow-[2px_2px_0px_0px_#000] active:translate-y-0.5 active:shadow-none">
-                                                เอาภาพออก
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- ปุ่ม Submit ซ่อนในแบบฟอร์ม เพื่อใช้เรียกกดจากภายนอกหรือกด Enter -->
-                                    <button type="submit" id="hiddenSubmitBtn" class="hidden"></button>
-                                </form>
-                            </div>
-
-                            <div class="bg-gray-100 p-4 border-t-4 border-black flex gap-3 shrink-0 relative z-10">
-                                <button type="button" id="cancelEditBtn" onclick="resetFormMode()" class="hidden manga-btn flex-1 py-3 bg-white text-black hover:bg-gray-200">
-                                    ยกเลิก
-                                </button>
-                                <button type="button" onclick="document.getElementById('hiddenSubmitBtn').click()" id="submitBtn" class="manga-btn flex-1 flex justify-center items-center py-3 bg-cyan-300 text-black hover:bg-cyan-400 gap-2">
-                                    <div id="loadingSpinner" class="loader !border-t-white !w-5 !h-5 !border-2 hidden"></div>
-                                    <i class="ph-bold ph-floppy-disk text-xl"></i> <span id="btnText">บันทึกข้อมูล</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right: Table -->
-                    <div class="w-full flex-1 min-w-0 flex flex-col gap-4">
-                        <div class="manga-card bg-white flex flex-col lg:max-h-[calc(100vh-10rem)]">
-                            
-                            <div class="bg-gray-50 px-4 md:px-6 py-4 border-b-4 border-black flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shrink-0">
-                                <h2 class="text-lg font-black text-black uppercase flex items-center gap-2">
-                                    <i class="ph-bold ph-list-numbers text-2xl"></i> รายการอุปกรณ์ในระบบ
-                                </h2>
-                                <div class="flex items-center gap-2 w-full sm:w-auto">
-                                    <span class="bg-white border-2 border-black text-black text-xs font-black px-2 py-1 shadow-[2px_2px_0px_0px_#000] shrink-0" id="tableCountBadge">0 รายการ</span>
-                                    <button onclick="exportToExcel()" class="manga-btn flex-1 sm:flex-none flex justify-center items-center px-4 py-1.5 bg-green-400 text-black hover:bg-green-500 gap-2 text-sm">
-                                        <i class="ph-bold ph-file-xls text-lg"></i> ส่งออก Excel
-                                    </button>
                                 </div>
-                            </div>
 
-                            <!-- Filter Section -->
-                            <div class="bg-gray-100 p-4 border-b-4 border-black flex flex-col md:flex-row gap-3 shrink-0 manga-lines relative z-0">
-                                <div class="absolute inset-0 bg-white/70 z-[-1]"></div>
+                                <div>
+                                    <label class="block text-sm font-black text-black mb-1 uppercase bg-white inline-block px-2 border-2 border-black">หมายเลขสติ๊กเกอร์ <span class="text-red-500">*</span></label>
+                                    <input type="text" id="stickerNo" name="stickerNo" required class="manga-input w-full px-4 py-2 mt-1 font-bold text-sm bg-white">
+                                </div>
+
+                                <div class="bg-white border-4 border-black p-3 shadow-[4px_4px_0px_0px_#000]">
+                                    <label class="block text-sm font-black text-black mb-2 uppercase">สถานะ <span class="text-red-500">*</span></label>
+                                    <div class="flex gap-4">
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="radio" id="statusActive" name="status" value="ใช้งาน" checked class="w-5 h-5 border-2 border-black accent-black">
+                                            <span class="ml-2 text-black font-bold text-sm">ใช้งานได้ปกติ</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="radio" id="statusInactive" name="status" value="ไม่ใช้งาน" class="w-5 h-5 border-2 border-black accent-black">
+                                            <span class="ml-2 text-black font-bold text-sm">ไม่ใช้งาน/ชำรุด</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="bg-gray-100 border-4 border-black border-dashed p-3">
+                                    <label class="block text-sm font-black text-black mb-2 uppercase bg-white inline-block px-2 border-2 border-black">รูปภาพอุปกรณ์ <span class="text-[10px] text-gray-500 lowercase">(ตัวเลือก)</span></label>
+                                    <input type="file" id="imageFile" accept="image/*" class="w-full text-sm font-bold file:mr-4 file:py-2 file:px-4 file:border-2 file:border-black file:text-sm file:font-black file:bg-cyan-300 file:text-black cursor-pointer bg-white manga-input p-1">
+                                    <input type="hidden" id="imageUrl" name="imageUrl" value="">
+                                    <div id="imagePreviewContainer" class="hidden mt-3 text-center relative border-4 border-black bg-white p-2">
+                                        <img id="imagePreview" src="" alt="Preview" class="max-h-40 mx-auto object-contain shadow-sm border-2 border-gray-200">
+                                        <button type="button" id="removeImageBtn" class="mt-2 text-xs px-3 py-1 bg-red-400 border-2 border-black text-black hover:bg-red-500 font-black uppercase shadow-[2px_2px_0px_0px_#000] active:translate-y-0.5 active:shadow-none">
+                                            เอาภาพออก
+                                        </button>
+                                    </div>
+                                </div>
                                 
-                                <div class="flex-1 relative z-10">
-                                    <div class="relative w-full flex">
-                                        <div class="bg-black text-white px-3 flex items-center justify-center border-3 border-r-0 border-black shrink-0"><i class="ph-bold ph-magnifying-glass text-xl"></i></div>
-                                        <input type="text" id="searchInput" placeholder="ค้นหาชื่อ, รหัส, สติ๊กเกอร์..." class="manga-input w-full p-2 flex-1 font-bold text-sm">
-                                    </div>
-                                </div>
-                                <div class="w-full md:w-auto relative z-10">
-                                    <div class="relative">
-                                        <select id="filterCompany" class="manga-input w-full px-3 py-2 text-sm font-bold appearance-none cursor-pointer bg-white">
-                                            <option value="">ทุกบริษัท</option>
-                                            <option value="Sunwork">Sunwork</option>
-                                            <option value="K-con">K-con</option>
-                                            <option value="Kemlex">Kemlex</option>
-                                        </select>
-                                        <div class="absolute right-0 top-0 bottom-0 w-8 bg-black pointer-events-none flex items-center justify-center border-l-3 border-black"><i class="ph-bold ph-caret-down text-white"></i></div>
-                                    </div>
-                                </div>
-                                <div class="w-full md:w-auto relative z-10">
-                                    <div class="relative">
-                                        <select id="filterVoltage" class="manga-input w-full px-3 py-2 text-sm font-bold appearance-none cursor-pointer bg-white">
-                                            <option value="">ทุกแรงดัน</option>
-                                            <option value="ไม่เกิน 24 V.">ไม่เกิน 24 V.</option>
-                                            <option value="สูงกว่า 24 V. (220V)">สูงกว่า 24 V. (220V)</option>
-                                            <option value="สูงกว่า 24 V. (380V)">สูงกว่า 24 V. (380V)</option>
-                                            <option value="อื่นๆ">อื่นๆ</option>
-                                        </select>
-                                        <div class="absolute right-0 top-0 bottom-0 w-8 bg-black pointer-events-none flex items-center justify-center border-l-3 border-black"><i class="ph-bold ph-caret-down text-white"></i></div>
-                                    </div>
-                                </div>
-                                <div class="w-full md:w-auto relative z-10">
-                                    <div class="relative">
-                                        <select id="filterStatus" class="manga-input w-full px-3 py-2 text-sm font-bold appearance-none cursor-pointer bg-white">
-                                            <option value="">ทุกสถานะ</option>
-                                            <option value="ใช้งาน">ใช้งานได้ปกติ</option>
-                                            <option value="ไม่ใช้งาน">ไม่ใช้งาน/ชำรุด</option>
-                                        </select>
-                                        <div class="absolute right-0 top-0 bottom-0 w-8 bg-black pointer-events-none flex items-center justify-center border-l-3 border-black"><i class="ph-bold ph-caret-down text-white"></i></div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Table Wrapper -->
-                            <div class="flex-1 overflow-auto table-scrollbar relative">
-                                <table class="min-w-full divide-y-2 divide-black border-collapse">
-                                    <thead class="bg-cyan-300 sticky top-0 z-20 outline outline-4 outline-black border-b-4 border-black">
-                                        <tr>
-                                            <th class="px-4 py-3 text-center text-xs font-black text-black uppercase tracking-wider border-r-2 border-black w-12">ลำดับ</th>
-                                            <th class="px-4 py-3 text-center text-xs font-black text-black uppercase tracking-wider border-r-2 border-black w-16">รูปภาพ</th>
-                                            <th class="px-4 py-3 text-left text-xs font-black text-black uppercase tracking-wider border-r-2 border-black">ชื่อ/รหัสอุปกรณ์</th>
-                                            <th class="px-4 py-3 text-left text-xs font-black text-black uppercase tracking-wider border-r-2 border-black">บริษัท</th>
-                                            <th class="px-4 py-3 text-left text-xs font-black text-black uppercase tracking-wider border-r-2 border-black">แรงดันไฟฟ้า/สติ๊กเกอร์</th>
-                                            <th class="px-4 py-3 text-center text-xs font-black text-black uppercase tracking-wider border-r-2 border-black">สถานะ</th>
-                                            <th class="px-4 py-3 text-center text-xs font-black text-black uppercase tracking-wider">จัดการ</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="dataTableBody" class="bg-white divide-y-2 divide-black">
-                                        <tr>
-                                            <td colspan="7" class="px-6 py-12 text-center text-gray-500 font-bold uppercase"><div class="loader !w-6 !h-6 mb-2"></div><br>กำลังโหลดข้อมูล...</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                                <button type="submit" id="hiddenSubmitBtn" class="hidden"></button>
+                            </form>
+                        </div>
+
+                        <div class="bg-gray-100 p-4 border-t-4 border-black flex gap-3 shrink-0 relative z-10">
+                            <button type="button" id="cancelEditBtn" onclick="resetFormMode()" class="hidden manga-btn flex-1 py-3 bg-white text-black hover:bg-gray-200">
+                                ยกเลิก
+                            </button>
+                            <button type="button" onclick="document.getElementById('hiddenSubmitBtn').click()" id="submitBtn" class="manga-btn flex-1 flex justify-center items-center py-3 bg-cyan-300 text-black hover:bg-cyan-400 gap-2">
+                                <div id="loadingSpinner" class="loader !border-t-white !w-5 !h-5 !border-2 hidden"></div>
+                                <i class="ph-bold ph-floppy-disk text-xl"></i> <span id="btnText">บันทึกข้อมูล</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: Data List (ตารางข้อมูล) -->
+            <div id="view-list" class="w-full hidden fade-in mt-2 flex-col min-h-0 h-full pb-8">
+                <div class="manga-card bg-white flex flex-col h-full lg:max-h-[calc(100vh-10rem)]">
+                    
+                    <div class="bg-gray-50 px-4 md:px-6 py-4 border-b-4 border-black flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shrink-0">
+                        <h2 class="text-lg font-black text-black uppercase flex items-center gap-2">
+                            <i class="ph-bold ph-list-numbers text-2xl"></i> รายการอุปกรณ์ในระบบ
+                        </h2>
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <span class="bg-white border-2 border-black text-black text-xs font-black px-2 py-1 shadow-[2px_2px_0px_0px_#000] shrink-0" id="tableCountBadge">0 รายการ</span>
+                            <button onclick="exportToExcel()" class="manga-btn flex-1 sm:flex-none flex justify-center items-center px-4 py-1.5 bg-green-400 text-black hover:bg-green-500 gap-2 text-sm">
+                                <i class="ph-bold ph-file-xls text-lg"></i> ส่งออก Excel
+                            </button>
                         </div>
                     </div>
 
+                    <!-- Filter Section -->
+                    <div class="bg-gray-100 p-4 border-b-4 border-black flex flex-col md:flex-row gap-3 shrink-0 manga-lines relative z-0">
+                        <div class="absolute inset-0 bg-white/70 z-[-1]"></div>
+                        
+                        <div class="flex-1 relative z-10">
+                            <div class="relative w-full flex">
+                                <div class="bg-black text-white px-3 flex items-center justify-center border-3 border-r-0 border-black shrink-0"><i class="ph-bold ph-magnifying-glass text-xl"></i></div>
+                                <input type="text" id="searchInput" placeholder="ค้นหาชื่อ, รหัส, สติ๊กเกอร์..." class="manga-input w-full p-2 flex-1 font-bold text-sm">
+                            </div>
+                        </div>
+                        <div class="w-full md:w-auto relative z-10">
+                            <div class="relative">
+                                <select id="filterCompany" class="manga-input w-full px-3 py-2 text-sm font-bold appearance-none cursor-pointer bg-white">
+                                    <option value="">ทุกบริษัท</option>
+                                    <option value="Sunwork">Sunwork</option>
+                                    <option value="K-con">K-con</option>
+                                    <option value="Kemlex">Kemlex</option>
+                                </select>
+                                <div class="absolute right-0 top-0 bottom-0 w-8 bg-black pointer-events-none flex items-center justify-center border-l-3 border-black"><i class="ph-bold ph-caret-down text-white"></i></div>
+                            </div>
+                        </div>
+                        <div class="w-full md:w-auto relative z-10">
+                            <div class="relative">
+                                <select id="filterVoltage" class="manga-input w-full px-3 py-2 text-sm font-bold appearance-none cursor-pointer bg-white">
+                                    <option value="">ทุกแรงดัน</option>
+                                    <option value="ไม่เกิน 24 V.">ไม่เกิน 24 V.</option>
+                                    <option value="สูงกว่า 24 V. (220V)">สูงกว่า 24 V. (220V)</option>
+                                    <option value="สูงกว่า 24 V. (380V)">สูงกว่า 24 V. (380V)</option>
+                                    <option value="อื่นๆ">อื่นๆ</option>
+                                </select>
+                                <div class="absolute right-0 top-0 bottom-0 w-8 bg-black pointer-events-none flex items-center justify-center border-l-3 border-black"><i class="ph-bold ph-caret-down text-white"></i></div>
+                            </div>
+                        </div>
+                        <div class="w-full md:w-auto relative z-10">
+                            <div class="relative">
+                                <select id="filterStatus" class="manga-input w-full px-3 py-2 text-sm font-bold appearance-none cursor-pointer bg-white">
+                                    <option value="">ทุกสถานะ</option>
+                                    <option value="ใช้งาน">ใช้งานได้ปกติ</option>
+                                    <option value="ไม่ใช้งาน">ไม่ใช้งาน/ชำรุด</option>
+                                </select>
+                                <div class="absolute right-0 top-0 bottom-0 w-8 bg-black pointer-events-none flex items-center justify-center border-l-3 border-black"><i class="ph-bold ph-caret-down text-white"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Table Wrapper -->
+                    <div class="flex-1 overflow-auto table-scrollbar relative">
+                        <table class="min-w-full divide-y-2 divide-black border-collapse">
+                            <thead class="bg-cyan-300 sticky top-0 z-20 outline outline-4 outline-black border-b-4 border-black">
+                                <tr>
+                                    <th class="px-4 py-3 text-center text-xs font-black text-black uppercase tracking-wider border-r-2 border-black w-12">ลำดับ</th>
+                                    <th class="px-4 py-3 text-center text-xs font-black text-black uppercase tracking-wider border-r-2 border-black w-16">รูปภาพ</th>
+                                    <th class="px-4 py-3 text-left text-xs font-black text-black uppercase tracking-wider border-r-2 border-black">ชื่อ/รหัสอุปกรณ์</th>
+                                    <th class="px-4 py-3 text-left text-xs font-black text-black uppercase tracking-wider border-r-2 border-black">บริษัท</th>
+                                    <th class="px-4 py-3 text-left text-xs font-black text-black uppercase tracking-wider border-r-2 border-black">แรงดันไฟฟ้า/สติ๊กเกอร์</th>
+                                    <th class="px-4 py-3 text-center text-xs font-black text-black uppercase tracking-wider border-r-2 border-black">สถานะ</th>
+                                    <th class="px-4 py-3 text-center text-xs font-black text-black uppercase tracking-wider">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataTableBody" class="bg-white divide-y-2 divide-black">
+                                <tr>
+                                    <td colspan="7" class="px-6 py-12 text-center text-gray-500 font-bold uppercase"><div class="loader !w-6 !h-6 mb-2"></div><br>กำลังโหลดข้อมูล...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -603,17 +608,18 @@
         // Navigation Switcher
         function switchView(viewName) {
             document.getElementById('view-dashboard').classList.add('hidden');
-            document.getElementById('view-manage').classList.add('hidden');
+            document.getElementById('view-add').classList.add('hidden');
+            document.getElementById('view-list').classList.add('hidden');
             
             // Reset Sidebar Styling
-            document.querySelectorAll('nav > a').forEach(nav => {
+            document.querySelectorAll('nav > a[id^="nav-"]').forEach(nav => {
                 nav.classList.remove('text-black');
                 nav.classList.add('text-gray-400');
                 nav.querySelectorAll('.nav-indicator').forEach(el => el.classList.replace('opacity-100', 'opacity-0'));
                 
                 const iconBg = nav.querySelector('.nav-icon-bg');
                 if (iconBg) {
-                    iconBg.classList.remove('border-black', 'shadow-[2px_2px_0px_0px_#000]', 'bg-cyan-300', 'bg-pink-300');
+                    iconBg.classList.remove('border-black', 'shadow-[2px_2px_0px_0px_#000]', 'bg-cyan-300', 'bg-pink-300', 'bg-green-300');
                     iconBg.classList.add('border-transparent');
                 }
             });
@@ -630,10 +636,21 @@
                 iconBg.classList.remove('border-transparent');
                 iconBg.classList.add('border-black', 'shadow-[2px_2px_0px_0px_#000]', 'bg-cyan-300');
 
-            } else {
-                document.getElementById('view-manage').classList.remove('hidden');
+            } else if (viewName === 'add') {
+                document.getElementById('view-add').classList.remove('hidden');
 
-                const activeNav = document.getElementById('nav-manage');
+                const activeNav = document.getElementById('nav-add');
+                activeNav.classList.remove('text-gray-400');
+                activeNav.classList.add('text-black');
+                activeNav.querySelectorAll('.nav-indicator').forEach(el => el.classList.replace('opacity-0', 'opacity-100'));
+                const iconBg = activeNav.querySelector('.nav-icon-bg');
+                iconBg.classList.remove('border-transparent');
+                iconBg.classList.add('border-black', 'shadow-[2px_2px_0px_0px_#000]', 'bg-green-300');
+
+            } else if (viewName === 'list') {
+                document.getElementById('view-list').classList.remove('hidden');
+
+                const activeNav = document.getElementById('nav-list');
                 activeNav.classList.remove('text-gray-400');
                 activeNav.classList.add('text-black');
                 activeNav.querySelectorAll('.nav-indicator').forEach(el => el.classList.replace('opacity-0', 'opacity-100'));
@@ -1009,6 +1026,9 @@
             const item = localData.find(d => String(d.rowNumber) === String(rowNum));
             if(!item) return;
 
+            // สลับกลับมายังหน้าต่างฟอร์ม
+            switchView('add');
+
             document.getElementById('no').value = item.no || '';
             document.getElementById('name').value = item.name || '';
             document.getElementById('equipmentId').value = item.equipmentId || '';
@@ -1099,6 +1119,7 @@
                     showToast(result.message);
                     resetFormMode();
                     fetchRealTimeData(); 
+                    switchView('list'); // สลับไปหน้าตารางเพื่อดูผลลัพธ์หลังจากบันทึกเสร็จ
                 } else {
                     showToast('เกิดข้อผิดพลาดจากฐานข้อมูล', 'error');
                 }
