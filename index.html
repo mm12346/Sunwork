@@ -183,13 +183,25 @@
         </div>
     </div>
 
+    <!-- แทนที่ alert() และ confirm() ด้วยระบบ Dialog นี้ -->
+    <div id="dialog-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+        <div class="bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] max-w-sm w-full p-6 text-center transform transition-all">
+            <h3 id="dialog-title" class="font-black text-2xl mb-2">แจ้งเตือน</h3>
+            <p id="dialog-msg" class="font-bold text-gray-700 mb-6">ข้อความ</p>
+            <div id="dialog-actions" class="flex gap-4 justify-center">
+                <!-- Buttons injected dynamically -->
+            </div>
+        </div>
+    </div>
+
     <script>
         /**
          * นำ URL ของ Apps Script ที่ได้จากการ Deploy มาใส่ที่ตัวแปรด้านล่าง
          */
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZfk-K3CMlRU0TDcZsob9t7neFOeOikzZxXz6Jnk-6RvvDdcAk5h2kD2evJTkX58m_7w/exec'; // เปลี่ยนตรงนี้
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZfk-K3CMlRU0TDcZsob9t7neFOeOikzZxXz6Jnk-6RvvDdcAk5h2kD2evJTkX58m_7w/exec'; 
         
         let currentUser = null;
+        let cachedIconOptions = null; // ตัวแปรเก็บข้อมูลไอคอนชั่วคราวเพื่อลดการโหลดซ้ำ
 
         const COLOR_OPTIONS = [
             { value: 'bg-red-400', label: '🔴 แดง (Red)' },
@@ -205,6 +217,46 @@
             { value: 'bg-gray-300', label: '⚪ เทา (Gray)' },
             { value: 'bg-lime-400', label: '🍋 มะนาว (Lime)' }
         ];
+
+        function customAlert(title, msg, type = 'error') {
+            const modal = document.getElementById('dialog-modal');
+            document.getElementById('dialog-title').textContent = title;
+            document.getElementById('dialog-title').className = `font-black text-2xl mb-2 ${type === 'error' ? 'text-red-500' : 'text-blue-500'}`;
+            document.getElementById('dialog-msg').textContent = msg;
+            document.getElementById('dialog-actions').innerHTML = `<button onclick="closeDialog()" class="manga-btn bg-gray-300 px-6 py-2 font-bold">ตกลง</button>`;
+            modal.classList.remove('hidden');
+        }
+
+        function customConfirm(title, msg, onConfirm) {
+            const modal = document.getElementById('dialog-modal');
+            document.getElementById('dialog-title').textContent = title;
+            document.getElementById('dialog-title').className = 'font-black text-2xl mb-2 text-yellow-500';
+            document.getElementById('dialog-msg').textContent = msg;
+            
+            const btnCancel = document.createElement('button');
+            btnCancel.className = 'manga-btn bg-gray-300 px-6 py-2 font-bold';
+            btnCancel.textContent = 'ยกเลิก';
+            btnCancel.onclick = closeDialog;
+            
+            const btnConfirm = document.createElement('button');
+            btnConfirm.className = 'manga-btn bg-red-400 px-6 py-2 font-bold text-black';
+            btnConfirm.textContent = 'ยืนยัน';
+            btnConfirm.onclick = () => {
+                closeDialog();
+                if(onConfirm) onConfirm();
+            };
+            
+            const actionContainer = document.getElementById('dialog-actions');
+            actionContainer.innerHTML = '';
+            actionContainer.appendChild(btnCancel);
+            actionContainer.appendChild(btnConfirm);
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeDialog() {
+            document.getElementById('dialog-modal').classList.add('hidden');
+        }
 
         const loginForm = document.getElementById('login-form');
         loginForm.addEventListener('submit', async (e) => {
@@ -265,7 +317,7 @@
         function processLoginSuccess(username, role, allowedApps, buttonsData) {
             currentUser = { username, role };
             
-            // บันทึก Session ข้อมูลผู้ใช้และปุ่มลงใน LocalStorage
+            // บันทึก Session
             localStorage.setItem('sunwork_user_session', JSON.stringify({
                 username: username,
                 role: role,
@@ -317,7 +369,6 @@
 
         function logout() {
             currentUser = null;
-            // ลบ Session ออกเมื่อออกจากระบบ
             localStorage.removeItem('sunwork_user_session');
             
             document.getElementById('main-menu-view').classList.add('hidden');
@@ -338,7 +389,7 @@
 
         async function callApi(action, dataObj = {}) {
             if (!SCRIPT_URL || SCRIPT_URL.includes('YOUR_GOOGLE_APPS_SCRIPT')) {
-                alert("กรุณาเชื่อมต่อ Google Apps Script ก่อน (ระบุ URL ในโค้ด)");
+                customAlert("ข้อผิดพลาด", "กรุณาเชื่อมต่อ Google Apps Script ก่อน (ระบุ URL ในโค้ด)");
                 return null;
             }
             
@@ -356,7 +407,7 @@
                 });
                 return await res.json();
             } catch (e) {
-                alert('เกิดข้อผิดพลาด: ' + e.message);
+                customAlert('เกิดข้อผิดพลาด', e.message);
                 return null;
             }
         }
@@ -364,7 +415,7 @@
         document.getElementById('settings-btn').addEventListener('click', () => {
             if (!currentUser) return;
             if (currentUser.role !== 'admin') {
-                setModalContent('Access Denied ❌', '<p class="text-red-600 text-center py-4">คุณไม่มีสิทธิ์เข้าถึงเมนูตั้งค่าระบบ <br>เฉพาะระดับ "Admin" เท่านั้น</p>', 'bg-red-400', false);
+                setModalContent('Access Denied ❌', '<p class="text-red-600 text-center py-4 font-black text-xl">คุณไม่มีสิทธิ์เข้าถึงเมนูตั้งค่าระบบ <br><span class="text-sm font-bold text-gray-700">เฉพาะระดับ "Admin" เท่านั้น</span></p>', 'bg-red-400', false);
                 return;
             }
             renderSettingsMenu();
@@ -447,18 +498,63 @@
                 role: document.getElementById('u-role').value,
                 allowedApps: document.getElementById('u-apps').value
             };
-            if(!data.username) return alert('กรุณากรอก Username');
+            if(!data.username) return customAlert('ตรวจสอบข้อมูล', 'กรุณากรอก Username');
             
             const res = await callApi('saveUser', data);
             if(res && res.status === 'success') fetchUsers();
         }
 
         async function deleteUser(username) {
-            if (username === 'admin') return alert('ไม่สามารถลบ admin หลักได้!');
-            if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้: ${username} ?`)) {
+            if (username === 'admin') return customAlert('ปฏิเสธ', 'ไม่สามารถลบ admin หลักได้!');
+            
+            customConfirm('ยืนยันการลบ', `คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้: ${username} ?`, async () => {
                 const res = await callApi('deleteUser', { username });
                 if(res && res.status === 'success') fetchUsers();
+            });
+        }
+
+        async function fetchIconOptions() {
+            if (cachedIconOptions) return cachedIconOptions;
+
+            try {
+                if (SCRIPT_URL && !SCRIPT_URL.includes('YOUR_GOOGLE_APPS_SCRIPT')) {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'getIcons' }),
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                    });
+                    const res = await response.json();
+                    
+                    if (res && res.status === 'success' && res.data) {
+                        cachedIconOptions = res.data;
+                        return cachedIconOptions;
+                    }
+                }
+            } catch (e) {
+                console.warn("ใช้ Mock Data เนื่องจากต่อ API ไม่ได้:", e);
             }
+
+            // MOCK DATA หากยังเชื่อมต่อ API ไม่ได้
+            cachedIconOptions = [
+                ['ph-users', '👥 ผู้ใช้งาน / พนักงาน'],
+                ['ph-wrench', '🔧 ซ่อมบำรุง / เครื่องมือ'],
+                ['ph-app-window', '📱 หน้าต่างระบบ'],
+                ['ph-calendar-check', '📅 ปฏิทิน / นัดหมาย'],
+                ['ph-chart-line-up', '📈 กราฟ / สถิติ'],
+                ['ph-file-text', '📄 เอกสาร / รายงาน'],
+                ['ph-shopping-cart', '🛒 ตะกร้าสินค้า'],
+                ['ph-truck', '🚚 ขนส่ง / โลจิสติกส์'],
+                ['ph-megaphone', '📣 ประกาศ / ข่าวสาร'],
+                ['ph-headset', '🎧 บริการลูกค้า (CS)'],
+                ['ph-money', '💰 การเงิน / บัญชี'],
+                ['ph-check-square', '✅ อนุมัติ / ตรวจสอบ'],
+                ['ph-package', '📦 กล่องพัสดุ'],
+                ['ph-receipt', '🧾 ใบเสร็จ / สลิป'],
+                ['ph-book-open-text', '📖 หนังสือ / คู่มือ'],
+                ['ph-chats', '💬 แชท / ข้อความ'],
+                ['ph-car-profile', '🚗 รถยนต์ / ยานพาหนะ']
+            ];
+            return cachedIconOptions;
         }
 
         async function fetchButtons() {
@@ -469,7 +565,7 @@
             let listHtml = `<button onclick="editButton(null)" class="manga-btn mb-6 bg-green-400 px-4 py-2 text-sm flex items-center gap-2"><i class="ph ph-plus-circle text-lg"></i> เพิ่มปุ่มใหม่</button>`;
             
             res.data.forEach(row => {
-                if(!row[0]) return; // ข้ามแถวว่าง
+                if(!row[0]) return;
                 listHtml += `
                 <div class="border-4 border-black p-3 mb-4 flex justify-between items-center bg-gray-50">
                     <div class="flex items-center gap-4">
@@ -488,10 +584,31 @@
             document.getElementById('modal-body').innerHTML = listHtml;
         }
 
-        function editButton(btnData) {
+        async function editButton(btnData) {
             const isEdit = !!btnData;
             const b = isEdit ? btnData : ['', '#', '', 'ph-app-window', 'bg-gray-300', '']; 
             
+            setModalContent(isEdit ? '✏️ กำลังเตรียมข้อมูล...' : '✨ กำลังเตรียมข้อมูล...', '<div class="flex justify-center p-10"><div class="loader"></div></div>', 'bg-purple-300', true);
+
+            // รอโหลดข้อมูลไอคอน
+            const iconList = await fetchIconOptions();
+
+            let iconOptionsHtml = '';
+            let isCurrentIconInList = false;
+
+            iconList.forEach(iconData => {
+                const iconClass = iconData[0];
+                const iconLabel = iconData[1] || iconData[0]; 
+                const isSelected = (b[3] === iconClass) ? 'selected' : '';
+                
+                if(isSelected) isCurrentIconInList = true;
+                iconOptionsHtml += `<option value="${iconClass}" ${isSelected}>${iconLabel} (${iconClass})</option>`;
+            });
+
+            if (b[3] && !isCurrentIconInList) {
+                iconOptionsHtml = `<option value="${b[3]}" selected>ออริจินัล (${b[3]})</option>` + iconOptionsHtml;
+            }
+
             let colorOptionsHtml = COLOR_OPTIONS.map(c => 
                 `<option value="${c.value}" class="${c.value}" ${b[4] === c.value ? 'selected' : ''}>${c.label}</option>`
             ).join('');
@@ -504,10 +621,22 @@
                     </div>
                     <div><label class="block mb-1">ชื่อปุ่ม (ชื่อระบบ)</label><input type="text" id="b-name" class="manga-input w-full p-2" value="${b[0]}" required></div>
                     <div><label class="block mb-1">ลิงก์ URL</label><input type="text" id="b-url" class="manga-input w-full p-2" value="${b[1]}" required></div>
+                    
                     <div>
-                        <label class="block mb-1">รหัสไอคอน <a href="https://phosphoricons.com/" target="_blank" class="text-blue-600 underline text-sm">(ค้นหาไอคอน)</a></label>
-                        <input type="text" id="b-icon" class="manga-input w-full p-2" value="${b[3]}" placeholder="เช่น ph-users">
+                        <label class="block mb-1">ไอคอน (Icon)</label>
+                        <div class="flex gap-2">
+                            <!-- พรีวิวไอคอนแบบสดๆ -->
+                            <div id="icon-preview" class="w-12 h-12 flex justify-center items-center border-4 border-black bg-white shrink-0 text-2xl transition-all">
+                                <i class="ph ${b[3] || 'ph-app-window'}"></i>
+                            </div>
+                            
+                            <!-- Dropdown ไอคอน -->
+                            <select id="b-icon" class="manga-input w-full p-2 font-bold cursor-pointer" onchange="document.querySelector('#icon-preview i').className = 'ph ' + this.value">
+                                ${iconOptionsHtml}
+                            </select>
+                        </div>
                     </div>
+
                     <div>
                         <label class="block mb-1">สีพื้นหลังปุ่ม (Dropdown)</label>
                         <select id="b-color" class="manga-input w-full p-2 font-bold cursor-pointer">
@@ -522,6 +651,7 @@
                     </div>
                 </form>
             `;
+            
             setModalContent(isEdit ? '✏️ แก้ไขปุ่ม' : '✨ เพิ่มปุ่มใหม่', html, 'bg-purple-300', true);
         }
 
@@ -534,26 +664,24 @@
                 color: document.getElementById('b-color').value,
                 desc: document.getElementById('b-desc').value
             };
-            if(!data.appId || !data.name) return alert('กรุณากรอก App ID และ ชื่อปุ่ม');
+            if(!data.appId || !data.name) return customAlert('ตรวจสอบข้อมูล', 'กรุณากรอก App ID และ ชื่อปุ่ม');
             
             const res = await callApi('saveButton', data);
             if(res && res.status === 'success') fetchButtons();
         }
 
         async function deleteButton(appId) {
-            if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบปุ่ม (App ID: ${appId}) ?`)) {
+            customConfirm('ยืนยันการลบ', `คุณแน่ใจหรือไม่ว่าต้องการลบปุ่ม (App ID: ${appId}) ?`, async () => {
                 const res = await callApi('deleteButton', { appId });
                 if(res && res.status === 'success') fetchButtons();
-            }
+            });
         }
 
-        // ตรวจสอบสถานะการล็อกอินทันทีที่โหลดหน้าเว็บ (Auto-login)
         const sessionData = localStorage.getItem('sunwork_user_session');
         if (sessionData) {
             try {
                 const data = JSON.parse(sessionData);
                 if (data && data.username) {
-                    // หากพบ Session ให้ส่งข้อมูลไปวาดปุ่มและซ่อนหน้า Login ทันที
                     processLoginSuccess(data.username, data.role, data.allowedApps, data.buttonsData);
                 }
             } catch (e) {
