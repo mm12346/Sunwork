@@ -5,11 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <meta name="theme-color" content="#5E64D1">
+    
+    <!-- iOS PWA Support -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SUNWORK">
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/mm12346/Sunwork/refs/heads/main/Sunworkicon.png">
     
     <title>SUNWORK - Portal</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700;900&display=swap" rel="stylesheet">
@@ -96,6 +100,7 @@
             <div class="absolute -bottom-4 -right-4 w-12 h-12 bg-pink-400 border-4 border-black manga-lines"></div>
             
             <div class="text-center mb-8">
+                <img src="https://raw.githubusercontent.com/mm12346/Sunwork/refs/heads/main/Sunworkicon.png" alt="Logo" class="w-24 h-24 mx-auto mb-4 border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_#000]">
                 <h1 class="text-4xl font-black uppercase tracking-wider">SUNWORK</h1>
                 <p class="font-bold text-gray-600 mt-2">ลงชื่อเข้าใช้งานระบบ</p>
             </div>
@@ -185,7 +190,6 @@
         </div>
     </div>
 
-    <!-- แทนที่ alert() และ confirm() ด้วยระบบ Dialog นี้ -->
     <div id="dialog-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
         <div class="bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] max-w-sm w-full p-6 text-center transform transition-all">
             <h3 id="dialog-title" class="font-black text-2xl mb-2">แจ้งเตือน</h3>
@@ -197,13 +201,75 @@
     </div>
 
     <script>
-        /**
-         * นำ URL ของ Apps Script ที่ได้จากการ Deploy มาใส่ที่ตัวแปรด้านล่าง
-         */
+        // ==========================================
+        // PWA SETUP (Dynamic Manifest & Service Worker)
+        // ==========================================
+        const appIconUrl = 'https://raw.githubusercontent.com/mm12346/Sunwork/refs/heads/main/Sunworkicon.png';
+        
+        // 1. Generate Manifest dynamically
+        const manifestData = {
+            name: "SUNWORK Portal",
+            short_name: "SUNWORK",
+            start_url: window.location.href.split('?')[0],
+            display: "standalone",
+            background_color: "#f8f9fa",
+            theme_color: "#5E64D1",
+            icons: [
+                { src: appIconUrl, sizes: "192x192", type: "image/png" },
+                { src: appIconUrl, sizes: "512x512", type: "image/png" }
+            ]
+        };
+
+        const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/json' });
+        const manifestUrl = URL.createObjectURL(manifestBlob);
+        
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = manifestUrl;
+        document.head.appendChild(manifestLink);
+
+        // 2. Generate and Register Service Worker dynamically
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                self.addEventListener('install', (event) => {
+                    self.skipWaiting();
+                });
+                self.addEventListener('activate', (event) => {
+                    event.waitUntil(clients.claim());
+                });
+                self.addEventListener('fetch', (event) => {
+                    // Basic pass-through fetch handler for PWA requirements
+                    event.respondWith(
+                        fetch(event.request).catch(() => {
+                            return new Response("You are currently offline. Please check your internet connection.", {
+                                status: 503,
+                                statusText: "Service Unavailable"
+                            });
+                        })
+                    );
+                });
+            `;
+            const swBlob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(swBlob);
+
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register(swUrl)
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+
+        // ==========================================
+        // MAIN APP LOGIC
+        // ==========================================
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZfk-K3CMlRU0TDcZsob9t7neFOeOikzZxXz6Jnk-6RvvDdcAk5h2kD2evJTkX58m_7w/exec'; 
         
         let currentUser = null;
-        let cachedIconOptions = null; // ตัวแปรเก็บข้อมูลไอคอนชั่วคราวเพื่อลดการโหลดซ้ำ
+        let cachedIconOptions = null; 
 
         const COLOR_OPTIONS = [
             { value: 'bg-red-400', label: '🔴 แดง (Red)' },
@@ -417,7 +483,7 @@
         document.getElementById('settings-btn').addEventListener('click', () => {
             if (!currentUser) return;
             if (currentUser.role !== 'admin') {
-                setModalContent('Access Denied ❌', '<p class="text-red-600 text-center py-4 font-black text-xl">คุณไม่มีสิทธิ์เข้าถึงเมนูตั้งค่าระบบ <br><span class="text-sm font-bold text-gray-700">เฉพาะระดับ "Admin" เท่านั้น</span></p>', 'bg-red-400', false);
+                setModalContent('Access Denied ❌', '<p class="text-red-600 text-center py-4 font-black text-xl">คุณไม่มีสิทธิ์เข้าถึงเมนูตั้งค่าระบบ <br><span class="text-sm font-bold text-gray-700">เฉพาะระดับ "Admin"เท่านั้น</span></p>', 'bg-red-400', false);
                 return;
             }
             renderSettingsMenu();
