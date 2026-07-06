@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ระบบจัดการเครื่องมือใช้ไฟฟ้า</title>
+    <title>ตรวจเครื่องมือ</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -130,7 +130,7 @@
 </head>
 <body class="manga-bg-dots text-brand-textDark h-screen flex flex-col md:flex-row overflow-hidden font-sans">
 
-    <!-- Sidebar (เหมือน sunwork_portal) -->
+    <!-- Sidebar -->
     <aside class="fixed md:relative bottom-0 w-full md:w-24 h-16 md:h-full bg-white border-t-4 md:border-t-0 md:border-r-4 border-black flex flex-row md:flex-col items-center py-0 md:py-6 justify-around md:justify-between z-50 shrink-0 shadow-[0_-6px_0px_0px_#000] md:shadow-[6px_0px_0px_0px_#000] order-last md:order-first">
         <div class="hidden md:flex flex-col items-center gap-8">
             <div class="w-14 h-14 bg-yellow-300 border-4 border-black shadow-[4px_4px_0px_0px_#000] flex items-center justify-center p-1 transform -rotate-3 hover:rotate-0 transition-transform">
@@ -177,25 +177,25 @@
     <!-- Main Content Area -->
     <div class="flex-1 flex flex-col h-screen overflow-hidden pb-16 md:pb-0 w-full relative">
         
-        <!-- Header -->
-        <header class="flex justify-between items-center mb-4 md:mb-6 gap-2 md:gap-4 p-4 md:p-8 pb-0 pt-6 md:pt-8 w-full bg-transparent flex-shrink-0">
+        <!-- Header (รูปแบบใหม่ตามที่ผู้ใช้งานต้องการ) -->
+        <header class="flex justify-between items-center mb-6 md:mb-8 gap-2 md:gap-4 pt-2 md:pt-0 w-full bg-white border-4 border-black p-4 shadow-card flex-shrink-0 z-10 relative mt-4 md:mt-8 mx-4 md:mx-8" style="width: calc(100% - 2rem); md:width: calc(100% - 4rem);">
             <div class="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
-                <div class="md:hidden w-12 h-12 bg-yellow-300 border-4 border-black flex items-center justify-center shadow-[4px_4px_0px_0px_#000] shrink-0 p-1">
+                <div class="md:hidden w-12 h-12 bg-yellow-300 border-4 border-black flex items-center justify-center shadow-sm shrink-0 p-1">
                     <img src="https://raw.githubusercontent.com/mm12346/Sunwork/refs/heads/main/Sunwork.png" alt="SUNWORK Logo" class="w-full h-full object-contain">
                 </div>
                 <div class="flex-1 min-w-0">
-                    <h1 id="pageTitle" class="text-xl md:text-3xl font-black text-black uppercase tracking-wider truncate border-b-4 border-black inline-block pb-1">แดชบอร์ดภาพรวม</h1>
-                    <p class="text-gray-600 font-bold text-xs md:text-sm mt-1 truncate uppercase">ระบบเครื่องมือใช้ไฟฟ้า</p>
+                    <h1 class="text-xl md:text-3xl font-black text-black uppercase tracking-wider truncate border-b-4 border-black inline-block pb-1">ตรวจเครื่องมือ</h1>
+                    <p class="text-gray-600 font-bold text-xs md:text-sm mt-1 truncate">SUNWORK COMPANY LIMITED</p>
                 </div>
             </div>
             <div class="flex items-center gap-3 shrink-0">
                 <button id="refreshBtn" onclick="fetchRealTimeData()" class="manga-btn flex items-center justify-center gap-2 bg-yellow-300 p-2 md:px-4 md:py-2 hover:bg-yellow-400 transition-colors shrink-0 group" title="รีเฟรชข้อมูล">
                     <i class="ph-bold ph-arrows-clockwise text-xl md:text-lg group-hover:rotate-180 transition-transform duration-500"></i>
-                    <span class="hidden md:inline text-sm font-black">อัปเดต</span>
+                    <span class="hidden md:inline text-sm font-black">อัปเดตข้อมูล</span>
                 </button>
                 <div class="hidden md:flex items-center gap-2 bg-white px-4 py-2 border-4 border-black shadow-sm shrink-0">
                     <div class="w-3 h-3 border-2 border-black bg-green-400 animate-pulse"></div>
-                    <span class="text-sm font-black text-black uppercase">ออนไลน์</span>
+                    <span class="text-sm font-black text-black uppercase">ออนไลน์ V8.4</span>
                 </div>
             </div>
         </header>
@@ -204,7 +204,7 @@
         <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8 pt-0 table-scrollbar">
             
             <!-- VIEW: Dashboard -->
-            <div id="view-dashboard" class="w-full space-y-6 block fade-in mt-4">
+            <div id="view-dashboard" class="w-full space-y-6 block fade-in mt-2">
                 
                 <!-- Summary Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -300,7 +300,7 @@
             </div>
 
             <!-- VIEW: Manage Data -->
-            <div id="view-manage" class="w-full hidden fade-in mt-4 flex-col min-h-0">
+            <div id="view-manage" class="w-full hidden fade-in mt-2 flex-col min-h-0">
                 <div class="flex flex-col xl:flex-row gap-6 items-start h-full pb-4">
                     
                     <!-- Left: Form -->
@@ -620,7 +620,6 @@
 
             if(viewName === 'dashboard') {
                 document.getElementById('view-dashboard').classList.remove('hidden');
-                document.getElementById('pageTitle').textContent = 'แดชบอร์ดภาพรวม';
                 updateDashboardStats();
 
                 const activeNav = document.getElementById('nav-dashboard');
@@ -633,7 +632,6 @@
 
             } else {
                 document.getElementById('view-manage').classList.remove('hidden');
-                document.getElementById('pageTitle').textContent = 'จัดการข้อมูล';
 
                 const activeNav = document.getElementById('nav-manage');
                 activeNav.classList.remove('text-gray-400');
