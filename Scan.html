@@ -12,50 +12,64 @@
     <!-- โหลด Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- ไลบรารีใหม่สำหรับการจัดการโครงสร้างไฟล์ PDF -->
     <!-- pdf-lib สำหรับ แก้ไข/รวม/แยก/ลบ/จัดเรียง หน้า PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-    <!-- pdf.js สำหรับแปลงหน้า PDF เป็นรูปภาพเพื่อโชว์พรีวิว (Thumbnails) -->
+    <!-- pdf.js สำหรับแปลงหน้า PDF เป็นรูปภาพ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <!-- SortableJS สำหรับระบบลากวาง (Drag & Drop) จัดเรียงหน้า -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
     <style>
         body {
-            overflow-x: hidden;
-            background-color: #f3f4f6; /* สีเทาอ่อนแบบแอพจัดการไฟล์ */
+            overflow: hidden; /* ล็อกไม่ให้หน้าจอเลื่อนหลุดกรอบ */
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh; /* ปรับให้พอดีกับหน้าจอมือถือแบบไดนามิก */
+            overscroll-behavior-y: none; /* ป้องกันการดึงเพื่อรีเฟรช (Pull-to-refresh) */
+            background-color: #f3f4f6;
         }
         .dark-mode {
             background-color: #111827;
             color: white;
         }
-        /* เอฟเฟกต์ชัตเตอร์กล้อง */
         .shutter-animation { animation: shutter 0.2s ease-out; }
         @keyframes shutter {
             0% { opacity: 1; background-color: white; }
             100% { opacity: 0; background-color: transparent; }
         }
-        /* ซ่อน input type file */
         .hidden-file-input { display: none; }
         
-        /* สไตล์สำหรับพรีวิวหน้า PDF */
         .pdf-page-thumbnail {
             transition: all 0.2s ease;
             cursor: pointer;
         }
         .pdf-page-thumbnail.selected-remove {
-            border: 3px solid #ef4444; /* แดง */
+            border: 3px solid #ef4444; 
             opacity: 0.6;
             filter: grayscale(100%);
         }
         .pdf-page-thumbnail.selected-extract {
-            border: 3px solid #22c55e; /* เขียว */
+            border: 3px solid #22c55e; 
             transform: scale(0.95);
         }
-        /* Loader */
+        .filter-btn {
+            border: 1px solid transparent;
+        }
+        .filter-btn.active {
+            border-color: #f97316;
+            color: #f97316;
+            background-color: rgba(249, 115, 22, 0.1);
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
         .loader {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #f97316; /* ส้ม */
+            border-top: 4px solid #f97316;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -64,12 +78,10 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 h-screen flex flex-col font-sans transition-colors duration-300">
+<body class="bg-gray-50 text-gray-800 flex flex-col font-sans transition-colors duration-300 w-full">
 
-    <!-- แถบด้านบน (Header) -->
-    <header class="bg-white dark:bg-gray-800 p-4 shadow-sm flex justify-between items-center z-30 relative transition-colors duration-300 border-b border-gray-200 dark:border-gray-700">
+    <header class="bg-white dark:bg-gray-800 p-4 shadow-sm flex justify-between items-center z-30 relative transition-colors duration-300 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 w-full">
         <div class="flex items-center gap-3">
-            <!-- ปุ่มย้อนกลับ (ซ่อนในหน้าหลัก) -->
             <button id="back-btn" class="hidden p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 active:scale-95 transition-transform">
                 <i data-lucide="arrow-left" class="w-5 h-5"></i>
             </button>
@@ -79,48 +91,35 @@
         </div>
         
         <div class="flex items-center gap-2">
-            <!-- ปุ่มสลับโหมดสว่าง/มืด -->
             <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
                 <i data-lucide="moon" class="w-5 h-5"></i>
             </button>
         </div>
     </header>
 
-    <!-- คอนเทนเนอร์หลักที่ใช้สลับหน้าจอ -->
-    <main class="flex-1 relative overflow-y-auto">
+    <main class="flex-1 relative overflow-y-auto overflow-x-hidden w-full">
         
-        <!-- ================= VIEW 1: HOME MENU ================= -->
         <div id="view-home" class="p-4 max-w-lg mx-auto w-full h-full flex flex-col py-6">
             <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-4 px-2 uppercase tracking-wide">เครื่องมือจัดการ PDF</h2>
-            
-            <!-- Grid เมนูตามรูปอ้างอิง -->
             <div class="grid grid-cols-2 gap-4">
                 
                 <button onclick="openTool('merge')" class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center gap-3 hover:shadow-md active:scale-[0.98] transition-all">
-                    <div class="bg-orange-500/10 p-4 rounded-2xl text-orange-500">
-                        <i data-lucide="combine" class="w-8 h-8"></i>
-                    </div>
+                    <div class="bg-orange-500/10 p-4 rounded-2xl text-orange-500"><i data-lucide="combine" class="w-8 h-8"></i></div>
                     <span class="font-medium text-gray-800 dark:text-gray-200">รวม PDF</span>
                 </button>
 
                 <button onclick="openTool('split')" class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center gap-3 hover:shadow-md active:scale-[0.98] transition-all">
-                    <div class="bg-orange-500/10 p-4 rounded-2xl text-orange-500">
-                        <i data-lucide="split-square-horizontal" class="w-8 h-8"></i>
-                    </div>
+                    <div class="bg-orange-500/10 p-4 rounded-2xl text-orange-500"><i data-lucide="split-square-horizontal" class="w-8 h-8"></i></div>
                     <span class="font-medium text-gray-800 dark:text-gray-200">แยก PDF</span>
                 </button>
 
                 <button onclick="openTool('remove')" class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center gap-3 hover:shadow-md active:scale-[0.98] transition-all">
-                    <div class="bg-red-500/10 p-4 rounded-2xl text-red-500">
-                        <i data-lucide="x-square" class="w-8 h-8"></i>
-                    </div>
+                    <div class="bg-red-500/10 p-4 rounded-2xl text-red-500"><i data-lucide="x-square" class="w-8 h-8"></i></div>
                     <span class="font-medium text-gray-800 dark:text-gray-200">ลบหน้าออก</span>
                 </button>
 
                 <button onclick="openTool('extract')" class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center gap-3 hover:shadow-md active:scale-[0.98] transition-all">
-                    <div class="bg-blue-500/10 p-4 rounded-2xl text-blue-500">
-                        <i data-lucide="share" class="w-8 h-8"></i>
-                    </div>
+                    <div class="bg-blue-500/10 p-4 rounded-2xl text-blue-500"><i data-lucide="share" class="w-8 h-8"></i></div>
                     <span class="font-medium text-gray-800 dark:text-gray-200">แยกหน้า</span>
                 </button>
 
@@ -134,20 +133,16 @@
 
                 <button onclick="openTool('scan')" class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center gap-3 hover:shadow-md active:scale-[0.98] transition-all relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent"></div>
-                    <div class="bg-orange-500 text-white p-4 rounded-2xl shadow-lg relative z-10">
-                        <i data-lucide="camera" class="w-8 h-8"></i>
-                    </div>
+                    <div class="bg-orange-500 text-white p-4 rounded-2xl shadow-lg relative z-10"><i data-lucide="camera" class="w-8 h-8"></i></div>
                     <span class="font-medium text-gray-800 dark:text-gray-200 relative z-10">สแกนเป็น PDF</span>
                 </button>
             </div>
         </div>
 
-        <!-- ================= VIEW 2: SCANNER ================= -->
-        <div id="view-scanner" class="hidden h-full flex-col bg-black">
+        <div id="view-scanner" class="hidden h-full flex-col bg-black relative">
             
             <!-- CAMERA UI MODE -->
             <div id="scanner-camera-mode" class="flex-1 relative flex flex-col">
-                <!-- ส่วนกล้อง -->
                 <div class="flex-1 relative flex justify-center items-center overflow-hidden">
                     <video id="camera-feed" class="w-full h-full object-cover transition-opacity duration-300" autoplay playsinline></video>
                     <div id="flash-effect" class="absolute inset-0 pointer-events-none opacity-0 z-20 bg-white"></div>
@@ -158,74 +153,119 @@
                     </div>
                 </div>
 
-                <!-- แถบควบคุมกล้อง -->
-                <div class="bg-gray-900 p-6 shadow-xl pb-8 z-30">
+                <div class="bg-gray-900 p-4 sm:p-6 shadow-xl pb-8 z-30 flex-shrink-0 w-full">
                     <input type="file" id="scan-upload" accept="image/*" multiple class="hidden-file-input">
                     
-                    <div class="flex justify-between items-center max-w-md mx-auto">
-                        <!-- ปุ่มเลือกคลังภาพ -->
+                    <div class="flex justify-between items-center max-w-md mx-auto w-full px-2">
                         <label for="scan-upload" class="flex flex-col items-center p-2 text-gray-400 hover:text-white cursor-pointer w-16">
                             <i data-lucide="image" class="w-6 h-6 mb-1"></i>
                         </label>
                         
-                        <!-- ปุ่มชัตเตอร์ -->
                         <button id="capture-btn" class="relative group outline-none focus:outline-none mx-4">
                             <div class="w-20 h-20 border-4 border-white rounded-full flex items-center justify-center">
                                 <div class="w-16 h-16 bg-white rounded-full group-active:bg-gray-300 transition-colors duration-150"></div>
                             </div>
                         </button>
                         
-                        <!-- พรีวิว Batch และปุ่มเสร็จสิ้น -->
                         <div class="flex flex-col items-center w-16">
-                            <div id="batch-preview-container" class="relative w-12 h-12 rounded border-2 border-gray-600 bg-gray-800 hidden cursor-pointer shadow-lg active:scale-95 transition-transform" onclick="finishBatchScan()">
+                            <div id="batch-preview-container" class="relative w-12 h-12 rounded border-2 border-gray-600 bg-gray-800 hidden cursor-pointer shadow-lg active:scale-95 transition-transform" onclick="openScanPreview()">
                                 <img id="batch-preview-img" class="w-full h-full object-cover opacity-80" src="">
                                 <div id="batch-count-badge" class="absolute -top-2 -right-2 bg-orange-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow">1</div>
-                                <div class="absolute inset-0 flex items-center justify-center text-white/80"><i data-lucide="check" class="w-6 h-6 drop-shadow-md"></i></div>
+                                <div class="absolute inset-0 flex items-center justify-center text-white/80"><i data-lucide="arrow-right" class="w-6 h-6 drop-shadow-md"></i></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- EDIT & CROP UI MODE -->
-            <div id="scanner-edit-mode" class="hidden flex-1 relative flex flex-col bg-gray-900">
-                <!-- Top Actions -->
-                <div class="flex justify-between items-center p-4 z-40 bg-gray-900/80 backdrop-blur">
+            <div id="scanner-edit-mode" class="hidden flex-1 relative flex flex-col bg-gray-900 w-full">
+                <div class="flex justify-between items-center p-4 z-40 bg-gray-900/80 backdrop-blur flex-shrink-0 w-full">
                     <button id="scan-retake-btn" class="text-white active:scale-95 p-2"><i data-lucide="x" class="w-6 h-6"></i></button>
-                    <div class="flex gap-4">
+                    <div class="flex gap-2 sm:gap-4">
                         <button id="scan-rotate-btn" class="text-white active:scale-95 p-2 bg-gray-800 rounded-lg"><i data-lucide="rotate-cw" class="w-6 h-6"></i></button>
-                        <button id="scan-filter-btn" class="text-blue-400 active:scale-95 p-2 bg-gray-800 rounded-lg"><i data-lucide="wand-2" class="w-6 h-6"></i></button>
+                        <button id="scan-filter-toggle-btn" class="text-orange-500 active:scale-95 p-2 bg-gray-800 rounded-lg"><i data-lucide="wand-2" class="w-6 h-6"></i></button>
                         <button id="scan-crop-toggle-btn" class="text-gray-400 active:scale-95 p-2 bg-gray-800 rounded-lg flex items-center gap-1"><i data-lucide="crop" class="w-6 h-6"></i><span class="text-xs font-bold hidden sm:block">ครอบตัด</span></button>
                     </div>
                 </div>
 
-                <!-- Workspace -->
-                <div class="flex-1 relative flex justify-center items-center overflow-hidden" id="scan-workspace">
+                <div class="flex-1 relative flex justify-center items-center overflow-hidden w-full" id="scan-workspace">
                     <canvas id="captured-canvas" class="shadow-2xl max-w-full max-h-full"></canvas>
                     
-                    <!-- Crop Overlay -->
-                    <div id="crop-overlay" class="hidden touch-none">
-                        <!-- กรอบแสดงผลการตัด (มืดด้านนอก) -->
-                        <div id="crop-box" class="absolute border-2 border-orange-500 box-content shadow-[0_0_0_9999px_rgba(0,0,0,0.7)] cursor-move">
-                            <!-- Handles 4 มุม -->
-                            <div class="absolute -top-4 -left-4 w-8 h-8 bg-orange-500 rounded-full border-2 border-white shadow crop-handle cursor-nwse-resize flex items-center justify-center" data-handle="tl"><div class="w-2 h-2 bg-white rounded-full"></div></div>
-                            <div class="absolute -top-4 -right-4 w-8 h-8 bg-orange-500 rounded-full border-2 border-white shadow crop-handle cursor-nesw-resize flex items-center justify-center" data-handle="tr"><div class="w-2 h-2 bg-white rounded-full"></div></div>
-                            <div class="absolute -bottom-4 -left-4 w-8 h-8 bg-orange-500 rounded-full border-2 border-white shadow crop-handle cursor-nesw-resize flex items-center justify-center" data-handle="bl"><div class="w-2 h-2 bg-white rounded-full"></div></div>
-                            <div class="absolute -bottom-4 -right-4 w-8 h-8 bg-orange-500 rounded-full border-2 border-white shadow crop-handle cursor-nwse-resize flex items-center justify-center" data-handle="br"><div class="w-2 h-2 bg-white rounded-full"></div></div>
-                        </div>
+                    <!-- Perspective Crop Overlay (SVG & Points) -->
+                    <div id="crop-overlay" class="hidden touch-none absolute z-10">
+                        <svg id="crop-svg" class="absolute inset-0 w-full h-full">
+                            <defs>
+                                <mask id="crop-mask">
+                                    <rect width="100%" height="100%" fill="white" />
+                                    <polygon id="crop-polygon-mask" points="" fill="black" />
+                                </mask>
+                            </defs>
+                            <rect width="100%" height="100%" fill="rgba(0,0,0,0.7)" mask="url(#crop-mask)" pointer-events="none" />
+                            <polygon id="crop-polygon-hitbox" points="" fill="transparent" class="cursor-move" pointer-events="all" />
+                            <polygon id="crop-polygon-border" points="" fill="none" stroke="#f97316" stroke-width="2" pointer-events="none" stroke-linejoin="round"/>
+                        </svg>
+                        
+                        <div id="handle-tl" class="absolute w-8 h-8 -ml-4 -mt-4 bg-orange-500 rounded-full border-2 border-white shadow crop-handle cursor-nwse-resize flex items-center justify-center z-20 pointer-events-auto" data-handle="tl"><div class="w-2 h-2 bg-white rounded-full pointer-events-none"></div></div>
+                        <div id="handle-tr" class="absolute w-8 h-8 -ml-4 -mt-4 bg-orange-500 rounded-full border-2 border-white shadow crop-handle cursor-nesw-resize flex items-center justify-center z-20 pointer-events-auto" data-handle="tr"><div class="w-2 h-2 bg-white rounded-full pointer-events-none"></div></div>
+                        <div id="handle-br" class="absolute w-8 h-8 -ml-4 -mt-4 bg-orange-500 rounded-full border-2 border-white shadow crop-handle cursor-nwse-resize flex items-center justify-center z-20 pointer-events-auto" data-handle="br"><div class="w-2 h-2 bg-white rounded-full pointer-events-none"></div></div>
+                        <div id="handle-bl" class="absolute w-8 h-8 -ml-4 -mt-4 bg-orange-500 rounded-full border-2 border-white shadow crop-handle cursor-nesw-resize flex items-center justify-center z-20 pointer-events-auto" data-handle="bl"><div class="w-2 h-2 bg-white rounded-full pointer-events-none"></div></div>
                     </div>
                 </div>
 
-                <!-- Bottom Action -->
-                <div class="p-6 bg-gray-900 shadow-[0_-10px_20px_rgba(0,0,0,0.2)] z-40 flex flex-col gap-4">
+                <div class="p-4 pb-6 bg-gray-900 shadow-[0_-10px_20px_rgba(0,0,0,0.2)] z-40 flex flex-col gap-3 flex-shrink-0 w-full">
+                    
+                    <!-- Filters Bar -->
+                    <div id="scan-filter-bar" class="flex space-x-3 overflow-x-auto hide-scrollbar pb-2">
+                        <button class="filter-btn flex flex-col items-center justify-center min-w-[70px] p-2 rounded-lg text-gray-400 hover:text-white transition" data-filter="original">
+                            <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center mb-1 border border-gray-600">
+                                <i data-lucide="image" class="w-4 h-4 text-gray-400"></i>
+                            </div>
+                            <span class="text-xs">ต้นฉบับ</span>
+                        </button>
+                        <button class="filter-btn active flex flex-col items-center justify-center min-w-[70px] p-2 rounded-lg text-gray-400 hover:text-white transition" data-filter="magic">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-300 to-orange-500 mb-1"></div>
+                            <span class="text-xs">สีคมชัด</span>
+                        </button>
+                        <button class="filter-btn flex flex-col items-center justify-center min-w-[70px] p-2 rounded-lg text-gray-400 hover:text-white transition" data-filter="grayscale">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-300 to-gray-600 mb-1"></div>
+                            <span class="text-xs">สีเทา</span>
+                        </button>
+                        <button class="filter-btn flex flex-col items-center justify-center min-w-[70px] p-2 rounded-lg text-gray-400 hover:text-white transition" data-filter="bw">
+                            <div class="w-8 h-8 rounded-full bg-black border border-white mb-1"></div>
+                            <span class="text-xs">ขาวดำ</span>
+                        </button>
+                    </div>
+
                     <button id="scan-keep-btn" class="w-full max-w-md mx-auto py-4 bg-orange-500 text-white rounded-xl font-bold shadow-lg shadow-orange-500/30 active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
                         <i data-lucide="plus-circle" class="w-5 h-5"></i> เพิ่มหน้านี้เข้าเอกสาร
                     </button>
                 </div>
             </div>
             
-            <!-- EXPORT OPTIONS (Popup ตอนกดเสร็จสิ้น) -->
-            <div id="scan-export-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex-col items-center justify-end">
+            <div id="view-scan-preview" class="hidden absolute inset-0 z-50 flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
+                <div class="bg-white dark:bg-gray-800 p-4 shadow-sm flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center gap-3">
+                        <button id="close-preview-btn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
+                            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                        </button>
+                        <h2 class="text-lg font-bold text-gray-800 dark:text-white">พรีวิวเอกสาร (<span id="preview-page-count">0</span> หน้า)</h2>
+                    </div>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto p-4">
+                    <div id="scan-preview-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-2xl mx-auto pb-24">
+                        <!-- Thumbnails injected here -->
+                    </div>
+                </div>
+
+                <div class="p-4 pb-6 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] absolute bottom-0 left-0 right-0 w-full z-10">
+                    <button id="open-export-sheet-btn" class="w-full max-w-md mx-auto block py-4 bg-orange-500 text-white rounded-xl font-bold shadow-lg shadow-orange-500/30 active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+                        <i data-lucide="file-check-2" class="w-5 h-5"></i> ไปที่หน้าบันทึก PDF
+                    </button>
+                </div>
+            </div>
+
+            <div id="scan-export-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-[60] flex-col items-center justify-end">
                 <div class="bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 shadow-2xl pb-10 transform translate-y-full transition-transform duration-300" id="scan-export-sheet">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
@@ -248,10 +288,8 @@
                     </button>
                 </div>
             </div>
-
         </div>
 
-        <!-- ================= VIEW 3: MERGE PDF ================= -->
         <div id="view-merge" class="hidden flex-col h-full bg-white dark:bg-gray-900 p-4">
             <div class="flex-1 overflow-y-auto w-full max-w-lg mx-auto">
                 <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl p-8 text-center bg-gray-50 dark:bg-gray-800/50 mb-6 relative">
@@ -266,22 +304,17 @@
                     <span id="merge-count" class="text-orange-500 font-bold">0 ไฟล์</span>
                 </div>
                 
-                <!-- List ของไฟล์ที่จะรวม (ใช้ SortableJS เพื่อจัดลำดับไฟล์ได้) -->
-                <ul id="merge-file-list" class="space-y-2 pb-24">
-                    <!-- ไอเทมไฟล์จะถูกเพิ่มที่นี่ผ่าน JS -->
-                </ul>
+                <ul id="merge-file-list" class="space-y-2 pb-28"></ul>
             </div>
             
-            <div class="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+            <div class="absolute bottom-0 left-0 right-0 p-4 pb-6 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] w-full z-10">
                 <button id="action-merge-btn" class="w-full max-w-lg mx-auto block py-3 bg-orange-500 text-white rounded-xl font-bold shadow-lg shadow-orange-500/30 active:scale-[0.98] transition-transform disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2">
                     <i data-lucide="combine" class="w-5 h-5"></i> รวมและบันทึก PDF
                 </button>
             </div>
         </div>
 
-        <!-- ================= VIEW 4: PDF EDITOR (Remove/Extract/Organize/Split) ================= -->
         <div id="view-editor" class="hidden flex-col h-full bg-white dark:bg-gray-900">
-            <!-- ส่วนอัปโหลดไฟล์ (แสดงตอนแรก) -->
             <div id="editor-upload-section" class="flex-1 flex items-center justify-center p-4">
                 <div class="w-full max-w-lg relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl p-10 text-center bg-gray-50 dark:bg-gray-800/50">
                     <input type="file" id="editor-file-input" accept="application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
@@ -291,73 +324,57 @@
                 </div>
             </div>
 
-            <!-- ส่วนแสดง Thumbnails (ซ่อนตอนแรก) -->
             <div id="editor-workspace" class="hidden flex-col h-full relative">
-                <!-- คำแนะนำการใช้งาน -->
                 <div class="bg-gray-100 dark:bg-gray-800 p-3 text-sm text-center text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 font-medium flex items-center justify-center gap-2" id="editor-instruction">
                     <i data-lucide="info" class="w-4 h-4"></i> <span>...</span>
                 </div>
                 
-                <!-- พื้นที่แสดงรูปหน้า PDF -->
-                <div class="flex-1 overflow-y-auto p-4 pb-24 bg-gray-50 dark:bg-gray-900">
-                    <div id="pdf-thumbnails-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                        <!-- Canvas ของแต่ละหน้าจะมาที่นี่ -->
-                    </div>
+                <div class="flex-1 overflow-y-auto p-4 pb-28 bg-gray-50 dark:bg-gray-900 w-full">
+                    <div id="pdf-thumbnails-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-2xl mx-auto"></div>
                 </div>
 
-                <!-- แถบปุ่ม Action ด้านล่าง -->
-                <div class="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg">
+                <div class="absolute bottom-0 left-0 right-0 p-4 pb-6 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg w-full z-10">
                     <button id="editor-action-btn" class="w-full max-w-lg mx-auto block py-3 bg-orange-500 text-white rounded-xl font-bold shadow-lg shadow-orange-500/30 active:scale-[0.98] transition-transform flex items-center justify-center gap-2 disabled:opacity-50 disabled:bg-gray-400">
                         <i data-lucide="save" class="w-5 h-5"></i> <span id="editor-btn-text">ดำเนินการ</span>
                     </button>
                 </div>
             </div>
         </div>
-
     </main>
 
-    <!-- แจ้งเตือน Toast -->
-    <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-xl shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-3 font-medium">
+    <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-xl shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-[110] flex items-center gap-3 font-medium">
         <i id="toast-icon" data-lucide="info" class="w-5 h-5 text-blue-400"></i>
         <span id="toast-message">ข้อความแจ้งเตือน</span>
     </div>
 
-    <!-- Loading Overlay สวยๆ สำหรับตอนที่ประมวลผล PDF หนักๆ -->
     <div id="loading-overlay" class="fixed inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center">
         <div class="loader mb-4"></div>
-        <p id="loading-text" class="text-gray-800 dark:text-white font-bold text-lg animate-pulse">กำลังประมวลผล PDF...</p>
-        <p class="text-sm text-gray-500 mt-2">กรุณารอสักครู่ อาจใช้เวลาขึ้นอยู่กับขนาดไฟล์</p>
+        <p id="loading-text" class="text-gray-800 dark:text-white font-bold text-lg animate-pulse">กำลังประมวลผล...</p>
     </div>
 
     <script>
-        // กำหนดที่อยู่ของ Worker สำหรับ PDF.js เพื่อประมวลผลการดึงรูปจาก PDF (จำเป็นมาก!)
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-        // วาดไอคอน
         lucide.createIcons();
 
-        // ------------------ State Management ------------------
-        let currentTool = 'home'; // home, scan, merge, remove, extract, organize, split
+        let currentTool = 'home';
         let isDarkMode = false;
         
-        // State สำหรับ Scanner
+        // --- Scanner Variables ---
         let cameraStream = null;
         let scanOriginalImage = new Image();
         let scanRotation = 0;
-        let scanIsFiltered = true;
+        let scanCurrentFilter = 'magic';
+        let isFilterBarVisible = true;
 
-        // State สำหรับ Merge
-        let filesToMerge = []; // Array of File objects
+        let filesToMerge = [];
         let mergeSortable = null;
 
-        // State สำหรับ Editor (ลบ/แยก/เรียง)
-        let editorPdfBytes = null; // ข้อมูลไฟล์ดิบ
+        let editorPdfBytes = null;
         let editorOriginalFile = null;
         let editorTotalPages = 0;
-        let editorSelectedPages = new Set(); // เก็บ index ของหน้าที่เลือก
+        let editorSelectedPages = new Set();
         let editorSortable = null;
 
-        // ------------------ DOM Elements (Global) ------------------
         const views = {
             home: document.getElementById('view-home'),
             scan: document.getElementById('view-scanner'),
@@ -370,17 +387,13 @@
         
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toast-message');
-        const toastIcon = document.getElementById('toast-icon');
         const loadingOverlay = document.getElementById('loading-overlay');
         const loadingText = document.getElementById('loading-text');
 
-        // ------------------ Utility Functions ------------------
+        // --- Common Helpers ---
         function showToast(message, type = 'info') {
             toastMessage.textContent = message;
-            
-            // แก้ไขปัญหาไอคอนไม่ยอมเปลี่ยนเมื่อถูกโหลดทับด้วย SVG
-            let iconName = 'info';
-            let iconColor = 'text-blue-400';
+            let iconName = 'info', iconColor = 'text-blue-400';
             if (type === 'success') { iconName = 'check-circle-2'; iconColor = 'text-green-400'; }
             else if (type === 'error') { iconName = 'alert-triangle'; iconColor = 'text-red-400'; }
             
@@ -410,7 +423,6 @@
             loadingOverlay.classList.remove('flex');
         }
 
-        // สลับโหมด Dark/Light
         themeToggle.addEventListener('click', () => {
             isDarkMode = !isDarkMode;
             document.body.classList.toggle('dark-mode', isDarkMode);
@@ -420,38 +432,25 @@
             lucide.createIcons();
         });
 
-        // เปิดเครื่องมือต่างๆ
+        // --- Router ---
         function openTool(tool) {
             currentTool = tool;
-            
-            // ซ่อนทุกหน้า
-            Object.values(views).forEach(v => {
-                v.classList.remove('flex');
-                v.classList.add('hidden');
-            });
-
-            backBtn.classList.remove('hidden'); // โชว์ปุ่มย้อนกลับ
+            Object.values(views).forEach(v => { v.classList.remove('flex'); v.classList.add('hidden'); });
+            backBtn.classList.remove('hidden');
 
             if (tool === 'scan') {
-                views.scan.classList.remove('hidden');
-                views.scan.classList.add('flex');
+                views.scan.classList.remove('hidden'); views.scan.classList.add('flex');
+                document.getElementById('view-scan-preview').classList.add('hidden');
+                document.getElementById('view-scan-preview').classList.remove('flex');
                 appTitle.innerHTML = '<i data-lucide="camera" class="text-orange-500 w-5 h-5"></i> สแกนเป็น PDF';
-                
-                // รีเซ็ต Batch เมื่อเข้าใหม่
-                scanBatch = [];
-                uploadQueue = [];
-                updateBatchUI();
-                initScanner();
+                scanBatch = []; uploadQueue = [];
+                updateBatchUI(); initScanner();
             } else if (tool === 'merge') {
-                views.merge.classList.remove('hidden');
-                views.merge.classList.add('flex');
+                views.merge.classList.remove('hidden'); views.merge.classList.add('flex');
                 appTitle.innerHTML = '<i data-lucide="combine" class="text-orange-500 w-5 h-5"></i> รวม PDF';
                 resetMergeWorkspace();
             } else {
-                // เครื่องมืออื่นๆ ใช้ Editor View (remove, extract, organize, split)
-                views.editor.classList.remove('hidden');
-                views.editor.classList.add('flex');
-                
+                views.editor.classList.remove('hidden'); views.editor.classList.add('flex');
                 const titles = {
                     'remove': '<i data-lucide="x-square" class="text-red-500 w-5 h-5"></i> ลบหน้าออก',
                     'extract': '<i data-lucide="share" class="text-blue-500 w-5 h-5"></i> แยกบางหน้า',
@@ -464,59 +463,141 @@
             lucide.createIcons();
         }
 
-        // กลับหน้าหลัก
         backBtn.addEventListener('click', () => {
-            if (currentTool === 'scan') stopCamera(); // ปิดกล้องถ้าเปิดอยู่
-            
+            if (currentTool === 'scan') stopCamera();
             currentTool = 'home';
             Object.values(views).forEach(v => { v.classList.add('hidden'); v.classList.remove('flex'); });
-            views.home.classList.remove('hidden');
-            views.home.classList.add('flex');
-            
+            views.home.classList.remove('hidden'); views.home.classList.add('flex');
             backBtn.classList.add('hidden');
             appTitle.innerHTML = '<i data-lucide="layers" class="text-orange-500 w-6 h-6"></i> PDF Tools';
             lucide.createIcons();
         });
 
-        // ------------------ 1. SCANNER LOGIC ------------------
         const video = document.getElementById('camera-feed');
         const scanCanvas = document.getElementById('captured-canvas');
-        const scanCtx = scanCanvas.getContext('2d');
+        const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
         const captureBtn = document.getElementById('capture-btn');
         
-        // UI Sections
         const scannerCameraMode = document.getElementById('scanner-camera-mode');
         const scannerEditMode = document.getElementById('scanner-edit-mode');
         const scanWorkspace = document.getElementById('scan-workspace');
         const scanExportModal = document.getElementById('scan-export-modal');
         const scanExportSheet = document.getElementById('scan-export-sheet');
+        const scanPreviewView = document.getElementById('view-scan-preview');
         
-        // Batch Elements
         const batchPreviewContainer = document.getElementById('batch-preview-container');
         const batchPreviewImg = document.getElementById('batch-preview-img');
         const batchCountBadge = document.getElementById('batch-count-badge');
         const exportBtnText = document.getElementById('export-btn-text');
         
-        // Crop Elements
         const cropOverlay = document.getElementById('crop-overlay');
-        const cropBox = document.getElementById('crop-box');
-
-        // States
-        let scanBatch = []; // Array of DataURLs (Final processed images)
-        let uploadQueue = []; // Array of Base64 (waiting to be edited)
-        let cropRect = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 }; // x,y,w,h in percentage (0-1)
-        let isCropMode = false;
         
-        // เอาตัวแปร let cameraStream, scanOriginalImage ที่ประกาศซ้ำซ้อนตรงนี้ออก เพื่อแก้บั๊ก SyntaxError
+        let scanBatch = []; 
+        let uploadQueue = []; 
+        let isCropMode = false;
+
+        let cropPoints = [
+            { x: 0.1, y: 0.1 }, { x: 0.9, y: 0.1 }, { x: 0.9, y: 0.9 }, { x: 0.1, y: 0.9 }
+        ];
+
+        function solveLinearSystem(A, B) {
+            const n = B.length;
+            for (let i = 0; i < n; i++) {
+                let maxEl = Math.abs(A[i][i]), maxRow = i;
+                for (let k = i + 1; k < n; k++) {
+                    if (Math.abs(A[k][i]) > maxEl) { maxEl = Math.abs(A[k][i]); maxRow = k; }
+                }
+                for (let k = i; k < n; k++) {
+                    const tmp = A[maxRow][k]; A[maxRow][k] = A[i][k]; A[i][k] = tmp;
+                }
+                const tmpB = B[maxRow]; B[maxRow] = B[i]; B[i] = tmpB;
+                
+                if (Math.abs(A[i][i]) < 1e-10) continue;
+                
+                for (let k = i + 1; k < n; k++) {
+                    const c = -A[k][i] / A[i][i];
+                    for (let j = i; j < n; j++) {
+                        if (i === j) A[k][j] = 0; else A[k][j] += c * A[i][j];
+                    }
+                    B[k] += c * B[i];
+                }
+            }
+            const x = new Array(n).fill(0);
+            for (let i = n - 1; i >= 0; i--) {
+                if (Math.abs(A[i][i]) < 1e-10) x[i] = 0;
+                else {
+                    x[i] = B[i] / A[i][i];
+                    for (let k = i - 1; k >= 0; k--) { B[k] -= A[k][i] * x[i]; }
+                }
+            }
+            return x;
+        }
+
+        function getPerspectiveTransform(src, dst) {
+            const A = [], B = [];
+            for (let i = 0; i < 4; i++) {
+                A.push([dst[i].x, dst[i].y, 1, 0, 0, 0, -src[i].x * dst[i].x, -src[i].x * dst[i].y]);
+                A.push([0, 0, 0, dst[i].x, dst[i].y, 1, -src[i].y * dst[i].x, -src[i].y * dst[i].y]);
+                B.push(src[i].x);
+                B.push(src[i].y);
+            }
+            const h = solveLinearSystem(A, B);
+            h.push(1);
+            return h;
+        }
+
+        function applyPerspectiveWarp(srcCanvas, srcPoints, dstWidth, dstHeight) {
+            const dstCanvas = document.createElement('canvas');
+            dstCanvas.width = dstWidth; dstCanvas.height = dstHeight;
+            const ctxDst = dstCanvas.getContext('2d');
+            const ctxSrc = srcCanvas.getContext('2d');
+            
+            const srcData = ctxSrc.getImageData(0, 0, srcCanvas.width, srcCanvas.height);
+            const dstData = ctxDst.createImageData(dstWidth, dstHeight);
+            
+            const dstPoints = [{x:0, y:0}, {x:dstWidth, y:0}, {x:dstWidth, y:dstHeight}, {x:0, y:dstHeight}];
+            const H = getPerspectiveTransform(srcPoints, dstPoints);
+            
+            const sData = srcData.data, dData = dstData.data;
+            const sw = srcCanvas.width, sh = srcCanvas.height;
+            
+            let i = 0;
+            for (let y = 0; y < dstHeight; y++) {
+                for (let x = 0; x < dstWidth; x++) {
+                    const z = H[6] * x + H[7] * y + 1;
+                    const sx = (H[0] * x + H[1] * y + H[2]) / z;
+                    const sy = (H[3] * x + H[4] * y + H[5]) / z;
+                    
+                    const x1 = sx | 0, y1 = sy | 0; 
+                    
+                    if (x1 >= 0 && x1 < sw - 1 && y1 >= 0 && y1 < sh - 1) {
+                        const wx = sx - x1, wy = sy - y1;
+                        const w1 = (1 - wx) * (1 - wy), w2 = wx * (1 - wy);
+                        const w3 = (1 - wx) * wy, w4 = wx * wy;
+                        
+                        const idx1 = (y1 * sw + x1) * 4;
+                        const idx2 = idx1 + 4, idx3 = ((y1 + 1) * sw + x1) * 4, idx4 = idx3 + 4;
+                        
+                        dData[i]   = sData[idx1]*w1 + sData[idx2]*w2 + sData[idx3]*w3 + sData[idx4]*w4;
+                        dData[i+1] = sData[idx1+1]*w1 + sData[idx2+1]*w2 + sData[idx3+1]*w3 + sData[idx4+1]*w4;
+                        dData[i+2] = sData[idx1+2]*w1 + sData[idx2+2]*w2 + sData[idx3+2]*w3 + sData[idx4+2]*w4;
+                        dData[i+3] = 255;
+                    }
+                    i += 4;
+                }
+            }
+            ctxDst.putImageData(dstData, 0, 0);
+            return dstCanvas;
+        }
 
         async function initScanner() {
             document.getElementById('camera-error').classList.add('hidden');
             scannerCameraMode.classList.remove('hidden'); scannerCameraMode.classList.add('flex');
             scannerEditMode.classList.add('hidden'); scannerEditMode.classList.remove('flex');
             scanExportModal.classList.add('hidden'); scanExportModal.classList.remove('flex');
+            scanPreviewView.classList.add('hidden'); scanPreviewView.classList.remove('flex');
             
-            if (cameraStream) return; // Already running
-            
+            if (cameraStream) return;
             try {
                 cameraStream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false
@@ -535,26 +616,21 @@
             if (scanBatch.length > 0) {
                 batchPreviewContainer.classList.remove('hidden');
                 batchCountBadge.textContent = scanBatch.length;
-                batchPreviewImg.src = scanBatch[scanBatch.length - 1]; // โชว์รูปหน้าล่าสุด
-                exportBtnText.textContent = `ดาวน์โหลด PDF (${scanBatch.length} หน้า)`;
+                batchPreviewImg.src = scanBatch[scanBatch.length - 1];
             } else {
                 batchPreviewContainer.classList.add('hidden');
             }
         }
 
-        // --- Capture & Load Image ---
         captureBtn.addEventListener('click', () => {
             if (!cameraStream) return;
-            // Shutter effect
             const flash = document.getElementById('flash-effect');
             flash.classList.remove('shutter-animation'); void flash.offsetWidth; flash.classList.add('shutter-animation');
             
-            // Get frame
             const tmpC = document.createElement('canvas'); 
             tmpC.width = video.videoWidth; tmpC.height = video.videoHeight;
             tmpC.getContext('2d').drawImage(video, 0, 0);
             
-            // Enter Edit Mode
             enterScanEditMode(tmpC.toDataURL('image/jpeg', 1.0));
         });
 
@@ -562,7 +638,6 @@
             const files = Array.from(e.target.files);
             if (files.length === 0) return;
             
-            // สร้าง Queue สำหรับจัดการหลายรูป
             uploadQueue = [];
             let loadedCount = 0;
             files.forEach(file => {
@@ -570,9 +645,7 @@
                 r.onload = (ev) => {
                     uploadQueue.push(ev.target.result);
                     loadedCount++;
-                    if (loadedCount === files.length) {
-                        processNextInQueue(); // เริ่มแก้ไขรูปแรก
-                    }
+                    if (loadedCount === files.length) processNextInQueue();
                 };
                 r.readAsDataURL(file);
             });
@@ -580,290 +653,326 @@
         });
 
         function processNextInQueue() {
-            if (uploadQueue.length > 0) {
-                const nextSrc = uploadQueue.shift();
-                enterScanEditMode(nextSrc);
-            } else {
-                // กลับไปหน้ากล้องเมื่อคิวหมด
-                initScanner();
-            }
+            if (uploadQueue.length > 0) enterScanEditMode(uploadQueue.shift());
+            else initScanner();
         }
 
         function enterScanEditMode(src) {
             stopCamera();
-            scanRotation = 0;
-            scanIsFiltered = true;
+            scanRotation = 0; 
+            scanCurrentFilter = 'magic'; 
             isCropMode = false;
-            cropRect = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 }; // Reset Crop to 10% margin
-            updateFilterBtnUI();
+            cropPoints = [{x:0.1, y:0.1}, {x:0.9, y:0.1}, {x:0.9, y:0.9}, {x:0.1, y:0.9}];
+            
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('.filter-btn[data-filter="magic"]').classList.add('active');
+            
+            isFilterBarVisible = true;
+            document.getElementById('scan-filter-bar').classList.remove('hidden');
+            document.getElementById('scan-filter-toggle-btn').classList.replace('text-gray-400', 'text-orange-500');
+            
             updateCropBtnUI();
             
             scannerCameraMode.classList.add('hidden'); scannerCameraMode.classList.remove('flex');
             scannerEditMode.classList.remove('hidden'); scannerEditMode.classList.add('flex');
 
-            scanOriginalImage.onload = () => {
-                renderScanCanvas();
-            };
+            showLoading('กำลังเตรียมรูปภาพ...');
+            scanOriginalImage.onload = () => { hideLoading(); renderScanCanvas(); };
             scanOriginalImage.src = src;
         }
 
-        // --- Render & Crop Logic ---
         function renderScanCanvas() {
             if (!scanOriginalImage.src) return;
-            
             const isLandscape = scanRotation === 90 || scanRotation === 270;
-            const originalW = isLandscape ? scanOriginalImage.height : scanOriginalImage.width;
-            const originalH = isLandscape ? scanOriginalImage.width : scanOriginalImage.height;
+            let originalW = isLandscape ? scanOriginalImage.height : scanOriginalImage.width;
+            let originalH = isLandscape ? scanOriginalImage.width : scanOriginalImage.height;
             
-            scanCanvas.width = originalW;
-            scanCanvas.height = originalH;
+            const MAX_DIMENSION = 2000;
+            if (originalW > MAX_DIMENSION || originalH > MAX_DIMENSION) {
+                const ratio = Math.min(MAX_DIMENSION / originalW, MAX_DIMENSION / originalH);
+                originalW = Math.round(originalW * ratio);
+                originalH = Math.round(originalH * ratio);
+            }
             
+            scanCanvas.width = originalW; scanCanvas.height = originalH;
             scanCtx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
             scanCtx.save();
             scanCtx.translate(scanCanvas.width / 2, scanCanvas.height / 2);
             scanCtx.rotate((scanRotation * Math.PI) / 180);
             
-            // เอฟเฟกต์หน้ากระดาษสแกน
-            scanCtx.filter = scanIsFiltered ? 'grayscale(100%) contrast(150%) brightness(120%)' : 'none';
-            scanCtx.drawImage(scanOriginalImage, -scanOriginalImage.width/2, -scanOriginalImage.height/2, scanOriginalImage.width, scanOriginalImage.height);
+            let drawWidth = isLandscape ? scanCanvas.height : scanCanvas.width;
+            let drawHeight = isLandscape ? scanCanvas.width : scanCanvas.height;
+            
+            scanCtx.drawImage(scanOriginalImage, -drawWidth/2, -drawHeight/2, drawWidth, drawHeight);
             scanCtx.restore();
+
+            if (scanCurrentFilter !== 'original') {
+                applyCanvasFilter(scanCurrentFilter);
+            }
 
             positionCropOverlay(originalW, originalH);
         }
 
-        function positionCropOverlay(imgW, imgH) {
-            // คำนวณขนาดที่แสดงผลบนจอจริงๆ เพื่อจัดวาง Overlay ให้ตรง
-            const wsW = scanWorkspace.clientWidth;
-            const wsH = scanWorkspace.clientHeight;
-            
-            const imgAspect = imgW / imgH;
-            const wsAspect = wsW / wsH;
-            
-            let drawW, drawH;
-            if (imgAspect > wsAspect) { // กว้างกว่าจอ
-                drawW = wsW;
-                drawH = wsW / imgAspect;
-            } else { // สูงกว่าจอ
-                drawH = wsH;
-                drawW = wsH * imgAspect;
+        function applyCanvasFilter(filterType) {
+            const imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+            const data = imageData.data;
+            const length = data.length;
+
+            for (let i = 0; i < length; i += 4) {
+                let r = data[i], g = data[i + 1], b = data[i + 2];
+                const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+
+                if (filterType === 'grayscale') {
+                    data[i] = data[i + 1] = data[i + 2] = luminance;
+                } 
+                else if (filterType === 'bw') {
+                    const threshold = 120;
+                    const value = luminance > threshold ? 255 : 0;
+                    data[i] = data[i + 1] = data[i + 2] = value;
+                } 
+                else if (filterType === 'magic') {
+                    let contrast = 1.5, brightness = 20;
+                    let newR = (r - 128) * contrast + 128 + brightness;
+                    let newG = (g - 128) * contrast + 128 + brightness;
+                    let newB = (b - 128) * contrast + 128 + brightness;
+
+                    data[i] = Math.max(0, Math.min(255, newR));
+                    data[i + 1] = Math.max(0, Math.min(255, newG));
+                    data[i + 2] = Math.max(0, Math.min(255, newB));
+                }
             }
+            scanCtx.putImageData(imageData, 0, 0);
+        }
+
+        function positionCropOverlay(imgW, imgH) {
+            const wsW = scanWorkspace.clientWidth, wsH = scanWorkspace.clientHeight;
+            const imgAspect = imgW / imgH, wsAspect = wsW / wsH;
+            let drawW, drawH;
             
-            // ตั้งค่า CSS ขนาดของ Canvas ให้ตรงกับที่คำนวณ
-            scanCanvas.style.width = drawW + 'px';
-            scanCanvas.style.height = drawH + 'px';
-            scanCanvas.style.position = 'absolute';
+            if (imgAspect > wsAspect) { drawW = wsW; drawH = wsW / imgAspect; } 
+            else { drawH = wsH; drawW = wsH * imgAspect; }
             
-            // ตั้งค่า Crop Overlay ให้ทับพอดี
-            cropOverlay.style.width = drawW + 'px';
-            cropOverlay.style.height = drawH + 'px';
-            cropOverlay.style.position = 'absolute';
-            
+            scanCanvas.style.width = drawW + 'px'; scanCanvas.style.height = drawH + 'px'; scanCanvas.style.position = 'absolute';
+            cropOverlay.style.width = drawW + 'px'; cropOverlay.style.height = drawH + 'px'; cropOverlay.style.position = 'absolute';
             updateCropBoxDOM();
         }
 
         function updateCropBoxDOM() {
-            cropBox.style.left = (cropRect.x * 100) + '%';
-            cropBox.style.top = (cropRect.y * 100) + '%';
-            cropBox.style.width = (cropRect.w * 100) + '%';
-            cropBox.style.height = (cropRect.h * 100) + '%';
+            const ow = cropOverlay.clientWidth, oh = cropOverlay.clientHeight;
+            
+            document.getElementById('handle-tl').style.left = (cropPoints[0].x * 100) + '%';
+            document.getElementById('handle-tl').style.top = (cropPoints[0].y * 100) + '%';
+            document.getElementById('handle-tr').style.left = (cropPoints[1].x * 100) + '%';
+            document.getElementById('handle-tr').style.top = (cropPoints[1].y * 100) + '%';
+            document.getElementById('handle-br').style.left = (cropPoints[2].x * 100) + '%';
+            document.getElementById('handle-br').style.top = (cropPoints[2].y * 100) + '%';
+            document.getElementById('handle-bl').style.left = (cropPoints[3].x * 100) + '%';
+            document.getElementById('handle-bl').style.top = (cropPoints[3].y * 100) + '%';
+            
+            const ptsString = cropPoints.map(p => `${p.x * ow},${p.y * oh}`).join(' ');
+            document.getElementById('crop-polygon-mask').setAttribute('points', ptsString);
+            document.getElementById('crop-polygon-hitbox').setAttribute('points', ptsString);
+            document.getElementById('crop-polygon-border').setAttribute('points', ptsString);
         }
 
-        // --- Editor Actions ---
+        let activeCropHandle = null, cropStartPos = null, cropStartPoints = null;
+
+        function startCropDrag(e, handle, clientX, clientY) {
+            e.preventDefault();
+            activeCropHandle = handle;
+            cropStartPos = { x: clientX, y: clientY };
+            cropStartPoints = JSON.parse(JSON.stringify(cropPoints));
+        }
+
+        function moveCropDrag(clientX, clientY) {
+            if(!activeCropHandle) return;
+            const rect = cropOverlay.getBoundingClientRect();
+            
+            if (activeCropHandle === 'move') {
+                const dx = (clientX - cropStartPos.x) / rect.width, dy = (clientY - cropStartPos.y) / rect.height;
+                let canMove = true;
+                for(let i=0; i<4; i++) {
+                    const nx = cropStartPoints[i].x + dx, ny = cropStartPoints[i].y + dy;
+                    if(nx < 0 || nx > 1 || ny < 0 || ny > 1) canMove = false;
+                }
+                if (canMove) {
+                    for(let i=0; i<4; i++) {
+                        cropPoints[i].x = cropStartPoints[i].x + dx; cropPoints[i].y = cropStartPoints[i].y + dy;
+                    }
+                }
+            } else {
+                let x = (clientX - rect.left) / rect.width, y = (clientY - rect.top) / rect.height;
+                x = Math.max(0, Math.min(1, x)); y = Math.max(0, Math.min(1, y));
+                
+                if (activeCropHandle === 'tl') cropPoints[0] = {x, y};
+                else if (activeCropHandle === 'tr') cropPoints[1] = {x, y};
+                else if (activeCropHandle === 'br') cropPoints[2] = {x, y};
+                else if (activeCropHandle === 'bl') cropPoints[3] = {x, y};
+            }
+            updateCropBoxDOM();
+        }
+
+        cropOverlay.addEventListener('mousedown', (e) => {
+            if(e.target.closest('.crop-handle')) { startCropDrag(e, e.target.closest('.crop-handle').dataset.handle, e.clientX, e.clientY); } 
+            else if (e.target.id === 'crop-polygon-hitbox') { startCropDrag(e, 'move', e.clientX, e.clientY); }
+        });
+        window.addEventListener('mousemove', (e) => moveCropDrag(e.clientX, e.clientY));
+        window.addEventListener('mouseup', () => { activeCropHandle = null; });
+        
+        cropOverlay.addEventListener('touchstart', (e) => {
+            if(e.target.closest('.crop-handle')) { startCropDrag(e, e.target.closest('.crop-handle').dataset.handle, e.touches[0].clientX, e.touches[0].clientY); } 
+            else if (e.target.id === 'crop-polygon-hitbox') { startCropDrag(e, 'move', e.touches[0].clientX, e.touches[0].clientY); }
+        }, {passive: false});
+        window.addEventListener('touchmove', (e) => {
+            if(activeCropHandle) { e.preventDefault(); moveCropDrag(e.touches[0].clientX, e.touches[0].clientY); }
+        }, {passive: false});
+        window.addEventListener('touchend', () => { activeCropHandle = null; });
+
         document.getElementById('scan-retake-btn').addEventListener('click', () => {
             if (uploadQueue.length > 0) processNextInQueue();
             else initScanner();
         });
 
         document.getElementById('scan-rotate-btn').addEventListener('click', () => { 
-            scanRotation = (scanRotation + 90) % 360; 
-            // รีเซ็ต Crop เมื่อหมุน
-            cropRect = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
-            renderScanCanvas(); 
+            showLoading('กำลังหมุนภาพ...');
+            setTimeout(() => {
+                scanRotation = (scanRotation + 90) % 360; 
+                cropPoints = [{x:0.1, y:0.1}, {x:0.9, y:0.1}, {x:0.9, y:0.9}, {x:0.1, y:0.9}];
+                renderScanCanvas(); 
+                hideLoading();
+            }, 10);
         });
 
-        const filterBtn = document.getElementById('scan-filter-btn');
-        filterBtn.addEventListener('click', () => {
-            scanIsFiltered = !scanIsFiltered;
-            updateFilterBtnUI();
-            renderScanCanvas();
+        const scanFilterToggleBtn = document.getElementById('scan-filter-toggle-btn');
+        const scanFilterBar = document.getElementById('scan-filter-bar');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+
+        scanFilterToggleBtn.addEventListener('click', () => {
+            isFilterBarVisible = !isFilterBarVisible;
+            if(isFilterBarVisible) {
+                scanFilterBar.classList.remove('hidden');
+                scanFilterToggleBtn.classList.replace('text-gray-400', 'text-orange-500');
+            } else {
+                scanFilterBar.classList.add('hidden');
+                scanFilterToggleBtn.classList.replace('text-orange-500', 'text-gray-400');
+            }
         });
-        function updateFilterBtnUI() {
-            if (scanIsFiltered) { filterBtn.classList.replace('text-gray-400', 'text-blue-400'); }
-            else { filterBtn.classList.replace('text-blue-400', 'text-gray-400'); }
-        }
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                scanCurrentFilter = btn.dataset.filter;
+                showLoading('กำลังปรับแต่งสี...');
+                setTimeout(() => {
+                    renderScanCanvas();
+                    hideLoading();
+                }, 10);
+            });
+        });
 
         const cropBtn = document.getElementById('scan-crop-toggle-btn');
         cropBtn.addEventListener('click', () => {
-            isCropMode = !isCropMode;
-            updateCropBtnUI();
+            isCropMode = !isCropMode; updateCropBtnUI();
         });
         function updateCropBtnUI() {
             if (isCropMode) {
-                cropBtn.classList.replace('text-gray-400', 'text-orange-500');
-                cropOverlay.classList.remove('hidden');
+                cropBtn.classList.replace('text-gray-400', 'text-orange-500'); cropOverlay.classList.remove('hidden');
             } else {
-                cropBtn.classList.replace('text-orange-500', 'text-gray-400');
-                cropOverlay.classList.add('hidden');
+                cropBtn.classList.replace('text-orange-500', 'text-gray-400'); cropOverlay.classList.add('hidden');
             }
         }
 
-        // --- Crop Dragging Logic (Touch & Mouse) ---
-        let activeCropHandle = null;
-        let cropStartPos = null;
-        let cropStartRect = null;
-
-        function startCropDrag(e, handle, clientX, clientY) {
-            e.preventDefault();
-            activeCropHandle = handle;
-            cropStartPos = { x: clientX, y: clientY };
-            cropStartRect = { ...cropRect };
-        }
-
-        function moveCropDrag(clientX, clientY) {
-            if(!activeCropHandle) return;
-            
-            const dx = clientX - cropStartPos.x;
-            const dy = clientY - cropStartPos.y;
-            
-            const ow = cropOverlay.clientWidth;
-            const oh = cropOverlay.clientHeight;
-            const dxPct = dx / ow;
-            const dyPct = dy / oh;
-            
-            let newRect = { ...cropStartRect };
-            
-            if (activeCropHandle === 'tl') {
-                newRect.x += dxPct; newRect.y += dyPct;
-                newRect.w -= dxPct; newRect.h -= dyPct;
-            } else if (activeCropHandle === 'tr') {
-                newRect.y += dyPct;
-                newRect.w += dxPct; newRect.h -= dyPct;
-            } else if (activeCropHandle === 'bl') {
-                newRect.x += dxPct;
-                newRect.w -= dxPct; newRect.h += dyPct;
-            } else if (activeCropHandle === 'br') {
-                newRect.w += dxPct; newRect.h += dyPct;
-            } else if (activeCropHandle === 'move') {
-                newRect.x += dxPct; newRect.y += dyPct;
-            }
-            
-            // Constraints
-            const minSize = 0.1;
-            if (activeCropHandle !== 'move') {
-                if (newRect.w < minSize) { newRect.w = minSize; if(activeCropHandle.includes('l')) newRect.x = cropStartRect.x + cropStartRect.w - minSize; }
-                if (newRect.h < minSize) { newRect.h = minSize; if(activeCropHandle.includes('t')) newRect.y = cropStartRect.y + cropStartRect.h - minSize; }
-            }
-            
-            // Keep in bounds
-            if (newRect.x < 0) { if(activeCropHandle!=='move') newRect.w += newRect.x; newRect.x = 0; }
-            if (newRect.y < 0) { if(activeCropHandle!=='move') newRect.h += newRect.y; newRect.y = 0; }
-            if (newRect.x + newRect.w > 1) { 
-                if(activeCropHandle==='move') newRect.x = 1 - newRect.w;
-                else newRect.w = 1 - newRect.x; 
-            }
-            if (newRect.y + newRect.h > 1) { 
-                if(activeCropHandle==='move') newRect.y = 1 - newRect.h;
-                else newRect.h = 1 - newRect.y; 
-            }
-
-            cropRect = newRect;
-            updateCropBoxDOM();
-        }
-
-        // Mouse Events
-        cropOverlay.addEventListener('mousedown', (e) => {
-            if(e.target.classList.contains('crop-handle')) {
-                startCropDrag(e, e.target.dataset.handle, e.clientX, e.clientY);
-            } else if (e.target.id === 'crop-box') {
-                startCropDrag(e, 'move', e.clientX, e.clientY);
-            }
-        });
-        window.addEventListener('mousemove', (e) => moveCropDrag(e.clientX, e.clientY));
-        window.addEventListener('mouseup', () => { activeCropHandle = null; });
-        
-        // Touch Events
-        cropOverlay.addEventListener('touchstart', (e) => {
-            if(e.target.classList.contains('crop-handle')) {
-                startCropDrag(e, e.target.dataset.handle, e.touches[0].clientX, e.touches[0].clientY);
-            } else if (e.target.id === 'crop-box') {
-                startCropDrag(e, 'move', e.touches[0].clientX, e.touches[0].clientY);
-            }
-        }, {passive: false});
-        window.addEventListener('touchmove', (e) => {
-            if(activeCropHandle) {
-                e.preventDefault(); // Prevent scrolling while cropping
-                moveCropDrag(e.touches[0].clientX, e.touches[0].clientY);
-            }
-        }, {passive: false});
-        window.addEventListener('touchend', () => { activeCropHandle = null; });
-
-
-        // --- Keep Scan (Add to Batch) ---
         document.getElementById('scan-keep-btn').addEventListener('click', () => {
-            showLoading('กำลังจัดเก็บหน้า...');
+            showLoading('กำลังจัดมุมภาพและจัดเก็บ...');
             
             setTimeout(() => {
                 let finalDataUrl;
                 
                 if (isCropMode) {
-                    // Extract cropped portion
-                    const tempC = document.createElement('canvas');
-                    tempC.width = scanCanvas.width * cropRect.w;
-                    tempC.height = scanCanvas.height * cropRect.h;
-                    const tCtx = tempC.getContext('2d');
+                    const sw = scanCanvas.width, sh = scanCanvas.height;
+                    const pts = cropPoints.map(p => ({ x: p.x * sw, y: p.y * sh }));
                     
-                    tCtx.drawImage(
-                        scanCanvas,
-                        scanCanvas.width * cropRect.x,
-                        scanCanvas.height * cropRect.y,
-                        scanCanvas.width * cropRect.w,
-                        scanCanvas.height * cropRect.h,
-                        0, 0, tempC.width, tempC.height
-                    );
-                    finalDataUrl = tempC.toDataURL('image/jpeg', 0.85);
+                    const w1 = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+                    const w2 = Math.hypot(pts[3].x - pts[2].x, pts[3].y - pts[2].y);
+                    const dstW = Math.max(w1, w2);
+                    
+                    const h1 = Math.hypot(pts[0].x - pts[3].x, pts[0].y - pts[3].y);
+                    const h2 = Math.hypot(pts[1].x - pts[2].x, pts[1].y - pts[2].y);
+                    const dstH = Math.max(h1, h2);
+                    
+                    const warpedCanvas = applyPerspectiveWarp(scanCanvas, pts, Math.round(dstW), Math.round(dstH));
+                    finalDataUrl = warpedCanvas.toDataURL('image/jpeg', 0.85);
                 } else {
-                    // Save full canvas
                     finalDataUrl = scanCanvas.toDataURL('image/jpeg', 0.85);
                 }
 
                 scanBatch.push(finalDataUrl);
-                updateBatchUI();
-                hideLoading();
+                updateBatchUI(); hideLoading();
                 
-                // Process next in queue or return to camera
-                if (uploadQueue.length > 0) {
-                    processNextInQueue();
-                } else {
-                    initScanner();
-                }
+                if (uploadQueue.length > 0) processNextInQueue(); else initScanner();
             }, 100);
         });
 
-        // --- Finalize Batch (Save PDF) ---
-        window.finishBatchScan = () => {
+        window.openScanPreview = () => {
             if (scanBatch.length === 0) return;
-            scanExportModal.classList.remove('hidden');
-            scanExportModal.classList.add('flex');
-            
-            // Animate Bottom Sheet up
-            setTimeout(() => {
-                scanExportSheet.classList.remove('translate-y-full');
-            }, 10);
+            scannerCameraMode.classList.add('hidden');
+            scannerCameraMode.classList.remove('flex');
+            scanPreviewView.classList.remove('hidden'); 
+            scanPreviewView.classList.add('flex');
+            renderScanPreview();
         };
+
+        document.getElementById('close-preview-btn').addEventListener('click', () => {
+            scanPreviewView.classList.add('hidden');
+            scanPreviewView.classList.remove('flex');
+            initScanner();
+        });
+
+        function renderScanPreview() {
+            const grid = document.getElementById('scan-preview-grid');
+            grid.innerHTML = '';
+            document.getElementById('preview-page-count').textContent = scanBatch.length;
+            exportBtnText.textContent = `ดาวน์โหลด PDF (${scanBatch.length} หน้า)`;
+
+            if (scanBatch.length === 0) {
+                document.getElementById('close-preview-btn').click();
+                return;
+            }
+
+            scanBatch.forEach((imgData, index) => {
+                const div = document.createElement('div');
+                div.className = 'relative bg-white dark:bg-gray-800 p-2 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-center';
+                div.innerHTML = `
+                    <div class="absolute top-2 left-2 bg-gray-900/80 text-white text-xs px-2 py-1 rounded backdrop-blur-sm shadow z-10 font-bold">${index + 1}</div>
+                    <button onclick="removeScanPage(${index})" class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full shadow z-10 active:scale-95 transition-transform"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    <img src="${imgData}" class="w-full h-auto object-contain rounded">
+                `;
+                grid.appendChild(div);
+            });
+            lucide.createIcons({root: grid});
+        }
+
+        window.removeScanPage = (index) => {
+            scanBatch.splice(index, 1);
+            updateBatchUI();
+            renderScanPreview();
+        };
+
+        document.getElementById('open-export-sheet-btn').addEventListener('click', () => {
+            scanExportModal.classList.remove('hidden'); scanExportModal.classList.add('flex');
+            setTimeout(() => { scanExportSheet.classList.remove('translate-y-full'); }, 10);
+        });
 
         document.getElementById('close-export-btn').addEventListener('click', () => {
             scanExportSheet.classList.add('translate-y-full');
-            setTimeout(() => {
-                scanExportModal.classList.add('hidden');
-                scanExportModal.classList.remove('flex');
-            }, 300);
+            setTimeout(() => { scanExportModal.classList.add('hidden'); scanExportModal.classList.remove('flex'); }, 300);
         });
 
         const paperSizeSelect = document.getElementById('paper-size-select');
         
         document.getElementById('scan-save-final-btn').addEventListener('click', () => {
             showLoading('กำลังสร้างไฟล์ PDF...');
-            
             setTimeout(() => {
                 try {
                     const { jsPDF } = window.jspdf;
@@ -871,56 +980,40 @@
                     
                     scanBatch.forEach((imgData, index) => {
                         if (index > 0) doc.addPage();
-                        
-                        const pw = doc.internal.pageSize.getWidth();
-                        const ph = doc.internal.pageSize.getHeight();
+                        const pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight();
                         const props = doc.getImageProperties(imgData);
-                        
                         let fw = pw, fh = (props.height * pw) / props.width;
-                        if (fh > ph) { 
-                            fh = ph; 
-                            fw = (props.width * ph) / props.height; 
-                        }
-                        
+                        if (fh > ph) { fh = ph; fw = (props.width * ph) / props.height; }
                         doc.addImage(imgData, 'JPEG', (pw-fw)/2, (ph-fh)/2, fw, fh);
                     });
 
                     doc.save(`Scan_${new Date().toISOString().replace(/[:.]/g,'-')}.pdf`);
-                    hideLoading(); 
-                    showToast('บันทึกสำเร็จ!', 'success');
+                    hideLoading(); showToast('บันทึกสำเร็จ!', 'success');
                     
-                    // Reset and close
-                    scanBatch = [];
-                    updateBatchUI();
+                    scanBatch = []; updateBatchUI(); 
                     document.getElementById('close-export-btn').click();
-                    setTimeout(() => backBtn.click(), 500); // กลับหน้าหลัก
-                    
+                    scanPreviewView.classList.add('hidden');
+                    setTimeout(() => backBtn.click(), 500); 
                 } catch(e) { 
-                    console.error(e);
-                    hideLoading(); 
-                    showToast('ข้อผิดพลาดในการสร้าง PDF', 'error'); 
+                    hideLoading(); showToast('ข้อผิดพลาดในการสร้าง PDF', 'error'); 
                 }
             }, 100);
         });
 
-        // ------------------ 2. MERGE LOGIC ------------------
         const mergeInput = document.getElementById('merge-file-input');
         const mergeList = document.getElementById('merge-file-list');
         const mergeCount = document.getElementById('merge-count');
         const mergeActionBtn = document.getElementById('action-merge-btn');
 
         function resetMergeWorkspace() {
-            filesToMerge = [];
-            mergeInput.value = '';
-            renderMergeList();
+            filesToMerge = []; mergeInput.value = ''; renderMergeList();
         }
 
         mergeInput.addEventListener('change', (e) => {
             const files = Array.from(e.target.files).filter(f => f.type === 'application/pdf');
             if (files.length === 0) return;
             filesToMerge = [...filesToMerge, ...files];
-            renderMergeList();
-            e.target.value = ''; // รีเซ็ต input ให้เลือกไฟล์เดิมซ้ำได้เผื่อลบ
+            renderMergeList(); e.target.value = '';
         });
 
         function renderMergeList() {
@@ -948,54 +1041,38 @@
             });
             lucide.createIcons({ root: mergeList });
 
-            // สร้างระบบลากวางสำหรับจัดเรียงไฟล์
             if (mergeSortable) mergeSortable.destroy();
             mergeSortable = new Sortable(mergeList, {
-                animation: 150,
-                handle: '.cursor-grab',
+                animation: 150, handle: '.cursor-grab',
                 onEnd: () => {
-                    // อัปเดต array เมื่อลากวางเสร็จ
                     const newOrderList = Array.from(mergeList.children);
-                    const newFilesArray = newOrderList.map(li => filesToMerge[parseInt(li.dataset.index)]);
-                    filesToMerge = newFilesArray;
-                    renderMergeList(); // render ใหม่เพื่ออัปเดต dataset index ให้ตรงกัน
+                    filesToMerge = newOrderList.map(li => filesToMerge[parseInt(li.dataset.index)]);
+                    renderMergeList(); 
                 }
             });
         }
 
-        window.removeMergeFile = (index) => {
-            filesToMerge.splice(index, 1);
-            renderMergeList();
-        };
+        window.removeMergeFile = (index) => { filesToMerge.splice(index, 1); renderMergeList(); };
 
         mergeActionBtn.addEventListener('click', async () => {
             if (filesToMerge.length < 2) return;
             showLoading('กำลังรวมไฟล์ PDF...');
-            
             try {
-                // ใช้ pdf-lib สร้างเอกสารใหม่
                 const mergedPdf = await PDFLib.PDFDocument.create();
-                
                 for (const file of filesToMerge) {
                     const arrayBuffer = await file.arrayBuffer();
                     const pdf = await PDFLib.PDFDocument.load(arrayBuffer);
                     const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
                     copiedPages.forEach((page) => mergedPdf.addPage(page));
                 }
-
                 const pdfBytes = await mergedPdf.save();
                 triggerDownload(pdfBytes, `Merged_${new Date().getTime()}.pdf`);
-                hideLoading();
-                showToast('รวมไฟล์สำเร็จ!', 'success');
-                resetMergeWorkspace();
+                hideLoading(); showToast('รวมไฟล์สำเร็จ!', 'success'); resetMergeWorkspace();
             } catch (error) {
-                console.error(error);
-                hideLoading();
-                showToast('เกิดข้อผิดพลาดในการรวมไฟล์', 'error');
+                hideLoading(); showToast('เกิดข้อผิดพลาดในการรวมไฟล์', 'error');
             }
         });
 
-        // ------------------ 3. PDF EDITOR LOGIC (Remove, Extract, Organize, Split) ------------------
         const editorInput = document.getElementById('editor-file-input');
         const editorUploadSec = document.getElementById('editor-upload-section');
         const editorWorkspace = document.getElementById('editor-workspace');
@@ -1006,25 +1083,17 @@
 
         function resetEditorWorkspace(toolMode) {
             editorUploadSec.classList.remove('hidden');
-            editorWorkspace.classList.add('hidden');
-            editorWorkspace.classList.remove('flex');
-            editorInput.value = '';
-            editorPdfBytes = null;
-            editorOriginalFile = null;
-            editorTotalPages = 0;
-            editorSelectedPages.clear();
+            editorWorkspace.classList.add('hidden'); editorWorkspace.classList.remove('flex');
+            editorInput.value = ''; editorPdfBytes = null; editorOriginalFile = null; editorTotalPages = 0; editorSelectedPages.clear();
             if (editorSortable) { editorSortable.destroy(); editorSortable = null; }
 
-            // เปลี่ยนข้อความคำแนะนำตามโหมด
             let instr = "", btnTxt = "";
             if (toolMode === 'remove') { instr = "แตะหน้ากระดาษที่ต้องการ 'ลบ' (กรอบสีแดง)"; btnTxt = "ลบหน้าที่เลือก และบันทึก"; }
             else if (toolMode === 'extract') { instr = "แตะหน้ากระดาษที่ต้องการ 'แยกออกมา' (กรอบสีเขียว)"; btnTxt = "สร้าง PDF ใหม่จากหน้าที่เลือก"; }
             else if (toolMode === 'split') { instr = "ไฟล์จะถูกแยกเป็น PDF หน้าเดี่ยวๆ ทุกหน้า"; btnTxt = "แยกเป็นหน้าเดี่ยวๆ (ดาวน์โหลดทั้งหมด)"; }
             else if (toolMode === 'organize') { instr = "กดค้างที่หน้ากระดาษแล้วลากเพื่อ 'จัดเรียงใหม่'"; btnTxt = "บันทึกลำดับกระดาษใหม่"; }
             
-            editorInstruction.textContent = instr;
-            editorBtnText.textContent = btnTxt;
-            editorActionBtn.disabled = true;
+            editorInstruction.textContent = instr; editorBtnText.textContent = btnTxt; editorActionBtn.disabled = true;
         }
 
         editorInput.addEventListener('change', async (e) => {
@@ -1032,92 +1101,65 @@
             if (!file || file.type !== 'application/pdf') return;
             
             showLoading('กำลังอ่านไฟล์ PDF...');
-            editorOriginalFile = file;
-            editorSelectedPages.clear();
+            editorOriginalFile = file; editorSelectedPages.clear();
 
             try {
-                // เก็บ Byte ของไฟล์ไว้เพื่อใช้กับ pdf-lib ตอนบันทึก
                 editorPdfBytes = await file.arrayBuffer();
-                
-                // ใช้ pdf.js เพื่อ Render รูปภาพพรีวิว
                 const loadingTask = pdfjsLib.getDocument({ data: editorPdfBytes });
                 const pdf = await loadingTask.promise;
                 editorTotalPages = pdf.numPages;
 
-                editorThumbGrid.innerHTML = ''; // เคลียร์ตาราง
-                
-                // ถ้าเป็นโหมด Split/Organize จะถือว่าเลือกทุกหน้า (สำหรับ Split = ทำทุกหน้า)
+                editorThumbGrid.innerHTML = ''; 
                 if(currentTool === 'split' || currentTool === 'organize') editorActionBtn.disabled = false;
                 else editorActionBtn.disabled = true;
 
-                // วนลูปสร้าง Canvas พรีวิวแต่ละหน้า
                 for (let i = 1; i <= editorTotalPages; i++) {
                     const page = await pdf.getPage(i);
-                    // ลด scale ให้เป็น thumbnail เพื่อประหยัด RAM
                     const viewport = page.getViewport({ scale: 0.5 }); 
                     
                     const container = document.createElement('div');
                     container.className = 'relative flex flex-col items-center bg-white dark:bg-gray-800 p-2 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm';
-                    container.dataset.pageIndex = i - 1; // อ้างอิง index ที่เริ่มจาก 0 (สำหรับ pdf-lib)
+                    container.dataset.pageIndex = i - 1;
 
                     const canvas = document.createElement('canvas');
                     canvas.className = 'pdf-page-thumbnail w-full h-auto border border-gray-200 rounded object-contain bg-white';
-                    canvas.width = viewport.width;
-                    canvas.height = viewport.height;
+                    canvas.width = viewport.width; canvas.height = viewport.height;
                     
-                    // ป้ายบอกเลขหน้า
                     const badge = document.createElement('div');
                     badge.className = 'absolute top-1 left-1 bg-gray-900/70 text-white text-[10px] px-1.5 py-0.5 rounded backdrop-blur-sm pointer-events-none';
                     badge.textContent = i;
                     
-                    // ไอคอนติ๊กถูก/กากบาท (ซ่อนไว้ก่อน)
                     const checkIcon = document.createElement('div');
                     checkIcon.className = 'absolute inset-0 flex items-center justify-center opacity-0 transition-opacity pointer-events-none z-10';
                     checkIcon.innerHTML = `<div class="bg-white rounded-full shadow-lg p-1"><i data-lucide="${currentTool === 'remove' ? 'trash' : 'check'}" class="w-8 h-8 ${currentTool === 'remove' ? 'text-red-500' : 'text-green-500'}"></i></div>`;
 
                     await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
                     
-                    container.appendChild(canvas);
-                    container.appendChild(badge);
-                    container.appendChild(checkIcon);
+                    container.appendChild(canvas); container.appendChild(badge); container.appendChild(checkIcon);
 
-                    // สร้าง Event Listener สำหรับการคลิก (เฉพาะโหมด Remove และ Extract)
                     if (currentTool === 'remove' || currentTool === 'extract') {
                         container.addEventListener('click', () => togglePageSelection(container, canvas, checkIcon, i - 1));
                     }
-                    
-                    // ถ้าโหมด organize เปลี่ยน cursor เป็น grab
-                    if (currentTool === 'organize') {
-                        canvas.classList.add('cursor-grab');
-                    }
+                    if (currentTool === 'organize') canvas.classList.add('cursor-grab');
 
                     editorThumbGrid.appendChild(container);
                 }
                 
                 lucide.createIcons({ root: editorThumbGrid });
 
-                // ถ้าเป็นโหมด Organize ให้เปิดใช้งาน SortableJS
                 if (currentTool === 'organize') {
-                    editorSortable = new Sortable(editorThumbGrid, {
-                        animation: 150,
-                        ghostClass: 'opacity-50'
-                    });
+                    editorSortable = new Sortable(editorThumbGrid, { animation: 150, ghostClass: 'opacity-50' });
                 }
 
-                // สลับ UI มาหน้า Workspace
                 editorUploadSec.classList.add('hidden');
-                editorWorkspace.classList.remove('hidden');
-                editorWorkspace.classList.add('flex');
+                editorWorkspace.classList.remove('hidden'); editorWorkspace.classList.add('flex');
                 
                 hideLoading();
             } catch (error) {
-                console.error(error);
-                hideLoading();
-                showToast('ไม่สามารถอ่านไฟล์ PDF นี้ได้', 'error');
+                hideLoading(); showToast('ไม่สามารถอ่านไฟล์ PDF นี้ได้', 'error');
             }
         });
 
-        // ฟังก์ชันเมื่อคลิกหน้ากระดาษ (ลบ / เลือก)
         function togglePageSelection(container, canvas, icon, index) {
             if (editorSelectedPages.has(index)) {
                 editorSelectedPages.delete(index);
@@ -1128,105 +1170,73 @@
                 canvas.classList.add(currentTool === 'remove' ? 'selected-remove' : 'selected-extract');
                 icon.classList.add('opacity-100');
             }
-            // เปิดปุ่มเมื่อมีการเลือกอย่างน้อย 1 หน้า
             editorActionBtn.disabled = editorSelectedPages.size === 0;
             
-            if(currentTool === 'remove') {
-                editorBtnText.textContent = `ลบ ${editorSelectedPages.size} หน้า และบันทึก`;
-            } else if (currentTool === 'extract') {
-                editorBtnText.textContent = `สร้าง PDF ใหม่ (${editorSelectedPages.size} หน้า)`;
-            }
+            if(currentTool === 'remove') editorBtnText.textContent = `ลบ ${editorSelectedPages.size} หน้า และบันทึก`;
+            else if (currentTool === 'extract') editorBtnText.textContent = `สร้าง PDF ใหม่ (${editorSelectedPages.size} หน้า)`;
         }
 
-        // ฟังก์ชันดาวน์โหลดไฟล์
         function triggerDownload(bytes, filename) {
             const blob = new Blob([bytes], { type: 'application/pdf' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
+            a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click();
             setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 0);
         }
 
-        // จัดการเมื่อกดปุ่มดำเนินการใน Editor
         editorActionBtn.addEventListener('click', async () => {
             showLoading('กำลังประมวลผล PDF...');
-            
             try {
-                // โหลด PDF ต้นฉบับด้วย pdf-lib
                 const pdfDoc = await PDFLib.PDFDocument.load(editorPdfBytes);
                 let finalBytes = null;
                 const baseName = editorOriginalFile.name.replace('.pdf', '');
 
                 if (currentTool === 'remove') {
-                    // โหมดลบหน้า: ระวังเรื่อง index ขยับ ต้องลบจาก index มากไปน้อย
                     const indicesToRemove = Array.from(editorSelectedPages).sort((a, b) => b - a);
-                    indicesToRemove.forEach(index => {
-                        pdfDoc.removePage(index);
-                    });
+                    indicesToRemove.forEach(index => { pdfDoc.removePage(index); });
                     finalBytes = await pdfDoc.save();
                     triggerDownload(finalBytes, `${baseName}_Removed.pdf`);
-
                 } 
                 else if (currentTool === 'extract') {
-                    // โหมดแยกบางหน้ามารวมกัน: สร้างเอกสารใหม่ แล้ว copy หน้าที่เลือกไปใส่
                     const newPdf = await PDFLib.PDFDocument.create();
-                    // เรียง index จากน้อยไปมากตามลำดับดั้งเดิม
                     const indicesToKeep = Array.from(editorSelectedPages).sort((a, b) => a - b);
                     const copiedPages = await newPdf.copyPages(pdfDoc, indicesToKeep);
                     copiedPages.forEach(page => newPdf.addPage(page));
-                    
                     finalBytes = await newPdf.save();
                     triggerDownload(finalBytes, `${baseName}_Extracted.pdf`);
-
                 } 
                 else if (currentTool === 'organize') {
-                    // โหมดจัดเรียง: สร้างเอกสารใหม่ ดึงหน้าตามลำดับ DOM ปัจจุบัน
                     const newPdf = await PDFLib.PDFDocument.create();
                     const newOrderList = Array.from(editorThumbGrid.children);
                     const orderedIndices = newOrderList.map(container => parseInt(container.dataset.pageIndex));
-                    
                     const copiedPages = await newPdf.copyPages(pdfDoc, orderedIndices);
                     copiedPages.forEach(page => newPdf.addPage(page));
-                    
                     finalBytes = await newPdf.save();
                     triggerDownload(finalBytes, `${baseName}_Reorganized.pdf`);
                 }
                 else if (currentTool === 'split') {
-                    // โหมดแยกทุกหน้า: สร้างไฟล์แยก 1 ไฟล์ ต่อ 1 หน้า 
-                    // (ข้อควรระวัง: Browser อาจบล็อกการดาวน์โหลดหลายไฟล์พร้อมกัน ต้องมี delay)
-                    hideLoading(); // เอาวงล้อออกก่อน
-                    showToast('กำลังทยอยดาวน์โหลดทีละหน้า...', 'info');
-                    
+                    hideLoading(); showToast('กำลังทยอยดาวน์โหลดทีละหน้า...', 'info');
                     for (let i = 0; i < editorTotalPages; i++) {
                         const newPdf = await PDFLib.PDFDocument.create();
                         const [copiedPage] = await newPdf.copyPages(pdfDoc, [i]);
                         newPdf.addPage(copiedPage);
                         const singleByte = await newPdf.save();
-                        
-                        // หน่วงเวลาเล็กน้อยให้ Browser ไม่มองว่าเป็นสแปม
                         await new Promise(resolve => setTimeout(resolve, 300));
                         triggerDownload(singleByte, `${baseName}_Page_${i + 1}.pdf`);
                     }
                     showToast('ดาวน์โหลดเสร็จสิ้น!', 'success');
-                    setTimeout(() => backBtn.click(), 1000); // กลับหน้าหลัก
-                    return; // จบการทำงาน
+                    setTimeout(() => backBtn.click(), 1000); 
+                    return; 
                 }
 
-                hideLoading();
-                showToast('ดำเนินการสำเร็จ!', 'success');
-                // เด้งกลับหน้าหลักหลังทำเสร็จ
+                hideLoading(); showToast('ดำเนินการสำเร็จ!', 'success');
                 setTimeout(() => backBtn.click(), 1500);
 
             } catch (error) {
-                console.error(error);
-                hideLoading();
-                showToast('เกิดข้อผิดพลาดระหว่างประมวลผล', 'error');
+                hideLoading(); showToast('เกิดข้อผิดพลาดระหว่างประมวลผล', 'error');
             }
         });
-
     </script>
 </body>
 </html>
