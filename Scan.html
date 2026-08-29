@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>แอปจัดการและสแกน PDF</title>
+    
+    <!-- โหลด Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- โหลด jsPDF (สำหรับสร้าง PDF จากรูปสแกน) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- โหลด Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- ไลบรารีใหม่สำหรับการจัดการโครงสร้างไฟล์ PDF -->
+    <!-- pdf-lib สำหรับ แก้ไข/รวม/แยก/ลบ/จัดเรียง หน้า PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <!-- pdf.js สำหรับแปลงหน้า PDF เป็นรูปภาพเพื่อโชว์พรีวิว (Thumbnails) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- SortableJS สำหรับระบบลากวาง (Drag & Drop) จัดเรียงหน้า -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+    <style>
+        body {
+            overflow-x: hidden;
+            background-color: #f3f4f6; /* สีเทาอ่อนแบบแอพจัดการไฟล์ */
+        }
+        .dark-mode {
+            background-color: #111827;
+            color: white;
+        }
+        /* เอฟเฟกต์ชัตเตอร์กล้อง */
+        .shutter-animation { animation: shutter 0.2s ease-out; }
+        @keyframes shutter {
+            0% { opacity: 1; background-color: white; }
+            100% { opacity: 0; background-color: transparent; }
+        }
+        /* ซ่อน input type file */
+        .hidden-file-input { display: none; }
+        
+        /* สไตล์สำหรับพรีวิวหน้า PDF */
+        .pdf-page-thumbnail {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .pdf-page-thumbnail.selected-remove {
+            border: 3px solid #ef4444; /* แดง */
+            opacity: 0.6;
+            filter: grayscale(100%);
+        }
+        .pdf-page-thumbnail.selected-extract {
+            border: 3px solid #22c55e; /* เขียว */
+            transform: scale(0.95);
+        }
+        /* Loader */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #f97316; /* ส้ม */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 h-screen flex flex-col font-sans transition-colors duration-300">
+
+    <!-- แถบด้านบน (Header) -->
+    <header class="bg-white dark:bg-gray-800 p-4 shadow-sm flex justify-between items-center z-30 relative transition-colors duration-300 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center gap-3">
+            <!-- ปุ่มย้อนกลับ (ซ่อนในหน้าหลัก) -->
+            <button id="back-btn" class="hidden p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 active:scale-95 transition-transform">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </button>
+            <h1 id="app-title" class="text-xl font-bold flex items-center gap-2 text-gray-800 dark:text-white">
+                <i data-lucide="layers" class="text-orange-500 w-6 h-6"></i> PDF Tools
+            </h1>
+        </div>
+        
+        <div class="flex items-center gap-2">
+            <!-- ปุ่มสลับโหมดสว่าง/มืด -->
+            <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
+                <i data-lucide="moon" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- คอนเทนเนอร์หลักที่ใช้สลับหน้าจอ -->
+    <main class="flex-1 relative overflow-y-auto">
+        
+        <!-- ================= VIEW 1: HOME MENU ================= -->
+        <div id="view-home" class="p-4 max-w-lg mx-auto w-full h-full flex flex-col py-6">
+            <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-4 px-2 uppercase tracking-wide">เครื่องมือจัดการ PDF</h2>
+            
+            <!-- Grid เมนูตามรูปอ้างอิง -->
+            <div class="grid grid-cols-2 gap-4">
+                
+                <button onclick="openTool('merge')" class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center gap-3 hover:shadow-md active:scale-[0.98] transition-all">
+                    <div class="bg-orange-500/10 p-4 rounded-2xl text-orange-500">
+                        <i data-lucide="combine" class="w-8 h-8"></i>
+                    </div>
+                    <span class="font-medium text-gray-800 dark:text-gray-200">รวม PDF</span>
+                </button>
+
+                <button onclick="openTool('split')" class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center gap-3 hover:shadow-md active:scale-[0.98] transition-all">
+                    <div class="bg-orange-500/10 p-4 rounded-2xl text-orange-500">
+                        <i data-lucide="split-square-horizontal" class="w-8 h-8"></i>
+                    </div>
+                    <span class="font-medium text-gray-800 dark:text-gray-200">แยก PDF</span>
+                </button>
+
+                <button onclick="openTool('remove')" class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center gap-3 hover:shadow-md active:scale-[0.98] transition-all">
+                    <div class="bg-red-500/10 p-4 rounded-2xl text-red-500">
+                        <i data-lucide="x-square" class="w-8 h-8"></i>
+                    </div>
+                    <span class="font-medium text-gray-800 dark:text-gray-200">ลบหน้าออก</span>
+                </button>
+
+                <button onclick="openTool('extract')" class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center gap-3 hover:shadow-md active:scale-[0.98] transition-all">
+                    <div class="bg-blue-500/10 p-4 rounded-2xl text-blue-500">
+                        <i data-lucide="share" class="w-8 h-8"></i>
+                    </div>
+                    <span class="font-medium text-gray-800 dark:text-gray-200">แยกหน้า</span>
+                </button>
+
+                <button onclick="openTool('organize')" class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center gap-3 hover:shadow-md active:scale-[0.98] transition-all">
+                    <div class="bg-orange-500/10 p-4 rounded-2xl text-orange-500 flex flex-col items-center">
+                        <div class="flex gap-1"><span class="text-[10px] bg-orange-200 text-orange-800 px-1 rounded font-bold">A</span></div>
+                        <div class="flex gap-1 mt-1"><span class="text-[10px] bg-orange-500 text-white px-1 rounded font-bold">B</span></div>
+                    </div>
+                    <span class="font-medium text-gray-800 dark:text-gray-200">จัดระเบียบ PDF</span>
+                </button>
+
+                <button onclick="openTool('scan')" class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center gap-3 hover:shadow-md active:scale-[0.98] transition-all relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent"></div>
+                    <div class="bg-orange-500 text-white p-4 rounded-2xl shadow-lg relative z-10">
+                        <i data-lucide="camera" class="w-8 h-8"></i>
+                    </div>
+                    <span class="font-medium text-gray-800 dark:text-gray-200 relative z-10">สแกนเป็น PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= VIEW 2: SCANNER ================= -->
+        <div id="view-scanner" class="hidden h-full flex-col bg-black">
+            <!-- ส่วนกล้อง -->
+            <div class="flex-1 relative flex justify-center items-center overflow-hidden">
+                <video id="camera-feed" class="w-full h-full object-cover transition-opacity duration-300" autoplay playsinline></video>
+                <canvas id="captured-canvas" class="w-full h-full object-contain hidden transition-opacity duration-300"></canvas>
+                <div id="flash-effect" class="absolute inset-0 pointer-events-none opacity-0 z-20"></div>
+                
+                <!-- ตัวเลือกกระดาษตอนสแกน -->
+                <div id="scan-top-bar" class="hidden absolute top-4 right-4 z-20">
+                    <select id="paper-size-select" class="bg-gray-800/80 text-sm text-white border border-gray-600 rounded-lg px-3 py-2 outline-none backdrop-blur">
+                        <option value="a4">A4 (มาตรฐาน)</option>
+                        <option value="letter">Letter</option>
+                        <option value="legal">Legal</option>
+                    </select>
+                </div>
+
+                <div id="camera-error" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-center p-6 z-10">
+                    <i data-lucide="camera-off" class="w-16 h-16 text-red-400 mb-4"></i>
+                    <p class="text-white mb-2">ไม่สามารถเปิดกล้องได้</p>
+                    <label for="scan-upload" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow cursor-pointer mt-4">
+                        เลือกรูปจากเครื่อง
+                    </label>
+                </div>
+            </div>
+
+            <!-- แถบควบคุมกล้อง -->
+            <div class="bg-gray-900 p-6 shadow-xl pb-8">
+                <input type="file" id="scan-upload" accept="image/*" class="hidden-file-input">
+                
+                <div id="scan-controls-capture" class="flex justify-around items-center max-w-md mx-auto">
+                    <label for="scan-upload" class="flex flex-col items-center p-2 text-gray-400 hover:text-white cursor-pointer">
+                        <i data-lucide="image" class="w-6 h-6 mb-1"></i>
+                        <span class="text-xs">คลังภาพ</span>
+                    </label>
+                    <button id="capture-btn" class="relative group outline-none focus:outline-none mx-4">
+                        <div class="w-20 h-20 border-4 border-white rounded-full flex items-center justify-center">
+                            <div class="w-16 h-16 bg-white rounded-full group-active:bg-gray-300 transition-colors duration-150"></div>
+                        </div>
+                    </button>
+                    <div class="w-10 opacity-0 pointer-events-none"></div> <!-- Spacer -->
+                </div>
+
+                <div id="scan-controls-edit" class="hidden grid-cols-4 gap-2 max-w-md mx-auto">
+                    <button id="scan-retake-btn" class="flex flex-col items-center p-2 text-gray-400 hover:text-white active:text-white">
+                        <i data-lucide="x" class="w-6 h-6 mb-1"></i>
+                        <span class="text-xs">ถ่ายใหม่</span>
+                    </button>
+                    <button id="scan-rotate-btn" class="flex flex-col items-center p-2 text-gray-400 hover:text-white active:text-white">
+                        <i data-lucide="rotate-cw" class="w-6 h-6 mb-1"></i>
+                        <span class="text-xs">หมุนภาพ</span>
+                    </button>
+                    <button id="scan-filter-btn" class="flex flex-col items-center p-2 text-blue-400 active:text-blue-300">
+                        <i data-lucide="wand-2" class="w-6 h-6 mb-1"></i>
+                        <span class="text-xs">โหมดสแกน</span>
+                    </button>
+                    <button id="scan-save-btn" class="flex flex-col items-center p-2 text-orange-500 font-bold active:scale-95">
+                        <i data-lucide="save" class="w-6 h-6 mb-1"></i>
+                        <span class="text-xs">บันทึก PDF</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= VIEW 3: MERGE PDF ================= -->
+        <div id="view-merge" class="hidden flex-col h-full bg-white dark:bg-gray-900 p-4">
+            <div class="flex-1 overflow-y-auto w-full max-w-lg mx-auto">
+                <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl p-8 text-center bg-gray-50 dark:bg-gray-800/50 mb-6 relative">
+                    <input type="file" id="merge-file-input" accept="application/pdf" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                    <div class="text-orange-500 mb-3 flex justify-center"><i data-lucide="file-plus-2" class="w-12 h-12"></i></div>
+                    <p class="font-medium text-gray-700 dark:text-gray-300">แตะเพื่อเลือกไฟล์ PDF</p>
+                    <p class="text-sm text-gray-500 mt-1">สามารถเลือกได้หลายไฟล์พร้อมกัน</p>
+                </div>
+
+                <div class="mb-2 flex justify-between items-center text-sm">
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">ไฟล์ที่เลือก:</span>
+                    <span id="merge-count" class="text-orange-500 font-bold">0 ไฟล์</span>
+                </div>
+                
+                <!-- List ของไฟล์ที่จะรวม (ใช้ SortableJS เพื่อจัดลำดับไฟล์ได้) -->
+                <ul id="merge-file-list" class="space-y-2 pb-24">
+                    <!-- ไอเทมไฟล์จะถูกเพิ่มที่นี่ผ่าน JS -->
+                </ul>
+            </div>
+            
+            <div class="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                <button id="action-merge-btn" class="w-full max-w-lg mx-auto block py-3 bg-orange-500 text-white rounded-xl font-bold shadow-lg shadow-orange-500/30 active:scale-[0.98] transition-transform disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2">
+                    <i data-lucide="combine" class="w-5 h-5"></i> รวมและบันทึก PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= VIEW 4: PDF EDITOR (Remove/Extract/Organize/Split) ================= -->
+        <div id="view-editor" class="hidden flex-col h-full bg-white dark:bg-gray-900">
+            <!-- ส่วนอัปโหลดไฟล์ (แสดงตอนแรก) -->
+            <div id="editor-upload-section" class="flex-1 flex items-center justify-center p-4">
+                <div class="w-full max-w-lg relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl p-10 text-center bg-gray-50 dark:bg-gray-800/50">
+                    <input type="file" id="editor-file-input" accept="application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                    <div id="editor-upload-icon" class="text-orange-500 mb-4 flex justify-center"><i data-lucide="upload-cloud" class="w-16 h-16"></i></div>
+                    <h3 id="editor-upload-title" class="text-lg font-bold text-gray-700 dark:text-gray-200 mb-2">เลือกไฟล์ PDF</h3>
+                    <p id="editor-upload-desc" class="text-sm text-gray-500">เพื่อเริ่มจัดการหน้ากระดาษ</p>
+                </div>
+            </div>
+
+            <!-- ส่วนแสดง Thumbnails (ซ่อนตอนแรก) -->
+            <div id="editor-workspace" class="hidden flex-col h-full relative">
+                <!-- คำแนะนำการใช้งาน -->
+                <div class="bg-gray-100 dark:bg-gray-800 p-3 text-sm text-center text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 font-medium flex items-center justify-center gap-2" id="editor-instruction">
+                    <i data-lucide="info" class="w-4 h-4"></i> <span>...</span>
+                </div>
+                
+                <!-- พื้นที่แสดงรูปหน้า PDF -->
+                <div class="flex-1 overflow-y-auto p-4 pb-24 bg-gray-50 dark:bg-gray-900">
+                    <div id="pdf-thumbnails-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                        <!-- Canvas ของแต่ละหน้าจะมาที่นี่ -->
+                    </div>
+                </div>
+
+                <!-- แถบปุ่ม Action ด้านล่าง -->
+                <div class="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg">
+                    <button id="editor-action-btn" class="w-full max-w-lg mx-auto block py-3 bg-orange-500 text-white rounded-xl font-bold shadow-lg shadow-orange-500/30 active:scale-[0.98] transition-transform flex items-center justify-center gap-2 disabled:opacity-50 disabled:bg-gray-400">
+                        <i data-lucide="save" class="w-5 h-5"></i> <span id="editor-btn-text">ดำเนินการ</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- แจ้งเตือน Toast -->
+    <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-xl shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-3 font-medium">
+        <i id="toast-icon" data-lucide="info" class="w-5 h-5 text-blue-400"></i>
+        <span id="toast-message">ข้อความแจ้งเตือน</span>
+    </div>
+
+    <!-- Loading Overlay สวยๆ สำหรับตอนที่ประมวลผล PDF หนักๆ -->
+    <div id="loading-overlay" class="fixed inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center">
+        <div class="loader mb-4"></div>
+        <p id="loading-text" class="text-gray-800 dark:text-white font-bold text-lg animate-pulse">กำลังประมวลผล PDF...</p>
+        <p class="text-sm text-gray-500 mt-2">กรุณารอสักครู่ อาจใช้เวลาขึ้นอยู่กับขนาดไฟล์</p>
+    </div>
+
+    <script>
+        // กำหนดที่อยู่ของ Worker สำหรับ PDF.js เพื่อประมวลผลการดึงรูปจาก PDF (จำเป็นมาก!)
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // วาดไอคอน
+        lucide.createIcons();
+
+        // ------------------ State Management ------------------
+        let currentTool = 'home'; // home, scan, merge, remove, extract, organize, split
+        let isDarkMode = false;
+        
+        // State สำหรับ Scanner
+        let cameraStream = null;
+        let scanOriginalImage = new Image();
+        let scanRotation = 0;
+        let scanIsFiltered = true;
+
+        // State สำหรับ Merge
+        let filesToMerge = []; // Array of File objects
+        let mergeSortable = null;
+
+        // State สำหรับ Editor (ลบ/แยก/เรียง)
+        let editorPdfBytes = null; // ข้อมูลไฟล์ดิบ
+        let editorOriginalFile = null;
+        let editorTotalPages = 0;
+        let editorSelectedPages = new Set(); // เก็บ index ของหน้าที่เลือก
+        let editorSortable = null;
+
+        // ------------------ DOM Elements (Global) ------------------
+        const views = {
+            home: document.getElementById('view-home'),
+            scan: document.getElementById('view-scanner'),
+            merge: document.getElementById('view-merge'),
+            editor: document.getElementById('view-editor')
+        };
+        const appTitle = document.getElementById('app-title');
+        const backBtn = document.getElementById('back-btn');
+        const themeToggle = document.getElementById('theme-toggle');
+        
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+        const toastIcon = document.getElementById('toast-icon');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+
+        // ------------------ Utility Functions ------------------
+        function showToast(message, type = 'info') {
+            toastMessage.textContent = message;
+            if (type === 'success') { toastIcon.setAttribute('data-lucide', 'check-circle-2'); toastIcon.className = 'w-5 h-5 text-green-400'; }
+            else if (type === 'error') { toastIcon.setAttribute('data-lucide', 'alert-triangle'); toastIcon.className = 'w-5 h-5 text-red-400'; }
+            else { toastIcon.setAttribute('data-lucide', 'info'); toastIcon.className = 'w-5 h-5 text-blue-400'; }
+            lucide.createIcons({ root: toast });
+
+            toast.classList.remove('opacity-0', '-translate-y-4');
+            if(window.toastTimeout) clearTimeout(window.toastTimeout);
+            window.toastTimeout = setTimeout(() => toast.classList.add('opacity-0', '-translate-y-4'), 3000);
+        }
+
+        function showLoading(text) {
+            loadingText.textContent = text;
+            loadingOverlay.classList.remove('hidden');
+            loadingOverlay.classList.add('flex');
+        }
+
+        function hideLoading() {
+            loadingOverlay.classList.add('hidden');
+            loadingOverlay.classList.remove('flex');
+        }
+
+        // สลับโหมด Dark/Light
+        themeToggle.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            document.body.classList.toggle('bg-gray-50', !isDarkMode);
+            document.body.classList.toggle('text-gray-800', !isDarkMode);
+            themeToggle.innerHTML = isDarkMode ? '<i data-lucide="sun" class="w-5 h-5"></i>' : '<i data-lucide="moon" class="w-5 h-5"></i>';
+            lucide.createIcons();
+        });
+
+        // เปิดเครื่องมือต่างๆ
+        function openTool(tool) {
+            currentTool = tool;
+            
+            // ซ่อนทุกหน้า
+            Object.values(views).forEach(v => {
+                v.classList.remove('flex');
+                v.classList.add('hidden');
+            });
+
+            backBtn.classList.remove('hidden'); // โชว์ปุ่มย้อนกลับ
+
+            if (tool === 'scan') {
+                views.scan.classList.remove('hidden');
+                views.scan.classList.add('flex');
+                appTitle.innerHTML = '<i data-lucide="camera" class="text-orange-500 w-5 h-5"></i> สแกนเป็น PDF';
+                initScanner();
+            } else if (tool === 'merge') {
+                views.merge.classList.remove('hidden');
+                views.merge.classList.add('flex');
+                appTitle.innerHTML = '<i data-lucide="combine" class="text-orange-500 w-5 h-5"></i> รวม PDF';
+                resetMergeWorkspace();
+            } else {
+                // เครื่องมืออื่นๆ ใช้ Editor View (remove, extract, organize, split)
+                views.editor.classList.remove('hidden');
+                views.editor.classList.add('flex');
+                
+                const titles = {
+                    'remove': '<i data-lucide="x-square" class="text-red-500 w-5 h-5"></i> ลบหน้าออก',
+                    'extract': '<i data-lucide="share" class="text-blue-500 w-5 h-5"></i> แยกบางหน้า',
+                    'split': '<i data-lucide="split-square-horizontal" class="text-orange-500 w-5 h-5"></i> แยกทีละหน้า',
+                    'organize': '<i data-lucide="arrow-up-down" class="text-orange-500 w-5 h-5"></i> จัดระเบียบ'
+                };
+                appTitle.innerHTML = titles[tool];
+                resetEditorWorkspace(tool);
+            }
+            lucide.createIcons();
+        }
+
+        // กลับหน้าหลัก
+        backBtn.addEventListener('click', () => {
+            if (currentTool === 'scan') stopCamera(); // ปิดกล้องถ้าเปิดอยู่
+            
+            currentTool = 'home';
+            Object.values(views).forEach(v => { v.classList.add('hidden'); v.classList.remove('flex'); });
+            views.home.classList.remove('hidden');
+            views.home.classList.add('flex');
+            
+            backBtn.classList.add('hidden');
+            appTitle.innerHTML = '<i data-lucide="layers" class="text-orange-500 w-6 h-6"></i> PDF Tools';
+            lucide.createIcons();
+        });
+
+        // ------------------ 1. SCANNER LOGIC ------------------
+        const video = document.getElementById('camera-feed');
+        const scanCanvas = document.getElementById('captured-canvas');
+        const scanCtx = scanCanvas.getContext('2d');
+        const captureBtn = document.getElementById('capture-btn');
+        const scanControlsCapture = document.getElementById('scan-controls-capture');
+        const scanControlsEdit = document.getElementById('scan-controls-edit');
+        const paperSizeSelect = document.getElementById('paper-size-select');
+        const scanTopBar = document.getElementById('scan-top-bar');
+
+        async function initScanner() {
+            document.getElementById('camera-error').classList.add('hidden');
+            if (cameraStream) stopCamera();
+            scanIsFiltered = true; scanRotation = 0;
+
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false
+                });
+                video.srcObject = cameraStream;
+                video.classList.remove('hidden');
+                scanCanvas.classList.add('hidden');
+                scanControlsCapture.classList.remove('hidden'); scanControlsCapture.classList.add('flex');
+                scanControlsEdit.classList.add('hidden'); scanControlsEdit.classList.remove('grid');
+                scanTopBar.classList.add('hidden');
+            } catch (err) {
+                video.classList.add('hidden');
+                document.getElementById('camera-error').classList.remove('hidden');
+                scanControlsCapture.classList.add('hidden');
+            }
+        }
+
+        function stopCamera() {
+            if (cameraStream) { cameraStream.getTracks().forEach(track => track.stop()); cameraStream = null; }
+        }
+
+        function renderScanCanvas() {
+            if (!scanOriginalImage.src) return;
+            const isLandscape = scanRotation === 90 || scanRotation === 270;
+            scanCanvas.width = isLandscape ? scanOriginalImage.height : scanOriginalImage.width;
+            scanCanvas.height = isLandscape ? scanOriginalImage.width : scanOriginalImage.height;
+            
+            scanCtx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
+            scanCtx.save();
+            scanCtx.translate(scanCanvas.width / 2, scanCanvas.height / 2);
+            scanCtx.rotate((scanRotation * Math.PI) / 180);
+            
+            // เอฟเฟกต์หน้ากระดาษสแกน
+            scanCtx.filter = scanIsFiltered ? 'grayscale(100%) contrast(160%) brightness(120%)' : 'none';
+            scanCtx.drawImage(scanOriginalImage, -scanOriginalImage.width/2, -scanOriginalImage.height/2, scanOriginalImage.width, scanOriginalImage.height);
+            scanCtx.restore();
+        }
+
+        captureBtn.addEventListener('click', () => {
+            if (!cameraStream) return;
+            const flash = document.getElementById('flash-effect');
+            flash.classList.remove('shutter-animation'); void flash.offsetWidth; flash.classList.add('shutter-animation');
+            
+            const tmpC = document.createElement('canvas'); tmpC.width = video.videoWidth; tmpC.height = video.videoHeight;
+            tmpC.getContext('2d').drawImage(video, 0, 0);
+            enterScanEditMode(tmpC.toDataURL('image/jpeg', 1.0));
+        });
+
+        document.getElementById('scan-upload').addEventListener('change', (e) => {
+            const f = e.target.files[0]; if(!f) return;
+            const r = new FileReader(); r.onload = (ev) => { enterScanEditMode(ev.target.result); e.target.value=''; }; r.readAsDataURL(f);
+        });
+
+        function enterScanEditMode(src) {
+            stopCamera();
+            scanOriginalImage.onload = () => {
+                renderScanCanvas();
+                video.classList.add('hidden'); scanCanvas.classList.remove('hidden');
+                scanControlsCapture.classList.add('hidden'); scanControlsCapture.classList.remove('flex');
+                scanControlsEdit.classList.remove('hidden'); scanControlsEdit.classList.add('grid');
+                scanTopBar.classList.remove('hidden');
+            };
+            scanOriginalImage.src = src;
+        }
+
+        document.getElementById('scan-retake-btn').addEventListener('click', initScanner);
+        document.getElementById('scan-rotate-btn').addEventListener('click', () => { scanRotation = (scanRotation + 90) % 360; renderScanCanvas(); });
+        document.getElementById('scan-filter-btn').addEventListener('click', (e) => {
+            scanIsFiltered = !scanIsFiltered;
+            e.currentTarget.querySelector('i').setAttribute('data-lucide', scanIsFiltered ? 'wand-2' : 'image');
+            e.currentTarget.classList.toggle('text-blue-400', scanIsFiltered); e.currentTarget.classList.toggle('text-gray-400', !scanIsFiltered);
+            lucide.createIcons({ root: e.currentTarget }); renderScanCanvas();
+        });
+
+        document.getElementById('scan-save-btn').addEventListener('click', () => {
+            showLoading('กำลังสร้างไฟล์ PDF...');
+            setTimeout(() => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: paperSizeSelect.value });
+                    const imgData = scanCanvas.toDataURL('image/jpeg', 0.85);
+                    const pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight();
+                    const props = doc.getImageProperties(imgData);
+                    let fw = pw, fh = (props.height * pw) / props.width;
+                    if (fh > ph) { fh = ph; fw = (props.width * ph) / props.height; }
+                    doc.addImage(imgData, 'JPEG', (pw-fw)/2, (ph-fh)/2, fw, fh);
+                    doc.save(`Scan_${new Date().toISOString().replace(/[:.]/g,'-')}.pdf`);
+                    hideLoading(); showToast('บันทึกสำเร็จ!', 'success');
+                    setTimeout(initScanner, 1500); // กลับไปโหมดกล้องอัตโนมัติ
+                } catch(e) { hideLoading(); showToast('ข้อผิดพลาดในการสร้าง PDF', 'error'); }
+            }, 100);
+        });
+
+        // ------------------ 2. MERGE LOGIC ------------------
+        const mergeInput = document.getElementById('merge-file-input');
+        const mergeList = document.getElementById('merge-file-list');
+        const mergeCount = document.getElementById('merge-count');
+        const mergeActionBtn = document.getElementById('action-merge-btn');
+
+        function resetMergeWorkspace() {
+            filesToMerge = [];
+            mergeInput.value = '';
+            renderMergeList();
+        }
+
+        mergeInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files).filter(f => f.type === 'application/pdf');
+            if (files.length === 0) return;
+            filesToMerge = [...filesToMerge, ...files];
+            renderMergeList();
+            e.target.value = ''; // รีเซ็ต input ให้เลือกไฟล์เดิมซ้ำได้เผื่อลบ
+        });
+
+        function renderMergeList() {
+            mergeList.innerHTML = '';
+            mergeCount.textContent = `${filesToMerge.length} ไฟล์`;
+            mergeActionBtn.disabled = filesToMerge.length < 2;
+
+            filesToMerge.forEach((file, index) => {
+                const li = document.createElement('li');
+                li.className = 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 rounded-xl flex items-center justify-between shadow-sm cursor-grab active:cursor-grabbing group';
+                li.dataset.index = index;
+                li.innerHTML = `
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <i data-lucide="grip-vertical" class="text-gray-400 w-5 h-5 flex-shrink-0"></i>
+                        <div class="bg-orange-100 dark:bg-orange-900/30 p-2 rounded-lg text-orange-600 dark:text-orange-400 flex-shrink-0">
+                            <i data-lucide="file-text" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-200 truncate whitespace-nowrap overflow-hidden">${file.name}</span>
+                    </div>
+                    <button type="button" class="text-gray-400 hover:text-red-500 p-2 flex-shrink-0" onclick="removeMergeFile(${index})">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                `;
+                mergeList.appendChild(li);
+            });
+            lucide.createIcons({ root: mergeList });
+
+            // สร้างระบบลากวางสำหรับจัดเรียงไฟล์
+            if (mergeSortable) mergeSortable.destroy();
+            mergeSortable = new Sortable(mergeList, {
+                animation: 150,
+                handle: '.cursor-grab',
+                onEnd: () => {
+                    // อัปเดต array เมื่อลากวางเสร็จ
+                    const newOrderList = Array.from(mergeList.children);
+                    const newFilesArray = newOrderList.map(li => filesToMerge[parseInt(li.dataset.index)]);
+                    filesToMerge = newFilesArray;
+                    renderMergeList(); // render ใหม่เพื่ออัปเดต dataset index ให้ตรงกัน
+                }
+            });
+        }
+
+        window.removeMergeFile = (index) => {
+            filesToMerge.splice(index, 1);
+            renderMergeList();
+        };
+
+        mergeActionBtn.addEventListener('click', async () => {
+            if (filesToMerge.length < 2) return;
+            showLoading('กำลังรวมไฟล์ PDF...');
+            
+            try {
+                // ใช้ pdf-lib สร้างเอกสารใหม่
+                const mergedPdf = await PDFLib.PDFDocument.create();
+                
+                for (const file of filesToMerge) {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await PDFLib.PDFDocument.load(arrayBuffer);
+                    const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+                    copiedPages.forEach((page) => mergedPdf.addPage(page));
+                }
+
+                const pdfBytes = await mergedPdf.save();
+                triggerDownload(pdfBytes, `Merged_${new Date().getTime()}.pdf`);
+                hideLoading();
+                showToast('รวมไฟล์สำเร็จ!', 'success');
+                resetMergeWorkspace();
+            } catch (error) {
+                console.error(error);
+                hideLoading();
+                showToast('เกิดข้อผิดพลาดในการรวมไฟล์', 'error');
+            }
+        });
+
+        // ------------------ 3. PDF EDITOR LOGIC (Remove, Extract, Organize, Split) ------------------
+        const editorInput = document.getElementById('editor-file-input');
+        const editorUploadSec = document.getElementById('editor-upload-section');
+        const editorWorkspace = document.getElementById('editor-workspace');
+        const editorThumbGrid = document.getElementById('pdf-thumbnails-grid');
+        const editorInstruction = document.getElementById('editor-instruction').querySelector('span');
+        const editorActionBtn = document.getElementById('editor-action-btn');
+        const editorBtnText = document.getElementById('editor-btn-text');
+
+        function resetEditorWorkspace(toolMode) {
+            editorUploadSec.classList.remove('hidden');
+            editorWorkspace.classList.add('hidden');
+            editorWorkspace.classList.remove('flex');
+            editorInput.value = '';
+            editorPdfBytes = null;
+            editorOriginalFile = null;
+            editorTotalPages = 0;
+            editorSelectedPages.clear();
+            if (editorSortable) { editorSortable.destroy(); editorSortable = null; }
+
+            // เปลี่ยนข้อความคำแนะนำตามโหมด
+            let instr = "", btnTxt = "";
+            if (toolMode === 'remove') { instr = "แตะหน้ากระดาษที่ต้องการ 'ลบ' (กรอบสีแดง)"; btnTxt = "ลบหน้าที่เลือก และบันทึก"; }
+            else if (toolMode === 'extract') { instr = "แตะหน้ากระดาษที่ต้องการ 'แยกออกมา' (กรอบสีเขียว)"; btnTxt = "สร้าง PDF ใหม่จากหน้าที่เลือก"; }
+            else if (toolMode === 'split') { instr = "ไฟล์จะถูกแยกเป็น PDF หน้าเดี่ยวๆ ทุกหน้า"; btnTxt = "แยกเป็นหน้าเดี่ยวๆ (ดาวน์โหลดทั้งหมด)"; }
+            else if (toolMode === 'organize') { instr = "กดค้างที่หน้ากระดาษแล้วลากเพื่อ 'จัดเรียงใหม่'"; btnTxt = "บันทึกลำดับกระดาษใหม่"; }
+            
+            editorInstruction.textContent = instr;
+            editorBtnText.textContent = btnTxt;
+            editorActionBtn.disabled = true;
+        }
+
+        editorInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file || file.type !== 'application/pdf') return;
+            
+            showLoading('กำลังอ่านไฟล์ PDF...');
+            editorOriginalFile = file;
+            editorSelectedPages.clear();
+
+            try {
+                // เก็บ Byte ของไฟล์ไว้เพื่อใช้กับ pdf-lib ตอนบันทึก
+                editorPdfBytes = await file.arrayBuffer();
+                
+                // ใช้ pdf.js เพื่อ Render รูปภาพพรีวิว
+                const loadingTask = pdfjsLib.getDocument({ data: editorPdfBytes });
+                const pdf = await loadingTask.promise;
+                editorTotalPages = pdf.numPages;
+
+                editorThumbGrid.innerHTML = ''; // เคลียร์ตาราง
+                
+                // ถ้าเป็นโหมด Split/Organize จะถือว่าเลือกทุกหน้า (สำหรับ Split = ทำทุกหน้า)
+                if(currentTool === 'split' || currentTool === 'organize') editorActionBtn.disabled = false;
+                else editorActionBtn.disabled = true;
+
+                // วนลูปสร้าง Canvas พรีวิวแต่ละหน้า
+                for (let i = 1; i <= editorTotalPages; i++) {
+                    const page = await pdf.getPage(i);
+                    // ลด scale ให้เป็น thumbnail เพื่อประหยัด RAM
+                    const viewport = page.getViewport({ scale: 0.5 }); 
+                    
+                    const container = document.createElement('div');
+                    container.className = 'relative flex flex-col items-center bg-white dark:bg-gray-800 p-2 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm';
+                    container.dataset.pageIndex = i - 1; // อ้างอิง index ที่เริ่มจาก 0 (สำหรับ pdf-lib)
+
+                    const canvas = document.createElement('canvas');
+                    canvas.className = 'pdf-page-thumbnail w-full h-auto border border-gray-200 rounded object-contain bg-white';
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    
+                    // ป้ายบอกเลขหน้า
+                    const badge = document.createElement('div');
+                    badge.className = 'absolute top-1 left-1 bg-gray-900/70 text-white text-[10px] px-1.5 py-0.5 rounded backdrop-blur-sm pointer-events-none';
+                    badge.textContent = i;
+                    
+                    // ไอคอนติ๊กถูก/กากบาท (ซ่อนไว้ก่อน)
+                    const checkIcon = document.createElement('div');
+                    checkIcon.className = 'absolute inset-0 flex items-center justify-center opacity-0 transition-opacity pointer-events-none z-10';
+                    checkIcon.innerHTML = `<div class="bg-white rounded-full shadow-lg p-1"><i data-lucide="${currentTool === 'remove' ? 'trash' : 'check'}" class="w-8 h-8 ${currentTool === 'remove' ? 'text-red-500' : 'text-green-500'}"></i></div>`;
+
+                    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                    
+                    container.appendChild(canvas);
+                    container.appendChild(badge);
+                    container.appendChild(checkIcon);
+
+                    // สร้าง Event Listener สำหรับการคลิก (เฉพาะโหมด Remove และ Extract)
+                    if (currentTool === 'remove' || currentTool === 'extract') {
+                        container.addEventListener('click', () => togglePageSelection(container, canvas, checkIcon, i - 1));
+                    }
+                    
+                    // ถ้าโหมด organize เปลี่ยน cursor เป็น grab
+                    if (currentTool === 'organize') {
+                        canvas.classList.add('cursor-grab');
+                    }
+
+                    editorThumbGrid.appendChild(container);
+                }
+                
+                lucide.createIcons({ root: editorThumbGrid });
+
+                // ถ้าเป็นโหมด Organize ให้เปิดใช้งาน SortableJS
+                if (currentTool === 'organize') {
+                    editorSortable = new Sortable(editorThumbGrid, {
+                        animation: 150,
+                        ghostClass: 'opacity-50'
+                    });
+                }
+
+                // สลับ UI มาหน้า Workspace
+                editorUploadSec.classList.add('hidden');
+                editorWorkspace.classList.remove('hidden');
+                editorWorkspace.classList.add('flex');
+                
+                hideLoading();
+            } catch (error) {
+                console.error(error);
+                hideLoading();
+                showToast('ไม่สามารถอ่านไฟล์ PDF นี้ได้', 'error');
+            }
+        });
+
+        // ฟังก์ชันเมื่อคลิกหน้ากระดาษ (ลบ / เลือก)
+        function togglePageSelection(container, canvas, icon, index) {
+            if (editorSelectedPages.has(index)) {
+                editorSelectedPages.delete(index);
+                canvas.classList.remove(currentTool === 'remove' ? 'selected-remove' : 'selected-extract');
+                icon.classList.remove('opacity-100');
+            } else {
+                editorSelectedPages.add(index);
+                canvas.classList.add(currentTool === 'remove' ? 'selected-remove' : 'selected-extract');
+                icon.classList.add('opacity-100');
+            }
+            // เปิดปุ่มเมื่อมีการเลือกอย่างน้อย 1 หน้า
+            editorActionBtn.disabled = editorSelectedPages.size === 0;
+            
+            if(currentTool === 'remove') {
+                editorBtnText.textContent = `ลบ ${editorSelectedPages.size} หน้า และบันทึก`;
+            } else if (currentTool === 'extract') {
+                editorBtnText.textContent = `สร้าง PDF ใหม่ (${editorSelectedPages.size} หน้า)`;
+            }
+        }
+
+        // ฟังก์ชันดาวน์โหลดไฟล์
+        function triggerDownload(bytes, filename) {
+            const blob = new Blob([bytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 0);
+        }
+
+        // จัดการเมื่อกดปุ่มดำเนินการใน Editor
+        editorActionBtn.addEventListener('click', async () => {
+            showLoading('กำลังประมวลผล PDF...');
+            
+            try {
+                // โหลด PDF ต้นฉบับด้วย pdf-lib
+                const pdfDoc = await PDFLib.PDFDocument.load(editorPdfBytes);
+                let finalBytes = null;
+                const baseName = editorOriginalFile.name.replace('.pdf', '');
+
+                if (currentTool === 'remove') {
+                    // โหมดลบหน้า: ระวังเรื่อง index ขยับ ต้องลบจาก index มากไปน้อย
+                    const indicesToRemove = Array.from(editorSelectedPages).sort((a, b) => b - a);
+                    indicesToRemove.forEach(index => {
+                        pdfDoc.removePage(index);
+                    });
+                    finalBytes = await pdfDoc.save();
+                    triggerDownload(finalBytes, `${baseName}_Removed.pdf`);
+
+                } 
+                else if (currentTool === 'extract') {
+                    // โหมดแยกบางหน้ามารวมกัน: สร้างเอกสารใหม่ แล้ว copy หน้าที่เลือกไปใส่
+                    const newPdf = await PDFLib.PDFDocument.create();
+                    // เรียง index จากน้อยไปมากตามลำดับดั้งเดิม
+                    const indicesToKeep = Array.from(editorSelectedPages).sort((a, b) => a - b);
+                    const copiedPages = await newPdf.copyPages(pdfDoc, indicesToKeep);
+                    copiedPages.forEach(page => newPdf.addPage(page));
+                    
+                    finalBytes = await newPdf.save();
+                    triggerDownload(finalBytes, `${baseName}_Extracted.pdf`);
+
+                } 
+                else if (currentTool === 'organize') {
+                    // โหมดจัดเรียง: สร้างเอกสารใหม่ ดึงหน้าตามลำดับ DOM ปัจจุบัน
+                    const newPdf = await PDFLib.PDFDocument.create();
+                    const newOrderList = Array.from(editorThumbGrid.children);
+                    const orderedIndices = newOrderList.map(container => parseInt(container.dataset.pageIndex));
+                    
+                    const copiedPages = await newPdf.copyPages(pdfDoc, orderedIndices);
+                    copiedPages.forEach(page => newPdf.addPage(page));
+                    
+                    finalBytes = await newPdf.save();
+                    triggerDownload(finalBytes, `${baseName}_Reorganized.pdf`);
+                }
+                else if (currentTool === 'split') {
+                    // โหมดแยกทุกหน้า: สร้างไฟล์แยก 1 ไฟล์ ต่อ 1 หน้า 
+                    // (ข้อควรระวัง: Browser อาจบล็อกการดาวน์โหลดหลายไฟล์พร้อมกัน ต้องมี delay)
+                    hideLoading(); // เอาวงล้อออกก่อน
+                    showToast('กำลังทยอยดาวน์โหลดทีละหน้า...', 'info');
+                    
+                    for (let i = 0; i < editorTotalPages; i++) {
+                        const newPdf = await PDFLib.PDFDocument.create();
+                        const [copiedPage] = await newPdf.copyPages(pdfDoc, [i]);
+                        newPdf.addPage(copiedPage);
+                        const singleByte = await newPdf.save();
+                        
+                        // หน่วงเวลาเล็กน้อยให้ Browser ไม่มองว่าเป็นสแปม
+                        await new Promise(resolve => setTimeout(resolve, 300));
+                        triggerDownload(singleByte, `${baseName}_Page_${i + 1}.pdf`);
+                    }
+                    showToast('ดาวน์โหลดเสร็จสิ้น!', 'success');
+                    setTimeout(() => backBtn.click(), 1000); // กลับหน้าหลัก
+                    return; // จบการทำงาน
+                }
+
+                hideLoading();
+                showToast('ดำเนินการสำเร็จ!', 'success');
+                // เด้งกลับหน้าหลักหลังทำเสร็จ
+                setTimeout(() => backBtn.click(), 1500);
+
+            } catch (error) {
+                console.error(error);
+                hideLoading();
+                showToast('เกิดข้อผิดพลาดระหว่างประมวลผล', 'error');
+            }
+        });
+
+    </script>
+</body>
+</html>
