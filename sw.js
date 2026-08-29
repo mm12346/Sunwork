@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sunwork-pwa-v8.4.4';
+const CACHE_NAME = 'sunwork-pwa-v8.4.5';
 const DYNAMIC_CACHE = 'sunwork-dynamic-v1';
 
 // ไฟล์ตั้งต้นที่ต้องการแคช (กรณีเปิดหน้าเว็บหลัก)
