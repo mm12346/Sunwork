@@ -500,6 +500,62 @@
             { x: 0.1, y: 0.1 }, { x: 0.9, y: 0.1 }, { x: 0.9, y: 0.9 }, { x: 0.1, y: 0.9 }
         ];
 
+        // --- Auto Edge Detection ---
+        function autoDetectEdges(img) {
+            const maxD = 300;
+            let w = img.width, h = img.height;
+            let scale = Math.min(maxD/w, maxD/h);
+            w = Math.round(w * scale); h = Math.round(h * scale);
+            
+            const cvs = document.createElement('canvas');
+            cvs.width = w; cvs.height = h;
+            const ctx = cvs.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(img, 0, 0, w, h);
+            
+            const imgData = ctx.getImageData(0,0,w,h);
+            const data = imgData.data;
+            const gray = new Uint8Array(w * h);
+            
+            for(let i=0; i<w*h; i++) {
+                gray[i] = 0.299*data[i*4] + 0.587*data[i*4+1] + 0.114*data[i*4+2];
+            }
+            
+            const edges = [];
+            const threshold = 40; 
+            for(let y=2; y<h-2; y++) {
+                for(let x=2; x<w-2; x++) {
+                    const idx = y*w + x;
+                    const gx = Math.abs(gray[idx+1] - gray[idx-1]);
+                    const gy = Math.abs(gray[idx+w] - gray[idx-w]);
+                    if(gx + gy > threshold) edges.push({x, y});
+                }
+            }
+            
+            const def = [{x:0.1, y:0.1}, {x:0.9, y:0.1}, {x:0.9, y:0.9}, {x:0.1, y:0.9}];
+            if(edges.length < (w*h)*0.005) return def;
+            
+            let tl = edges[0], tr = edges[0], br = edges[0], bl = edges[0];
+            let minSum = 99999, maxSum = -1, minDiff = 99999, maxDiff = -99999;
+            
+            for(let i=0; i<edges.length; i++) {
+                const p = edges[i];
+                const sum = p.x + p.y, diff = p.x - p.y;
+                if(sum < minSum) { minSum = sum; tl = p; }
+                if(sum > maxSum) { maxSum = sum; br = p; }
+                if(diff > maxDiff) { maxDiff = diff; tr = p; }
+                if(diff < minDiff) { minDiff = diff; bl = p; }
+            }
+            
+            const pad = 0.03; 
+            let p0 = {x: Math.max(0, tl.x/w - pad), y: Math.max(0, tl.y/h - pad)};
+            let p1 = {x: Math.min(1, tr.x/w + pad), y: Math.max(0, tr.y/h - pad)};
+            let p2 = {x: Math.min(1, br.x/w + pad), y: Math.min(1, br.y/h + pad)};
+            let p3 = {x: Math.max(0, bl.x/w - pad), y: Math.min(1, bl.y/h + pad)};
+            
+            if (p1.x - p0.x < 0.2 || p2.y - p1.y < 0.2) return def;
+            return [p0, p1, p2, p3];
+        }
+
         function solveLinearSystem(A, B) {
             const n = B.length;
             for (let i = 0; i < n; i++) {
@@ -662,7 +718,6 @@
             scanRotation = 0; 
             scanCurrentFilter = 'magic'; 
             isCropMode = false;
-            cropPoints = [{x:0.1, y:0.1}, {x:0.9, y:0.1}, {x:0.9, y:0.9}, {x:0.1, y:0.9}];
             
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             document.querySelector('.filter-btn[data-filter="magic"]').classList.add('active');
@@ -677,7 +732,11 @@
             scannerEditMode.classList.remove('hidden'); scannerEditMode.classList.add('flex');
 
             showLoading('กำลังเตรียมรูปภาพ...');
-            scanOriginalImage.onload = () => { hideLoading(); renderScanCanvas(); };
+            scanOriginalImage.onload = () => { 
+                cropPoints = autoDetectEdges(scanOriginalImage); // ประมวลผลจับขอบกระดาษอัตโนมัติ
+                hideLoading(); 
+                renderScanCanvas(); 
+            };
             scanOriginalImage.src = src;
         }
 
@@ -1180,9 +1239,10 @@
             const blob = new Blob([bytes], { type: 'application/pdf' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
+            a.style.display = 'none';
             a.href = url; a.download = filename;
             document.body.appendChild(a); a.click();
-            setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 0);
+            setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 2000); // ขยายเวลาให้มือถือดาวน์โหลดเสร็จ
         }
 
         editorActionBtn.addEventListener('click', async () => {
@@ -1190,10 +1250,11 @@
             try {
                 const pdfDoc = await PDFLib.PDFDocument.load(editorPdfBytes);
                 let finalBytes = null;
-                const baseName = editorOriginalFile.name.replace('.pdf', '');
+                const baseName = editorOriginalFile.name.replace(/\.[^/.]+$/, ""); // ตัดนามสกุลไฟล์ออกอย่างปลอดภัย
 
                 if (currentTool === 'remove') {
                     const indicesToRemove = Array.from(editorSelectedPages).sort((a, b) => b - a);
+                    if (indicesToRemove.length === 0) throw new Error("No pages selected");
                     indicesToRemove.forEach(index => { pdfDoc.removePage(index); });
                     finalBytes = await pdfDoc.save();
                     triggerDownload(finalBytes, `${baseName}_Removed.pdf`);
@@ -1201,6 +1262,7 @@
                 else if (currentTool === 'extract') {
                     const newPdf = await PDFLib.PDFDocument.create();
                     const indicesToKeep = Array.from(editorSelectedPages).sort((a, b) => a - b);
+                    if (indicesToKeep.length === 0) throw new Error("No pages selected");
                     const copiedPages = await newPdf.copyPages(pdfDoc, indicesToKeep);
                     copiedPages.forEach(page => newPdf.addPage(page));
                     finalBytes = await newPdf.save();
@@ -1208,8 +1270,10 @@
                 } 
                 else if (currentTool === 'organize') {
                     const newPdf = await PDFLib.PDFDocument.create();
-                    const newOrderList = Array.from(editorThumbGrid.children);
-                    const orderedIndices = newOrderList.map(container => parseInt(container.dataset.pageIndex));
+                    // แก้ไข: กรองเอาเฉพาะ element ที่มี data-page-index ออกมา (ทิ้ง element จำลองของ SortableJS)
+                    const validContainers = Array.from(editorThumbGrid.children).filter(el => el.hasAttribute('data-page-index'));
+                    const orderedIndices = validContainers.map(container => parseInt(container.dataset.pageIndex));
+                    
                     const copiedPages = await newPdf.copyPages(pdfDoc, orderedIndices);
                     copiedPages.forEach(page => newPdf.addPage(page));
                     finalBytes = await newPdf.save();
@@ -1217,23 +1281,27 @@
                 }
                 else if (currentTool === 'split') {
                     hideLoading(); showToast('กำลังทยอยดาวน์โหลดทีละหน้า...', 'info');
+                    // แก้ไข: ใส่ Delay ให้เบราว์เซอร์มีเวลาจัดการ popup แทรกลงคิวโหลด
                     for (let i = 0; i < editorTotalPages; i++) {
                         const newPdf = await PDFLib.PDFDocument.create();
                         const [copiedPage] = await newPdf.copyPages(pdfDoc, [i]);
                         newPdf.addPage(copiedPage);
                         const singleByte = await newPdf.save();
-                        await new Promise(resolve => setTimeout(resolve, 300));
+                        
                         triggerDownload(singleByte, `${baseName}_Page_${i + 1}.pdf`);
+                        await new Promise(resolve => setTimeout(resolve, 800)); // หน่วงเวลา 0.8 วินาทีต่อไฟล์
                     }
                     showToast('ดาวน์โหลดเสร็จสิ้น!', 'success');
                     setTimeout(() => backBtn.click(), 1000); 
                     return; 
                 }
 
-                hideLoading(); showToast('ดำเนินการสำเร็จ!', 'success');
-                setTimeout(() => backBtn.click(), 1500);
-
+                if (finalBytes) {
+                    hideLoading(); showToast('ดำเนินการสำเร็จ!', 'success');
+                    setTimeout(() => backBtn.click(), 1500);
+                }
             } catch (error) {
+                console.error(error);
                 hideLoading(); showToast('เกิดข้อผิดพลาดระหว่างประมวลผล', 'error');
             }
         });
